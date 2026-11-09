@@ -57,11 +57,25 @@ describe("refusalMessage", () => {
     expect(m.content).toMatch(/turned off/);
   });
 
-  it("keeps the original wording for the safety floor and for no source", () => {
+  it("names the safety floor for it and for no source, and says to carry on", () => {
     for (const source of ["safety-floor", undefined] as const) {
       const m = refusalMessage("rm -rf /", source, undefined);
       expect(m.description).toBe("Command Disabled");
       expect(m.content).toContain("disabled by security policy");
+      expect(m.content).toMatch(/Do what else the request needs/);
+    }
+  });
+
+  it("never tells the model to stop and ask: the refusal cap decides that", () => {
+    for (const source of [
+      "deny-rule",
+      "tool-setting",
+      "auto",
+      undefined,
+    ] as const) {
+      const m = refusalMessage("x", source, "why");
+      expect(m.content).not.toMatch(/ask how they want to proceed/);
+      expect(m.content).toMatch(/say what you could not do/);
     }
   });
 });

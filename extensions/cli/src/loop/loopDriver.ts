@@ -30,6 +30,7 @@ import {
   parsePlanFile,
   PRESENT_PLAN_CLI_TOOL_NAME,
 } from "core/util/planFile.js";
+import { finishItemNudge, presentPlanNudge } from "core/util/turnEnd.js";
 
 import { services } from "../services/index.js";
 import { getSessionLoop, getSessionTaskPlan } from "../session.js";
@@ -48,6 +49,7 @@ import {
   planFileDisplayPath,
   planFilePath,
   sessionTokens,
+  prepareLoopTurn,
 } from "./loopSession.js";
 
 /**
@@ -96,9 +98,34 @@ function planTitle(): string | undefined {
   }
 }
 
-/** Records the end of the run that was going: its report, or a re-plan's plan. */
-function finishRun(loop: LoopState): LoopState | "accepted" | "awaiting" {
+/**
+ * A run that ended without what ends it (finish_item's report, a re-plan's
+ * plan) is told once to call the tool, in the same run; only a second such
+ * end counts. Returns the nudge turn, or undefined when the run was nudged
+ * already (core/util/turnEnd.ts).
+ */
+function nudgeRun(loop: LoopState, prompt: string): LoopTurn | undefined {
+  const current = loop.current;
+  if (!current || current.nudged) return undefined;
+  commitLoop({ ...loop, current: { ...current, nudged: true } });
+  return { kind: current.kind === "replan" ? "replan" : "item", prompt };
+}
+
+/**
+ * Records the end of the run that was going: its report, or a re-plan's
+ * plan. A LoopTurn means the run is not over: it is being told to report.
+ */
+function finishRun(
+  loop: LoopState,
+): LoopState | LoopTurn | "accepted" | "awaiting" {
   if (loop.current?.kind === "item") {
+    if (!loop.current.report) {
+      const nudge = nudgeRun(
+        loop,
+        finishItemNudge(CLI_LOOP_TOOL_NAMES.finishItem),
+      );
+      if (nudge) return nudge;
+    }
     const pending = new Set(pendingSteerIds());
     dropPendingSteers();
     const delivered = loop.answers
@@ -118,6 +145,13 @@ function finishRun(loop: LoopState): LoopState | "accepted" | "awaiting" {
   }
   if (loop.current?.kind === "replan") {
     if (!presentedSince(loop.current.historyIndex)) {
+      // One nudge first: a small model wrote the PresentPlan call as text
+      // once in six runs, and one text reply must not end the whole loop
+      const nudge = nudgeRun(
+        loop,
+        presentPlanNudge(CLI_LOOP_TOOL_NAMES.presentPlan),
+      );
+      if (nudge) return nudge;
       commitLoop(
         stopLoop(
           loop,
@@ -162,6 +196,8 @@ export function nextLoopTurn(
       const finished = finishRun(loop);
       if (finished === "awaiting") return undefined;
       if (finished === "accepted") continue;
+      // The run is not over: it is being told to call its finishing tool
+      if ("prompt" in finished) return finished;
       loop = finished;
     }
 
@@ -324,8 +360,12 @@ export class LoopRunner {
       while (!this.disposed && this.host.isIdle()) {
         const step = nextLoopTurn(this.host.historyLength());
         if (!step) break;
-        if (step.kind === "check") await runLoopCheck(step);
-        else await this.host.send(step);
+        if (step.kind === "check") {
+          await runLoopCheck(step);
+        } else {
+          await prepareLoopTurn(step.kind);
+          await this.host.send(step);
+        }
       }
     } catch (error) {
       logger.error("Loop step failed", { error });

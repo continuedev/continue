@@ -49,7 +49,9 @@ describe("E2E: Headless Mode with Mock Server", () => {
     const userMessage = mockServer.requests[0].body.messages.find(
       (m: any) => m.role === "user",
     );
-    expect(userMessage.content).toBe("Say hello");
+    // The prompt comes first; the environment block rides on the first user
+    // message after it (src/environmentContext.ts)
+    expect(userMessage.content.split("\n\n<context ")[0]).toBe("Say hello");
   }, 20000);
 
   it("should work with longer prompts", async () => {
@@ -70,7 +72,7 @@ describe("E2E: Headless Mode with Mock Server", () => {
     const userMessage = mockServer.requests[0].body.messages.find(
       (m: any) => m.role === "user",
     );
-    expect(userMessage.content).toBe(
+    expect(userMessage.content.split("\n\n<context ")[0]).toBe(
       "Please respond with exactly 'Hello World!' and nothing else",
     );
   }, 20000);

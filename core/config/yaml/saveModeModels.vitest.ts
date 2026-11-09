@@ -164,3 +164,30 @@ modeModels:
     expect(text).toMatch(/# cheap\s+- Sonnet/);
   });
 });
+
+describe("applyModeModelsUpdate: single-model uses", () => {
+  it("writes one model for loop, replan and subagent, never a list", () => {
+    const { text } = apply(BASE, {
+      loop: { model: "Sonnet", models: ["Sonnet", "Opus"] },
+      replan: { model: "Opus", reasoningEffort: "high" },
+      subagent: { model: "Sonnet" },
+    });
+    const parsed = YAML.parse(text ?? "");
+    expect(parsed.modeModels).toEqual({
+      loop: { model: "Sonnet" },
+      replan: { model: "Opus", reasoningEffort: "high" },
+      subagent: { model: "Sonnet" },
+    });
+  });
+
+  it("removes a single-model use set to null and leaves the modes alone", () => {
+    const start = apply(BASE, {
+      plan: { model: "Opus" },
+      loop: { model: "Sonnet" },
+    }).text;
+    const { text } = apply(start ?? "", { loop: null });
+    expect(YAML.parse(text ?? "").modeModels).toEqual({
+      plan: { model: "Opus" },
+    });
+  });
+});

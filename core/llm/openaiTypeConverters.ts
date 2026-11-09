@@ -235,6 +235,12 @@ export function toChatBody(
     tool_choice: options.toolChoice,
   };
 
+  // Not in OpenAI's own API, but every local server (llama.cpp, Strata,
+  // vLLM, Ollama's OpenAI endpoint) takes them, and Qwen's recommended
+  // sampling sets both. Sent only when the config sets them.
+  if (options.topK !== undefined) (params as any).top_k = options.topK;
+  if (options.minP !== undefined) (params as any).min_p = options.minP;
+
   if (options.tools?.length) {
     params.tools = options.tools
       .filter((tool) => !tool.type || tool.type === "function")

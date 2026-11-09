@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import type { Express, Request, Response } from "express";
 
 import {
@@ -6,6 +7,7 @@ import {
 } from "../hooks/promptHook.js";
 import { runLoopCheck } from "../loop/loopChecks.js";
 import { loopWakeDelay, nextLoopTurn } from "../loop/loopDriver.js";
+import { prepareLoopTurn } from "../loop/loopSession.js";
 import { getSessionLoop, interruptRunningLoop } from "../loop/loopSession.js";
 import { services } from "../services/index.js";
 import { getCompleteStateSnapshot, type StateSnapshot } from "../session.js";
@@ -16,9 +18,23 @@ import {
   messageQueue,
 } from "../stream/messageQueue.js";
 import { reportFailureTool } from "../tools/reportFailure.js";
+import {
+  cacheTallySnapshot,
+  type CacheTallySnapshot,
+  describeCacheTally,
+} from "../util/cacheTally.js";
 import { updateAgentMetadata } from "../util/exit.js";
 import { formatError } from "../util/formatError.js";
 import { logger } from "../util/logger.js";
+import {
+  answerPendingQuestion,
+  listPendingQuestions,
+  openPendingQuestions,
+  pendingAnswerMessage,
+  type PendingQuestion,
+  pendingQuestionState,
+} from "../util/pendingQuestions.js";
+import { formatReplyTally, getTruncatedReplies } from "../util/replyTally.js";
 
 import {
   checkAgentComplete,
@@ -80,9 +96,25 @@ export interface ServeMessageContext {
   loopWakeTimer?: ReturnType<typeof setTimeout>;
 }
 
+/** What this process's requests did, next to the session's cumulative usage. */
+export interface RunTallySnapshot {
+  /**
+   * The prompt cache, counted per request of this process: requests, input
+   * tokens processed, tokens read and written, and how many requests were
+   * under the model's minimum cacheable prompt (so could not be cached).
+   */
+  promptCache: CacheTallySnapshot;
+  /** Replies the output limit cut off (finish_reason "length"). */
+  truncatedReplies: number;
+  /** Questions asked with nobody to answer, answered ones included. */
+  pendingQuestions: (PendingQuestion & { state: "open" | "answered" })[];
+  /** How many of them still wait for an answer. */
+  openQuestions: number;
+}
+
 export function getServeStateSnapshot(
   state: ServerState,
-): StateSnapshot & QueueSnapshot & LoopSnapshot {
+): StateSnapshot & QueueSnapshot & LoopSnapshot & RunTallySnapshot {
   return {
     ...getCompleteStateSnapshot(
       state.session,
@@ -92,7 +124,52 @@ export function getServeStateSnapshot(
     ),
     ...getQueueSnapshot(),
     ...getLoopSnapshot(),
+    promptCache: cacheTallySnapshot(),
+    truncatedReplies: getTruncatedReplies(),
+    // Questions the model asked with nobody to answer (plan turns): answer
+    // one with POST /message { answerQuestion: id, answer }
+    pendingQuestions: listPendingQuestions().map((q) => ({
+      ...q,
+      state: pendingQuestionState(q),
+    })),
+    openQuestions: openPendingQuestions().length,
   };
+}
+
+/**
+ * An answer to a held question: recorded, and delivered to the model as the
+ * next message. 404 when no open question has the id.
+ */
+export function handlePendingAnswer(body: {
+  answerQuestion?: unknown;
+  answer?: unknown;
+}): { status: number; json: Record<string, unknown> } | undefined {
+  if (body.answerQuestion === undefined) return undefined;
+  if (
+    typeof body.answerQuestion !== "string" ||
+    typeof body.answer !== "string"
+  ) {
+    return {
+      status: 400,
+      json: { error: "answerQuestion (id) and answer must be strings" },
+    };
+  }
+  const answered = answerPendingQuestion(body.answerQuestion, body.answer);
+  if (!answered) {
+    return {
+      status: 404,
+      json: { error: `No open question with id ${body.answerQuestion}` },
+    };
+  }
+  return { status: 200, json: { answered: answered.id } };
+}
+
+/** The end-of-turn lines for the serve log: the cache tally, cut-off replies. */
+export function logTurnTally(): void {
+  const cacheLine = describeCacheTally();
+  if (cacheLine) logger.info(chalk.dim(cacheLine));
+  const cutOff = formatReplyTally();
+  if (cutOff) logger.info(chalk.yellow(cutOff));
 }
 
 /** GET /state, POST /message and POST /pause. */
@@ -119,6 +196,22 @@ export function registerMessageRoutes(
       res.status(loopResponse.status).json(loopResponse.json);
       if (loopResponse.status === 200 && !state.isProcessing) {
         void processMessages(ctx);
+      }
+      return;
+    }
+
+    // An answer to a question held in the inbox: it reaches the model as a
+    // message of its own in the next turn
+    const answered = handlePendingAnswer(req.body ?? {});
+    if (answered) {
+      res.status(answered.status).json(answered.json);
+      if (answered.status === 200) {
+        const held = listPendingQuestions().find(
+          (q) => q.id === answered.json.answered,
+        );
+        if (held) await messageQueue.enqueueMessage(pendingAnswerMessage(held));
+        messageQueue.resume();
+        if (!state.isProcessing) void processMessages(ctx);
       }
       return;
     }
@@ -248,6 +341,7 @@ async function runTurn(ctx: ServeMessageContext, prompt: string) {
     // No direct persistence here; ChatHistoryService handles persistence when appropriate
 
     state.lastActivity = Date.now();
+    logTurnTally();
 
     // Update metadata after successful agent turn
     try {
@@ -342,6 +436,7 @@ async function drainMessages(ctx: ServeMessageContext) {
         }
         continue;
       }
+      await prepareLoopTurn(step.kind);
       await runTurn(ctx, step.prompt);
       continue;
     }

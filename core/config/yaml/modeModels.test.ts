@@ -138,3 +138,60 @@ describe("resolveModeModels", () => {
     });
   });
 });
+
+describe("uses beyond the modes", () => {
+  const all = [...chat, { title: "Judge" }];
+
+  it("resolves loop, replan and subagent against the chat models", () => {
+    const { modeModels, errors } = resolveModeModels(
+      {
+        loop: { model: "Haiku", reasoningEffort: "off" },
+        replan: { model: "Opus" },
+        subagent: { model: "Sonnet" },
+      },
+      chat,
+      all,
+    );
+    expect(errors).toEqual([]);
+    expect(modeModels).toEqual({
+      loop: { title: "Haiku", reasoningEffort: "off" },
+      replan: { title: "Opus" },
+      subagent: { title: "Sonnet" },
+    });
+  });
+
+  it("lets the reviewer be any model, not only a chat model", () => {
+    const { modeModels, errors } = resolveModeModels(
+      { reviewer: { model: "Judge" }, subagent: { model: "Judge" } },
+      chat,
+      all,
+    );
+    expect(modeModels).toEqual({ reviewer: { title: "Judge" } });
+    expect(errors.map((e) => e.message)).toEqual([
+      expect.stringContaining(
+        'modeModels.subagent: no chat model named "Judge"',
+      ),
+    ]);
+  });
+
+  it("reports an unknown reviewer against every model", () => {
+    const { modeModels, errors } = resolveModeModels(
+      { reviewer: { model: "Nope" } },
+      chat,
+      all,
+    );
+    expect(modeModels).toBeUndefined();
+    expect(errors[0].message).toContain(
+      'modeModels.reviewer: no model named "Nope"',
+    );
+    expect(errors[0].message).toContain("Judge");
+  });
+
+  it("does not fill in fallbacks: a missing loop entry stays missing", () => {
+    const { modeModels } = resolveModeModels(
+      { agent: { model: "Sonnet" } },
+      chat,
+    );
+    expect(modeModels).toEqual({ agent: { title: "Sonnet" } });
+  });
+});

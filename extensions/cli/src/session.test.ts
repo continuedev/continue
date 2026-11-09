@@ -10,12 +10,14 @@ import {
   createSession,
   getCurrentSession,
   getSessionTaskPlan,
+  getSessionUsage,
   hasSession,
   loadOrCreateSessionById,
   loadSession,
   onTaskPlanChange,
   saveSession,
   startNewSession,
+  trackSessionUsage,
   updateSessionHistory,
   updateSessionTaskPlan,
   updateSessionTitle,
@@ -635,5 +637,71 @@ describe("SessionManager", () => {
       expect(session2.title).toBe("Untitled Session");
       expect(getCurrentSession().sessionId).toBe("fresh-session-2");
     });
+  });
+});
+
+// The estimate flag: a request priced at the fallback rate marks the
+// session's total as an estimate, and the flag persists with the usage.
+describe("session usage cost estimate", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockOs.homedir.mockReturnValue("/home/test");
+    mockFs.existsSync.mockReturnValue(true);
+    mockFs.mkdirSync.mockImplementation(() => undefined);
+    mockFs.writeFileSync.mockImplementation(() => undefined);
+    clearSession();
+    startNewSession();
+  });
+
+  it("is unset while every request was priced from a table", () => {
+    trackSessionUsage(
+      0.5,
+      { promptTokens: 10, completionTokens: 5 },
+      "bedrock",
+      "m",
+    );
+    const usage = getSessionUsage();
+    expect(usage.totalCost).toBeCloseTo(0.5);
+    expect(usage.costEstimated).toBeUndefined();
+  });
+
+  it("is set once a request was priced at the fallback rate, and stays set", () => {
+    trackSessionUsage(
+      0.5,
+      { promptTokens: 10, completionTokens: 5 },
+      "bedrock",
+      "m",
+    );
+    trackSessionUsage(
+      1.0,
+      { promptTokens: 10, completionTokens: 5 },
+      "bedrock",
+      "m",
+      true,
+    );
+    trackSessionUsage(
+      0.5,
+      { promptTokens: 10, completionTokens: 5 },
+      "bedrock",
+      "m",
+    );
+    const usage = getSessionUsage();
+    expect(usage.totalCost).toBeCloseTo(2.0);
+    expect(usage.costEstimated).toBe(true);
+    // Saved with the session, so /state and a resumed session see it
+    expect(getCurrentSession().usage?.costEstimated).toBe(true);
+  });
+
+  it("a new session starts without it", () => {
+    trackSessionUsage(
+      1.0,
+      { promptTokens: 10, completionTokens: 5 },
+      "bedrock",
+      "m",
+      true,
+    );
+    clearSession();
+    startNewSession();
+    expect(getSessionUsage().costEstimated).toBeUndefined();
   });
 });

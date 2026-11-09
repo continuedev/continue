@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { ILLM } from "../../index.js";
-import Anthropic from "./Anthropic.js";
+import Anthropic, { anthropicSamplingParams } from "./Anthropic.js";
 
 interface LlmTestCase {
   llm: ILLM;
@@ -716,6 +716,57 @@ describe("Anthropic", () => {
       );
       expect(marked(body).messages.flat().filter(Boolean)).toHaveLength(2);
       expect(marked(body).tools).toEqual([false, false]);
+    });
+  });
+
+  describe("Sampling fields", () => {
+    // The API refuses temperature and top_p together, and with thinking on
+    // any temperature other than 1 or top_p below 0.95.
+    const anthropic = new Anthropic({
+      apiKey: "test-api-key",
+      model: "claude-sonnet-4-5",
+      apiBase: "https://api.anthropic.com/v1/",
+    });
+
+    test("sends temperature or top_p, never both", () => {
+      const both = anthropic.convertArgs({
+        model: "claude-sonnet-4-5",
+        temperature: 0.5,
+        topP: 0.9,
+      });
+      expect(both.temperature).toBe(0.5);
+      expect(both.top_p).toBeUndefined();
+
+      const topOnly = anthropic.convertArgs({
+        model: "claude-sonnet-4-5",
+        topP: 0.9,
+      });
+      expect(topOnly.temperature).toBeUndefined();
+      expect(topOnly.top_p).toBe(0.9);
+    });
+
+    test("sends neither while thinking is on", () => {
+      const args = anthropic.convertArgs({
+        model: "claude-sonnet-4-5",
+        temperature: 0.5,
+        topP: 0.9,
+        reasoning: true,
+        reasoningBudgetTokens: 2048,
+      });
+      expect(args.thinking).toBeDefined();
+      expect(args.temperature).toBeUndefined();
+      expect(args.top_p).toBeUndefined();
+    });
+
+    test("anthropicSamplingParams matches the Bedrock rule for Claude", () => {
+      expect(anthropicSamplingParams(0.5, 0.9, false)).toEqual({
+        temperature: 0.5,
+      });
+      expect(anthropicSamplingParams(undefined, 0.9, false)).toEqual({
+        temperature: undefined,
+        top_p: 0.9,
+      });
+      expect(anthropicSamplingParams(0.5, 0.9, true)).toEqual({});
     });
   });
 

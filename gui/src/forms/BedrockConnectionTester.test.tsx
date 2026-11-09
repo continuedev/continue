@@ -125,6 +125,36 @@ describe("BedrockConnectionTester", () => {
     expect(screen.queryByText(useCaseNotice)).toBeNull();
   });
 
+  it("counts the models that need access and passes the state on", async () => {
+    const withAccess = [
+      { ...models[0], access: "needs-access" as const, legacy: true },
+      { ...models[1], access: "available" as const },
+      {
+        id: "us.anthropic.claude-opus-4-1",
+        name: "Claude Opus 4.1 (us. cross-region)",
+        provider: "Anthropic",
+        kind: "inference-profile" as const,
+        access: "pending" as const,
+      },
+    ];
+    const { user, onModelsLoaded } = setup({
+      "bedrock/listModels": async (data: any) =>
+        data.endpoint === "mantle"
+          ? { ok: true, models: [] }
+          : { ok: true, models: withAccess },
+    });
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(
+      await screen.findByText(/3 models available in us-east-1.*2 need access/),
+    ).toBeTruthy();
+    const [loaded] = onModelsLoaded.mock.calls.at(-1)!;
+    expect(loaded.map((m: any) => m.access)).toEqual([
+      "needs-access",
+      "available",
+      "pending",
+    ]);
+  });
+
   it("clears the model list when the connection fails", async () => {
     const { user, onModelsLoaded } = setup({
       "bedrock/listModels": async () => ({ ok: false, error: "nope" }),

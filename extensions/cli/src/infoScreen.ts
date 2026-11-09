@@ -8,7 +8,10 @@ import {
   getSessionFilePath,
   getSessionUsage,
 } from "./session.js";
+import { formatCacheTally, splitInputTokens } from "./util/cacheTally.js";
 import { logger } from "./util/logger.js";
+import { formatReplyTally } from "./util/replyTally.js";
+import { formatSessionCost } from "./util/sessionCost.js";
 import { getVersion } from "./version.js";
 
 function getVersionInfo(): string[] {
@@ -77,31 +80,31 @@ function getUsageInfo(): string[] {
 
   try {
     const usage = getSessionUsage();
-    if (usage.totalCost > 0) {
+    if (usage.totalCost > 0 || usage.promptTokens > 0) {
+      lines.push(`  Total Cost: ${chalk.green(formatSessionCost(usage))}`);
+      // Input is what the provider processed: uncached plus cache reads plus
+      // cache writes. The parts are always shown, so a session that never
+      // cached does not look like one that could not.
+      const { uncached, cacheRead, cacheWrite } = splitInputTokens(usage);
       lines.push(
-        `  Total Cost: ${chalk.green(`$${usage.totalCost.toFixed(6)}`)}`,
+        `  Input Tokens: ${chalk.cyan(usage.promptTokens.toLocaleString())} processed`,
       );
-      lines.push(
-        `  Input Tokens: ${chalk.cyan(usage.promptTokens.toLocaleString())}`,
-      );
+      lines.push(`    Uncached: ${chalk.cyan(uncached.toLocaleString())}`);
+      lines.push(`    Cache Read: ${chalk.cyan(cacheRead.toLocaleString())}`);
+      lines.push(`    Cache Write: ${chalk.cyan(cacheWrite.toLocaleString())}`);
       lines.push(
         `  Output Tokens: ${chalk.cyan(usage.completionTokens.toLocaleString())}`,
       );
 
-      if (usage.promptTokensDetails?.cachedTokens) {
-        lines.push(
-          `  Cache Read Tokens: ${chalk.cyan(usage.promptTokensDetails.cachedTokens.toLocaleString())}`,
-        );
-      }
-
-      if (usage.promptTokensDetails?.cacheWriteTokens) {
-        lines.push(
-          `  Cache Write Tokens: ${chalk.cyan(usage.promptTokensDetails.cacheWriteTokens.toLocaleString())}`,
-        );
-      }
-
       const totalTokens = usage.promptTokens + usage.completionTokens;
       lines.push(`  Total Tokens: ${chalk.cyan(totalTokens.toLocaleString())}`);
+
+      // Counted per request this run, so they can differ from the cumulative
+      // totals above when the session was resumed.
+      const cacheLine = formatCacheTally();
+      if (cacheLine) lines.push(`  ${cacheLine}`);
+      const cutOff = formatReplyTally();
+      if (cutOff) lines.push(`  ${chalk.yellow(cutOff)}`);
     } else {
       lines.push(`  ${chalk.gray("No usage data yet")}`);
     }

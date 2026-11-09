@@ -263,7 +263,10 @@ describe("the system message in the request", () => {
     const messages = sentMessages(llmApi);
     expect(messages.map((m) => m.role)).toEqual(["system", "user"]);
     expect(messages[0].content).toBe("current system message");
-    expect(messages[1].content).toBe("hello");
+    // The first user message also carries the environment block
+    const first = String(messages[1].content);
+    expect(first.startsWith("hello")).toBe(true);
+    expect(first).toContain('<context name="environment">');
   });
 
   it("cn serve: the startup system item is replaced by the current one", async () => {

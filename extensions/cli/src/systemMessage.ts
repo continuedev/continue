@@ -3,9 +3,14 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { parseMarkdownRule, RuleObject } from "@continuedev/config-yaml";
+import {
+  actTurnFor,
+  CLI_TURN_TOOL_NAMES,
+  planTurnFor,
+} from "core/llm/prompts/turns.js";
 
-import { env } from "./env.js";
 import { processRule } from "./hubLoader.js";
+import { AGENT_FILES, rulesDirs } from "./instructionFiles.js";
 import { PermissionMode } from "./permissions/types.js";
 import { serviceContainer } from "./services/ServiceContainer.js";
 import { ConfigServiceState, SERVICE_NAMES } from "./services/types.js";
@@ -22,43 +27,23 @@ function isGitRepo(): boolean {
   }
 }
 
-/**
- * Get git status
- */
-function getGitStatus(): string {
-  try {
-    if (!isGitRepo()) {
-      return "Not a git repository";
-    }
-    const result = execSync("git status --porcelain", {
-      encoding: "utf-8",
-      cwd: process.cwd(),
-    });
-    return result.trim() || "Working tree clean";
-  } catch {
-    return "Git status not available";
-  }
-}
-
-const baseSystemMessage = `You are an agent in the Continuous CLI. Given the user's prompt, you should use the tools available to you to answer the user's question.
-
-Notes:
-1. IMPORTANT: You should be concise, direct, and to the point, since your responses will be displayed on a command line interface.
-2. When relevant, share file names and code snippets relevant to the query
+// The CLI's preamble. The turn's own instructions (act or plan) are shared
+// with the IDE and appended by constructSystemMessage; see
+// core/llm/prompts/turns.ts and plans/policy-areas.md.
+//
+// Only facts that are the same for every run in this folder go here, so the
+// cached prefix matches across sessions. The date and the git status change
+// between runs and travel in the first user message of each request instead
+// (src/environmentContext.ts).
+const baseSystemMessage = `You are an agent in the Continuous CLI. Your replies are shown in a terminal: be concise and direct, and show file names and code only where they help.
 Here is useful information about the environment you are running in:
 <env>
 Working directory: ${process.cwd()}
 Is directory a git repo: ${isGitRepo()}
 Platform: ${process.platform}
-Today's date: ${new Date().toISOString().split("T")[0]}
 </env>
 
-As you answer the user's questions, you can use the following context:
-
-<context name="gitStatus">This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
-
-${getGitStatus()}
-</context>`;
+Today's date and the git status of the working tree are in a <context name="environment"> block in the first user message.`;
 
 async function getConfigYamlRules(): Promise<string[]> {
   const configState = await serviceContainer.get<ConfigServiceState>(
@@ -87,16 +72,9 @@ function getRuleNameFromPath(filePath: string): string {
  * Scan .continue/rules/ directories for markdown rule files and return the rules with metadata that should be always-applied
  */
 export function loadMarkdownRulesWithMetadata(): RuleObject[] {
-  const cwd = process.cwd();
-  const rulesDirs = [
-    path.join(cwd, ".continuous", "rules"),
-    path.join(cwd, ".continue", "rules"),
-    path.join(env.continueHome, "rules"),
-  ];
-
   const rules: RuleObject[] = [];
 
-  for (const dir of rulesDirs) {
+  for (const dir of rulesDirs()) {
     if (!fs.existsSync(dir)) continue;
 
     let files: string[];
@@ -164,13 +142,13 @@ export async function constructSystemMessage(
   additionalRules?: string[],
   format?: "json",
   headless?: boolean,
+  /** The model id the message is for; picks the turn text's prompt profile. */
+  model?: string,
 ): Promise<string> {
-  const agentFiles = ["AGENTS.md", "AGENT.md", "CLAUDE.md", "CODEX.md"];
-
   let agentContent = "";
 
   try {
-    for (const fileName of agentFiles) {
+    for (const fileName of AGENT_FILES) {
       const filePath = path.join(process.cwd(), fileName);
 
       if (fs.existsSync(filePath)) {
@@ -215,11 +193,13 @@ export async function constructSystemMessage(
   // Construct the comprehensive system message
   let systemMessage = baseSystemMessage;
 
-  // Add plan mode specific instructions if in plan mode
+  // The turn's instructions: a plan turn in plan mode, an act turn otherwise.
+  // The same texts serve the IDE, so the two surfaces cannot drift apart; the
+  // model's prompt profile picks the short text for small models (Qwen).
   if (mode === "plan") {
-    systemMessage +=
-      '\n<context name="planMode">You are operating in _Plan Mode_, which means that your goal is to help the user investigate their ideas and develop a plan before taking action. You only have access to read-only tools and should not attempt to circumvent them to write / delete / create files. Bash commands ask the user for approval first, and it is not acceptable to use the Bash tool to write to files. When your plan is ready, present it with the PresentPlan tool and stop: the user then chooses to build it or to keep planning.</context>\n';
+    systemMessage += `\n<context name="planMode">\n${planTurnFor(model, CLI_TURN_TOOL_NAMES)}\n</context>\n`;
   } else {
+    systemMessage += `\n<context name="agentMode">\n${actTurnFor(model, CLI_TURN_TOOL_NAMES)}\n</context>\n`;
     // Check if commit signature is disabled via environment variable
     if (!process.env.CONTINUE_CLI_DISABLE_COMMIT_SIGNATURE) {
       systemMessage += `\n<context name="commitSignature">When creating commits using any CLI or tool, include the following in the commit message:

@@ -40,6 +40,11 @@ vi.mock("./streamChatResponse.helpers.js", () => ({
 
 // Import the mocked modules
 import {
+  checkRepeatedCall,
+  resetRepeatGuard,
+  startRepeatRound,
+} from "./repeatGuard.js";
+import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
 } from "./streamChatResponse.helpers.js";
@@ -388,5 +393,111 @@ describe("handleToolCalls - duplicate tool_result prevention", () => {
       (item) => item.message.role === "tool",
     );
     expect(separateToolMessages).toHaveLength(0);
+  });
+});
+
+// The repeat guard (repeatGuard.ts) runs here, before preprocessing, for
+// headless and interactive runs alike.
+
+describe("handleToolCalls - the repeat guard", () => {
+  const read = (id: string) => ({
+    id,
+    name: "Read",
+    arguments: { filepath: "a.ts" },
+    argumentsStr: '{"filepath":"a.ts"}',
+    startNotified: false,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetRepeatGuard();
+    vi.mocked(services.chatHistory.isReady).mockReturnValue(true);
+    mockPreprocess.mockImplementation(async (_h, calls) => ({
+      preprocessedCalls: calls.map((c) => ({ ...c, tool: {} as any })),
+      errorChatEntries: [],
+    }));
+    mockExecute.mockImplementation(async (calls) => ({
+      hasRejection: false,
+      chatHistoryEntries: calls.map((c) => ({
+        role: "tool" as const,
+        tool_call_id: c.id,
+        content: "ok",
+        status: "done" as const,
+      })),
+    }));
+  });
+
+  const run = (toolCalls: any[], isHeadless = false) =>
+    handleToolCalls({
+      toolCalls,
+      chatHistory: [],
+      content: "",
+      callbacks: undefined,
+      isHeadless,
+    });
+
+  it("refuses the third identical call without preprocessing or running it", async () => {
+    expect(await run([read("1")])).toBe(false);
+    expect(await run([read("2")])).toBe(false);
+    expect(await run([read("3")])).toBe(false);
+    expect(mockPreprocess).toHaveBeenCalledTimes(3);
+    expect(mockPreprocess.mock.calls[2][1]).toEqual([]);
+    expect(mockExecute.mock.calls[2][0]).toEqual([]);
+    expect(services.chatHistory.addToolResult).toHaveBeenCalledWith(
+      "3",
+      expect.stringContaining("Read was not run"),
+      "canceled",
+    );
+  });
+
+  it("ends the turn at the sixth identical call, interactive or headless", async () => {
+    for (let i = 1; i <= 5; i++) {
+      expect(await run([read(String(i))])).toBe(false);
+    }
+    expect(await run([read("6")])).toBe(true);
+  });
+
+  it("counts rounds of invalid calls and appends the note to their error", async () => {
+    mockPreprocess.mockImplementation(async (_h, calls) => ({
+      preprocessedCalls: [],
+      errorChatEntries: calls.map((c) => ({
+        role: "tool" as const,
+        tool_call_id: c.id,
+        content: "Required parameter filepath missing",
+      })),
+    }));
+    mockExecute.mockResolvedValue({
+      hasRejection: false,
+      chatHistoryEntries: [],
+    });
+    const invalid = (id: string, n: number) => ({
+      id,
+      name: "Read",
+      arguments: { other: n },
+      argumentsStr: "{}",
+      startNotified: false,
+    });
+    expect(await run([invalid("1", 1)])).toBe(false);
+    expect(await run([invalid("2", 2)])).toBe(false);
+    expect(await run([invalid("3", 3)])).toBe(false);
+    expect(services.chatHistory.addToolResult).toHaveBeenLastCalledWith(
+      "3",
+      expect.stringContaining("3rd round in a row"),
+      "errored",
+    );
+    expect(await run([invalid("4", 4)])).toBe(false);
+    expect(await run([invalid("5", 5)])).toBe(false);
+    expect(await run([invalid("6", 6)])).toBe(true);
+  });
+
+  it("a different call resets the guard", async () => {
+    await run([read("1")]);
+    await run([read("2")]);
+    await run([{ ...read("3"), arguments: { filepath: "b.ts" } }]);
+    await run([read("4")]);
+    expect(mockExecute.mock.calls[3][0]).toHaveLength(1);
+    // The guard's own state, for comparison
+    startRepeatRound();
+    expect(checkRepeatedCall(read("x")).refusal).toBeUndefined();
   });
 });

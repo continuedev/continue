@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
   applyCrossRegionInference,
+  bedrockFinishReason,
   bedrockModelAccessMessage,
+  bedrockReasoningFields,
+  bedrockSamplingParams,
+  bedrockToolsNeedNonStreaming,
   bedrockUsageToCompletionUsage,
+  budgetTokensToEffort,
+  crossRegionFallbackModelId,
+  effortToBudgetTokens,
   getBedrockErrorHint,
   inferenceProfilePrefixForRegion,
+  isInvalidModelIdentifierError,
+  isStreamingToolUseUnsupportedError,
   resolveBedrockCacheParts,
+  ThinkingSplit,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers.js";
 
 describe("inferenceProfilePrefixForRegion", () => {
@@ -218,5 +230,246 @@ describe("resolveBedrockCacheParts", () => {
     [undefined, { cacheSystemMessage: true }, false, none],
   ] as const)("requested=%s behavior=%j hasSystem=%s", (r, b, s, expected) => {
     expect(resolveBedrockCacheParts(r, b, s)).toEqual(expected);
+  });
+});
+
+describe("bedrockReasoningFields", () => {
+  it("maps effort and budget both ways as the GUI does", () => {
+    for (const effort of ["low", "medium", "high"] as const) {
+      expect(budgetTokensToEffort(effortToBudgetTokens(effort))).toBe(effort);
+    }
+  });
+
+  it("sends Claude thinking, adaptive on the models that take it", () => {
+    expect(
+      bedrockReasoningFields(
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
+        true,
+        1024,
+      ),
+    ).toEqual({
+      additionalModelRequestFields: {
+        thinking: { type: "enabled", budget_tokens: 1024 },
+      },
+      omitMaxTokens: false,
+    });
+    expect(
+      bedrockReasoningFields("us.anthropic.claude-sonnet-4-6", true, 16384)
+        .additionalModelRequestFields,
+    ).toEqual({
+      thinking: { type: "adaptive" },
+      output_config: { effort: "high" },
+    });
+    expect(
+      bedrockReasoningFields("us.anthropic.claude-sonnet-4-6", false, 16384)
+        .additionalModelRequestFields,
+    ).toEqual({});
+  });
+
+  it("sends Nova 2 reasoningConfig and drops maxTokens at high", () => {
+    expect(
+      bedrockReasoningFields("us.amazon.nova-2-lite-v1:0", true, 16384),
+    ).toEqual({
+      additionalModelRequestFields: {
+        reasoningConfig: { type: "enabled", maxReasoningEffort: "high" },
+      },
+      omitMaxTokens: true,
+    });
+    expect(
+      bedrockReasoningFields("us.amazon.nova-2-lite-v1:0", true, 1024)
+        .omitMaxTokens,
+    ).toBe(false);
+  });
+
+  it("sends Qwen3 and DeepSeek V3.2 reasoning_effort, none only when explicitly off", () => {
+    expect(
+      bedrockReasoningFields("qwen.qwen3-32b-v1:0", true, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({ reasoning_effort: "medium" });
+    expect(
+      bedrockReasoningFields("deepseek.v3.2", false, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({ reasoning_effort: "none" });
+    expect(
+      bedrockReasoningFields("deepseek.v3.2", undefined, 4096)
+        .additionalModelRequestFields,
+    ).toEqual({});
+  });
+
+  it.each([
+    "us.deepseek.r1-v1:0",
+    "us.amazon.nova-pro-v1:0",
+    "amazon.nova-premier-v1:0",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+    "mistral.mistral-large-3-675b-instruct",
+  ])("sends %s nothing", (id) => {
+    expect(bedrockReasoningFields(id, true, 16384)).toEqual({
+      additionalModelRequestFields: {},
+      omitMaxTokens: false,
+    });
+  });
+});
+
+describe("bedrockSamplingParams", () => {
+  const claude = "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+  it("keeps Claude to temperature when both are set, neither with thinking", () => {
+    expect(bedrockSamplingParams(claude, 0.5, 0.9, false)).toEqual({
+      temperature: 0.5,
+    });
+    expect(bedrockSamplingParams(claude, undefined, 0.9, false)).toEqual({
+      temperature: undefined,
+      topP: 0.9,
+    });
+    expect(bedrockSamplingParams(claude, 0.5, undefined, true)).toEqual({});
+  });
+  it("leaves other families alone", () => {
+    expect(
+      bedrockSamplingParams("us.amazon.nova-2-lite-v1:0", 0.5, 0.9, true),
+    ).toEqual({
+      temperature: 0.5,
+      topP: 0.9,
+    });
+  });
+});
+
+describe("cross-region prefix fallback", () => {
+  it("recognises the refusal", () => {
+    expect(
+      isInvalidModelIdentifierError(
+        new Error(
+          "ValidationException: The provided model identifier is invalid.",
+        ),
+      ),
+    ).toBe(true);
+    expect(isInvalidModelIdentifierError(new Error("Throttling"))).toBe(false);
+  });
+  it("offers the bare ID only when auto added the prefix", () => {
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "auto", "us-east-1"),
+    ).toBe("qwen.qwen3-32b-v1:0");
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "us", "us-east-1"),
+    ).toBeUndefined();
+    expect(
+      crossRegionFallbackModelId("us.qwen.qwen3-32b-v1:0", "auto", "us-east-1"),
+    ).toBeUndefined();
+    expect(
+      crossRegionFallbackModelId("qwen.qwen3-32b-v1:0", "auto", "sa-east-1"),
+    ).toBeUndefined();
+  });
+});
+
+describe("bedrockFinishReason", () => {
+  it.each([
+    ["max_tokens", "length"],
+    ["tool_use", "tool_calls"],
+    ["end_turn", "stop"],
+    ["stop_sequence", "stop"],
+    ["content_filtered", "content_filter"],
+    ["guardrail_intervened", "content_filter"],
+    ["new_reason", "stop"],
+  ])("%s -> %s", (stop, finish) => {
+    expect(bedrockFinishReason(stop)).toBe(finish);
+  });
+});
+
+describe("tools through Converse for models that cannot stream them", () => {
+  it.each([
+    "us.meta.llama4-maverick-17b-instruct-v1:0",
+    "meta.llama4-scout-17b-instruct-v1:0",
+    "qwen.qwen3-32b-v1:0",
+    "us.qwen.qwen3-32b-v1:0",
+  ])("%s needs the non-streaming route", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(true);
+  });
+
+  it.each([
+    "us.anthropic.claude-haiku-4-5",
+    "amazon.nova-pro-v1:0",
+    "qwen.qwen3-coder-next",
+    "qwen.qwen3-coder-30b-a3b-v1:0",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+  ])("%s streams tools as usual", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(false);
+  });
+
+  it("recognises Bedrock's refusal of tools in streaming mode", () => {
+    expect(
+      isStreamingToolUseUnsupportedError(
+        new Error("This model doesn't support tool use in streaming mode."),
+      ),
+    ).toBe(true);
+    expect(isStreamingToolUseUnsupportedError(new Error("boom"))).toBe(false);
+  });
+});
+
+describe("Nova's <thinking> tags in the text", () => {
+  it("applies to Nova Pro, Lite, Micro and Premier, not Nova 2 or others", () => {
+    for (const id of [
+      "amazon.nova-pro-v1:0",
+      "us.amazon.nova-lite-v1:0",
+      "amazon.nova-micro-v1:0",
+      "us.amazon.nova-premier-v1:0",
+    ]) {
+      expect(writesThinkingTags(id)).toBe(true);
+    }
+    expect(writesThinkingTags("us.amazon.nova-2-lite-v1:0")).toBe(false);
+    expect(writesThinkingTags("us.anthropic.claude-haiku-4-5")).toBe(false);
+  });
+
+  const join = (parts: ThinkingSplit[]) =>
+    parts.reduce(
+      (acc, p) => ({
+        content: acc.content + p.content,
+        reasoning: acc.reasoning + p.reasoning,
+      }),
+      { content: "", reasoning: "" },
+    );
+
+  it("lifts the tagged text into reasoning and keeps the rest as content", () => {
+    const s = new ThinkingTagSplitter();
+    const out = join([
+      s.push("<thinking>Let me check the file.</thinking>\n\nThe answer is 4."),
+      s.flush(),
+    ]);
+    expect(out).toEqual({
+      reasoning: "Let me check the file.",
+      content: "The answer is 4.",
+    });
+  });
+
+  it("handles a tag split across deltas", () => {
+    const s = new ThinkingTagSplitter();
+    const out = join([
+      s.push("<thin"),
+      s.push("king>I rea"),
+      s.push("son</thi"),
+      s.push("nking>Done"),
+      s.flush(),
+    ]);
+    expect(out).toEqual({ reasoning: "I reason", content: "Done" });
+  });
+
+  it("holds back a possible tag start and releases it when it was only text", () => {
+    const s = new ThinkingTagSplitter();
+    const first = s.push("a <");
+    expect(first.content).toBe("a ");
+    const rest = join([s.push(" b and c"), s.flush()]);
+    expect(rest.content).toBe("< b and c");
+    expect(rest.reasoning).toBe("");
+  });
+
+  it("flushes a held fragment at the end of the block", () => {
+    const s = new ThinkingTagSplitter();
+    expect(s.push("text <").content).toBe("text ");
+    expect(s.flush()).toEqual({ content: "<", reasoning: "" });
+  });
+
+  it("leaves text without tags alone", () => {
+    const s = new ThinkingTagSplitter();
+    expect(join([s.push("Hello"), s.push(" world"), s.flush()])).toEqual({
+      content: "Hello world",
+      reasoning: "",
+    });
   });
 });

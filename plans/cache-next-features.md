@@ -186,7 +186,7 @@ Run through the built adapter and the built CLI (`dist/cn.js`, headless, a throw
 | Does the CLI itself cache and record it?         | Yes. Six sequential file reads in one headless session: 49,645 cache read and 16,742 cache write tokens in the session file, 3,141 uncached. A first request of about 3,000 tokens wrote nothing, so a short CLI session starts below the cache minimum.  |
 | Claude models, 5-minute cache points             | Haiku 4.5, Haiku 5.5 and Sonnet 5.5 write on request 1 and read on 2 and 3. Only these three were checked for the 5-minute default.                                                                                                                       |
 | GPT 5.6 Sol and 6.1 Sol                          | Cache by themselves, with no cache point: write on request 1, read on 2 and 3. They reject a request that carries a cache point; AWS says Converse does not support their explicit breakpoints.                                                           |
-| Nova Pro                                         | Rejects the cache point; with none sent, no caching shown.                                                                                                                                                                                                |
+| Nova Pro                                         | Rejected the request, which carried a cache point in the tool list; with none sent, no caching shown. AWS lists Nova with checkpoints in `system` and `messages` only; see Nova on Bedrock below.                                                         |
 | Grok 4.7                                         | Rejects the cache point; without it, reads appear from request 2 and writes never do.                                                                                                                                                                     |
 | Does a read refresh the 5-minute lifetime?       | Yes. An entry written at 0:00 and read at 4:30 was still read at 9:00. Untouched, it was gone at 5:30. An entry read at 4:30 and then left was gone at 9:36 (about 5 minutes after its last read). Same result on Haiku 4.5 and Sonnet 5.5.               |
 | Does `ttl: 1h` work?                             | Accepted on Haiku 4.5, Haiku 5.5, Sonnet 5.5 and Opus 5.5. `cacheDetails` reports the lifetime of each write, so the 5-minute and 1-hour split can be priced. Other Claude models were not open to this role, so the allowlist is not confirmed for them. |
@@ -195,10 +195,35 @@ Run through the built adapter and the built CLI (`dist/cn.js`, headless, a throw
 
 What this changed:
 
-- **A bug, fixed:** `promptCaching: true` sent cache points to every model on Bedrock, which breaks GPT, Nova and Grok. The adapter now sends them to Claude models only (`33ca5f9e4`), and so does `core`'s Bedrock provider (`99cfe2542` on `feat/auto-request-count`).
+- **A bug, fixed:** `promptCaching: true` sent cache points to every model on Bedrock, which breaks GPT, Nova and Grok. The adapter now sends them to Claude models only (`33ca5f9e4`), and so does `core`'s Bedrock provider (`99cfe2542` on `feat/auto-request-count`). Too broad for Nova, which takes them outside the tool list: see Nova on Bedrock below.
 - **Keepalive:** a read refreshes the lifetime, so the 1.3% estimate for pings rests on a confirmed mechanism. It is still a small gain for 71,000 extra requests, so it stays deferred.
 - **C18:** GPT models report cache writes with no lifetime detail, and Grok reports reads only. A read-only status needs per-family wording, not one 30-minute ring.
 - **Not done:** the fine boundary between 4:30 and 5:06 (the docs do not give it), the long-gap runs for GPT, and the other Claude models.
+
+## Nova on Bedrock (2026-11-08)
+
+Why six `cn serve` runs on Nova 2 Lite (`us.amazon.nova-2-lite-v1:0`, 2026-11-08, plans/loop-mode.md) reported `cachedTokens: 0` and `cacheWriteTokens: 0` on every request, and what changed.
+
+**Does Nova 2 Lite cache on Bedrock?** Yes, both ways. The AWS prompt caching guide's "Supported models" table (read 2026-11-08) lists Nova 2 Lite, Nova Pro, Nova Lite and Nova Micro for explicit caching: minimum "1K" tokens per checkpoint, 4 checkpoints, 5 minutes only, checkpoints in `system` and `messages` (not `tools`), and a footnote that Nova caches at most 20K tokens. Nova also has implicit caching for every text prompt, but the guide says that reuse "isn't reported in the cache usage fields and isn't billed as cache reads". So a Nova run with no cache points may be faster and still show zero, and the zero is real as far as billing goes. Nova Premier and the other Nova 2 models are not in the table. Price (AWS pricing page as relayed by aggregators, 2026-11-08, not read from AWS directly): Nova 2 Lite input $0.30/MTok, cache read $0.075/MTok, no separate write rate.
+
+**Did our requests ask for it?** No, for two reasons, both ours.
+
+1. The Bedrock adapter (the path `cn` uses) and core's Bedrock provider built cache points only when the model ID contained `claude`, after the 2026-11-04 live run above saw Nova Pro refuse a request. That request carried `promptCaching: true`, which puts a cache point in the tool list, the one field Nova does not accept. The refusal was read as "Nova takes no cache points".
+2. The CLI's default (`bedrockCachingSettings` in extensions/cli/src/config.ts) turned caching on, when the config said nothing, for Claude only. The scenario config said nothing, so the adapter received `promptCaching: undefined` and sent no cache points.
+
+**Would our usage reading have seen it?** Yes. The adapter maps the Converse stream's `metadata.usage` (`cacheReadInputTokens`, `cacheWriteInputTokens`, `cacheDetails`) into `prompt_tokens_details.cache_read_tokens` and `cache_write_tokens`; the CLI records those as `cachedTokens` and `cacheWriteTokens` in the session usage that `cn serve` exposes in `/state`. The build the scenarios ran carried that mapping (checked in its bundle), and it reported `prompt_tokens` correctly from the same event. Only the request side was missing.
+
+**What changed (branch `claude/bedrock-nova-cache`):**
+
+- `bedrockCachePointFields(modelId)` in both Bedrock helper copies says which fields take a cache point: Claude all three, the four Nova models `system` and `messages`, everything else none. `bedrockCachePartsForModel` masks the configured parts with it, so `promptCaching: true` on Nova caches the system prompt and the last two user messages and leaves the tool list alone; GPT, Grok and unlisted Nova models still get nothing. A core test fails if the two copies disagree.
+- `bedrockCacheTtl` already returned the default for a non-Claude model, so no `ttl` reaches Nova.
+- The CLI default turns caching on for the four Nova models too, with no lifetime (Nova takes 5 minutes only). `promptCaching: false` still wins.
+- `minCacheableTokens` knows Nova's 1,024-token minimum on Bedrock, so the CLI's cache line can say when a request was under it.
+- An opt-in live test, `Bedrock.novaCache.live.vitest.ts`, sends two requests with a 1,500-token system prompt and a tool, and expects a write then a read. Run on 2026-11-08 against `us.amazon.nova-2-lite-v1:0` in us-east-1: request 1 wrote 3,123 tokens and read none; request 2 read 3,022 and wrote 101 (the new user message). Cost under a cent.
+
+**For the Loop design (plans/policy-areas.md):** the stable-prefix argument holds on Nova 2 Lite once cache points are sent, with two limits that Claude does not have: only the first 20K tokens of the prompt are cached, and the lifetime is 5 minutes with no 1-hour option, so a loop that pauses longer than that between model calls rewrites its prefix. The Bedrock models with the fullest support stay the Claude rows of the AWS table (tools, system and messages; 512 to 4,096-token minimums; 5 minutes or 1 hour). GPT on Bedrock caches implicitly with no cache points through Converse; Grok reports reads only.
+
+**Verified live** (2026-11-08): Nova 2 Lite accepted a request with a tool list, a cache point after the system prompt and one on each of the last two user messages, and reported the write and the read in `metadata.usage`. The field table otherwise comes from the AWS guide and the 2026-11-04 refusal.
 
 ## Sources, read 2026-11-04
 

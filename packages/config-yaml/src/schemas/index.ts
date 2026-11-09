@@ -123,11 +123,34 @@ export const modeModelSchema = z
   });
 export type ModeModel = z.infer<typeof modeModelSchema>;
 
-/** Per-mode model selection. Modes without an entry keep the current model. */
+/**
+ * Model (by its `name` in `models:`) for a use that has no picker of its own:
+ * loop items, re-plans, the reviewer, subagents. One model, no list.
+ */
+export const useModelSchema = z.object({
+  model: z.string().min(1),
+  reasoningEffort: reasoningEffortSchema.optional(),
+});
+export type UseModel = z.infer<typeof useModelSchema>;
+
+/**
+ * Which model does what. Modes without an entry keep the current model;
+ * `loop` falls back to `agent`, `replan` to `plan`, `subagent` to the chat
+ * model of the turn that started it, and `reviewer` to the model selected
+ * for the reviewer role.
+ */
 export const modeModelsSchema = z.object({
   chat: modeModelSchema.optional(),
   agent: modeModelSchema.optional(),
   plan: modeModelSchema.optional(),
+  /** Loop item turns. */
+  loop: useModelSchema.optional(),
+  /** Loop re-plans, check-ins and repairs. */
+  replan: useModelSchema.optional(),
+  /** The Auto reviewer. Any model, whatever its roles. */
+  reviewer: useModelSchema.optional(),
+  /** Subagents whose definition does not name a model. */
+  subagent: useModelSchema.optional(),
 });
 export type ModeModels = z.infer<typeof modeModelsSchema>;
 

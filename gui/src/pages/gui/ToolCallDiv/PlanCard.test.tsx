@@ -111,6 +111,102 @@ describe("PlanCard", () => {
     expect(openFile).toHaveBeenCalledWith(PLAN_URI);
   });
 
+  describe("decisions", () => {
+    const QUESTION = "Which format should formatDate return?";
+    const FILE_WITH_DECISIONS =
+      "# Add retry\n\nWrap it.\n\n## Decisions\n\n" +
+      `- ${QUESTION}\n  - type: scope\n  - options: ISO 8601 | November 8, 2026\n  - pick: ISO 8601\n  - to-dos: 1\n` +
+      "- Keep the old endpoint?\n  - pick: yes\n\n" +
+      "## To-dos\n\n- [ ] Add a helper <!-- id: 1 -->\n- [ ] Use it <!-- id: 2 -->\n";
+
+    /** Renders the card with the given decisions; captures what it writes. */
+    async function setupDecisions(decisions: unknown[]) {
+      const ideMessenger = new MockIdeMessenger();
+      ideMessenger.responseHandlers.readFile = async () => FILE_WITH_DECISIONS;
+      const written: string[] = [];
+      ideMessenger.responseHandlers.writeFile = async (data) => {
+        written.push(data.contents);
+      };
+      const store = setupStore({ ideMessenger });
+      await renderWithProviders(
+        <PlanCard
+          toolCallState={{
+            ...toolCallState,
+            parsedArgs: { ...toolCallState.parsedArgs, decisions },
+          }}
+          historyIndex={1}
+        />,
+        { store, mockIdeMessenger: ideMessenger },
+      );
+      return { written };
+    }
+
+    const withOptions = [
+      {
+        question: QUESTION,
+        options: ["ISO 8601", "November 8, 2026"],
+        pick: "ISO 8601",
+        type: "scope",
+        todos: [1],
+      },
+    ];
+
+    it("lists the decisions with the options as buttons, the pick marked", async () => {
+      await setupDecisions(withOptions);
+      const decisions = screen.getByTestId("plan-card-decisions");
+      expect(decisions.textContent).toContain(QUESTION);
+      expect(decisions.textContent).toContain("(scope)");
+      expect(decisions.textContent).toContain("To-dos 1 wait on this.");
+      const options = screen.getAllByTestId("plan-card-decision-option");
+      expect(options.map((o) => o.textContent)).toEqual([
+        "ISO 8601 (pick)",
+        "November 8, 2026",
+      ]);
+      expect(screen.queryByTestId("plan-card-decision-answer")).toBeNull();
+    });
+
+    it("an option button writes the answer into the plan file and shows it", async () => {
+      const { written } = await setupDecisions(withOptions);
+      await act(async () => {
+        fireEvent.click(screen.getAllByTestId("plan-card-decision-option")[1]);
+      });
+      await waitFor(() => expect(written).toHaveLength(1));
+      const file = written[0];
+      expect(file).toContain(`- ${QUESTION}\n`);
+      expect(file).toContain("  - answer: November 8, 2026\n");
+      // The rest of the file is kept as it was: title, body, the other
+      // decision (unanswered) and the to-dos with their ids.
+      expect(file).toContain("# Add retry\n\nWrap it.\n");
+      expect(file).toContain("- Keep the old endpoint?\n  - pick: yes\n");
+      expect(file).toContain("- [ ] Add a helper <!-- id: 1 -->\n");
+      expect(file).toContain("- [ ] Use it <!-- id: 2 -->\n");
+      expect(
+        screen.getByTestId("plan-card-decision-answered").textContent,
+      ).toBe("Answer: November 8, 2026");
+    });
+
+    it("a decision without options takes a typed answer", async () => {
+      const { written } = await setupDecisions([
+        { question: "Keep the old endpoint?", pick: "yes" },
+      ]);
+      expect(screen.queryByTestId("plan-card-decision-option")).toBeNull();
+      const input = screen.getByTestId("plan-card-decision-answer");
+      await act(async () => {
+        fireEvent.change(input, { target: { value: "No, remove it" } });
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("plan-card-decision-submit"));
+      });
+      await waitFor(() => expect(written).toHaveLength(1));
+      expect(written[0]).toContain(
+        "- Keep the old endpoint?\n  - pick: yes\n  - answer: No, remove it\n",
+      );
+      expect(
+        screen.getByTestId("plan-card-decision-answered").textContent,
+      ).toBe("Answer: No, remove it");
+    });
+  });
+
   it("Keep planning stays in Plan mode and sends nothing", async () => {
     const { store } = await setup();
     await act(async () => {

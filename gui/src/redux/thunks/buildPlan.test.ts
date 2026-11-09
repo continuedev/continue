@@ -81,6 +81,29 @@ describe("buildPlan", () => {
     ]);
   });
 
+  it("tells the model what the file's decisions say", async () => {
+    const s = store(
+      "# Add retry\n\n## Decisions\n\n" +
+        "- Which format?\n  - options: ISO 8601 | Long\n  - pick: ISO 8601\n  - to-dos: 1\n  - answer: Long\n" +
+        "- Keep the old endpoint?\n  - pick: yes\n\n" +
+        "## To-dos\n\n- [ ] Add a helper <!-- id: 1 -->\n- [ ] Use it <!-- id: 2 -->\n",
+    );
+    await s.dispatch(buildPlan({ planFile: PLAN_URI }) as any);
+    const text = sentText(s);
+    expect(text).toContain("Build the plan in .continuous/plans/add-retry.md");
+    expect(text).toContain("Decisions:");
+    expect(text).toContain("1. Which format? (to-dos 1): decided: Long");
+    expect(text).toContain(
+      "2. Keep the old endpoint?: open; the person has not decided. Do not settle it.",
+    );
+  });
+
+  it("sends no decision lines when the file has none", async () => {
+    const s = store("# Add retry\n\n## To-dos\n\n- [ ] Add a helper\n");
+    await s.dispatch(buildPlan({ planFile: PLAN_URI }) as any);
+    expect(sentText(s)).not.toContain("Decisions:");
+  });
+
   it("still builds when the file cannot be read, keeping the list", async () => {
     const s = store(new Error("gone"));
     await s.dispatch(buildPlan({ planFile: PLAN_URI }) as any);

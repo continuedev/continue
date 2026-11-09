@@ -1,4 +1,9 @@
 import { normalizeClaudeModelId } from "../utils/calculateRequestCost.js";
+import { resolveCacheParts } from "./anthropicCache.js";
+import {
+  budgetTokensToEffort,
+  supportsAdaptiveThinking,
+} from "./anthropicThinking.js";
 
 /**
  * Pure helpers for the Bedrock provider (kept separate from Bedrock.ts so they
@@ -61,11 +66,36 @@ export function applyCrossRegionInference(
  */
 export function getBedrockErrorHint(
   error: unknown,
-  ctx: { profile?: string; region?: string; usedProfile?: boolean },
+  ctx: {
+    profile?: string;
+    region?: string;
+    usedProfile?: boolean;
+    /** The request was signed with a Bedrock API key (bearer token). */
+    apiKey?: boolean;
+  },
 ): string | undefined {
   const err = error as { name?: string; message?: string } | undefined;
   const text = `${err?.name ?? ""} ${err?.message ?? ""}`;
   const profileArg = ctx.profile ? ` --profile ${ctx.profile}` : "";
+
+  // A 403 with this text is all Bedrock says when a short-term key is used
+  // outside the region it was generated for (seen live 2026-11-08).
+  if (ctx.apiKey && /make sure your API Key is valid/i.test(text)) {
+    return `Bedrock rejected the API key${
+      ctx.region ? ` in ${ctx.region}` : ""
+    }. A short-term key only works in the region it was generated for, so \`region\` must match it; a long-term key may have expired or been revoked.`;
+  }
+  // A retired model: ResourceNotFoundException "This model version has
+  // reached the end of its life" (Nova Premier, seen live 2026-11-08) while
+  // ListInferenceProfiles and GetFoundationModelAvailability still say yes.
+  // Access or a profile would not help, so neither is suggested.
+  if (/reached the end of its life/i.test(text)) {
+    return "This model has been retired (end of life) and Bedrock no longer serves it, although its inference profile is still listed. Pick a current model: Test connection in the model picker lists the ones this account can use.";
+  }
+  // A ResourceNotFoundException, not an AccessDenied, so it is matched first.
+  if (/marked by provider as Legacy/i.test(text)) {
+    return "This model is legacy and Bedrock no longer serves it to accounts that have not used it in the last 30 days. Pick a current model: Test connection in the model picker lists them and marks the ones that need access.";
+  }
 
   if (
     /sso/i.test(text) &&
@@ -172,6 +202,12 @@ export interface BedrockModelOption {
    * use-case form. Bedrock still lists it as ACTIVE, but chat is refused.
    */
   needsAnthropicUseCase?: boolean;
+  /**
+   * What GetFoundationModelAvailability says about this account's access to
+   * the model. Absent when it was not asked (Amazon's own models) or the
+   * lookup failed.
+   */
+  access?: BedrockModelAccess;
 }
 
 function baseModelIdFromArn(arn: string | undefined): string | undefined {
@@ -221,6 +257,11 @@ export function buildModelCatalog(
 
     // System profiles must point at an eligible text model; application
     // profiles are the user's own, so keep them even if we can't classify them.
+    // This also drops a profile whose base model Bedrock no longer lists: on
+    // 2026-11-08 ListInferenceProfiles still returned
+    // us.amazon.nova-premier-v1:0 (ACTIVE) while amazon.nova-premier-v1:0 was
+    // absent from ListFoundationModels and requests to it failed with "reached
+    // the end of its life".
     if (!isApplication && !fm) continue;
 
     const geography = id.split(".")[0];
@@ -317,6 +358,74 @@ export function bedrockUsageToUsage(usage: BedrockTokenUsageLike): {
     promptTokens: usage.inputTokens ?? 0,
     completionTokens: usage.outputTokens ?? 0,
     promptTokensDetails: details,
+  };
+}
+
+/** Which parts of a Converse request get, or may get, a cache point. */
+export interface BedrockCacheParts {
+  tools: boolean;
+  system: boolean;
+  conversation: boolean;
+}
+
+/**
+ * Amazon Nova models that take explicit cache checkpoints: the Nova rows of the
+ * "Supported models" table in the AWS Bedrock prompt caching guide (checked
+ * 2026-11-08) are Nova 2 Lite, Nova Pro, Nova Lite and Nova Micro, each with a
+ * 1K-token minimum, 4 checkpoints, a 5-minute lifetime only, and checkpoints
+ * in `system` and `messages` but not `tools`. Nova Premier and the other Nova
+ * 2 models are not in the table and get nothing. `us.amazon.nova-2-lite-v1:0`
+ * and `amazon.nova-pro-v1:0` match; `nova-premier` and `nova-2-pro` do not.
+ */
+const NOVA_CACHE_MODELS = /(^|\.)amazon\.nova-(2-lite|pro|lite|micro)-v\d/i;
+
+/**
+ * Which fields of a Converse request accept a `cachePoint` on this model, or
+ * undefined for a model that accepts none. Claude takes one in `tools`,
+ * `system` and `messages`. Nova takes `system` and `messages` only: checked
+ * live on 2026-11-04, a Nova model refused a request whose tool list carried a
+ * cache point, which is what `promptCaching: true` used to send it, and the
+ * AWS table lists `system` and `messages` for Nova. GPT and Grok on Bedrock
+ * cache by themselves and refuse any cache point. A `ttl` is a separate
+ * question (`bedrockCacheTtl`): Nova takes only the 5-minute default.
+ *
+ * There are two copies, this one and the one in
+ * packages/openai-adapters/src/apis/bedrockHelpers.ts; see
+ * `bedrockSupportsOneHourCache` for why, and bedrockCacheFields.vitest.ts
+ * fails if they disagree.
+ */
+export function bedrockCachePointFields(
+  modelId: string,
+): BedrockCacheParts | undefined {
+  if (/claude/i.test(modelId)) {
+    return { tools: true, system: true, conversation: true };
+  }
+  if (NOVA_CACHE_MODELS.test(modelId)) {
+    return { tools: false, system: true, conversation: true };
+  }
+  return undefined;
+}
+
+/**
+ * `resolveCacheParts`, limited to the fields this model accepts a cache point
+ * in, and nothing at all for a model that accepts none, so `promptCaching:
+ * true` on a GPT, Grok or unlisted Nova model sends no `cachePoint` field (the
+ * request would be refused).
+ */
+export function bedrockCachePartsForModel(
+  modelId: string,
+  requested: boolean | undefined,
+  behavior:
+    { cacheSystemMessage?: boolean; cacheConversation?: boolean } | undefined,
+  hasSystem: boolean,
+): BedrockCacheParts {
+  const fields = bedrockCachePointFields(modelId);
+  if (!fields) return { tools: false, system: false, conversation: false };
+  const parts = resolveCacheParts(requested, behavior, hasSystem);
+  return {
+    tools: parts.tools && fields.tools,
+    system: parts.system && fields.system,
+    conversation: parts.conversation && fields.conversation,
   };
 }
 
@@ -469,4 +578,444 @@ export function normalizeToolUseIds<
     }
   }
   return messages;
+}
+
+/**
+ * Whether Bedrock refused a request because it does not know the model ID.
+ * Happens when `crossRegionInference: auto` put a geographic prefix on a
+ * model that is only offered on demand (`qwen.*`, `deepseek.v3.2`, the newer
+ * Mistral models): `us.qwen.qwen3-32b-v1:0` answers "The provided model
+ * identifier is invalid".
+ */
+export function isInvalidModelIdentifierError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /provided model identifier is invalid/i.test(message);
+}
+
+/**
+ * Models whose tool calls must go through Converse rather than
+ * ConverseStream (checked live 2026-11-08):
+ *
+ * - Llama 4 Maverick and Scout refuse every ConverseStream request that
+ *   carries tools with "This model doesn't support tool use in streaming
+ *   mode."; the same request to Converse returns a proper toolUse block.
+ * - Qwen3 32B streams tool input with its opening fragment missing, so the
+ *   arguments never parse; Converse returned complete input every time.
+ *
+ * Requests without tools stream as usual. There are two copies, this one and
+ * packages/openai-adapters/src/apis/bedrockHelpers.ts (see
+ * `bedrockSupportsOneHourCache` for why).
+ */
+const NON_STREAMING_TOOL_MODELS: RegExp[] = [
+  /(^|\.)meta\.llama4-/i,
+  /(^|\.)qwen\.qwen3-32b($|[-:])/i,
+];
+
+export function bedrockToolsNeedNonStreaming(modelId: string): boolean {
+  return NON_STREAMING_TOOL_MODELS.some((m) => m.test(modelId));
+}
+
+/** Bedrock's refusal of tools in ConverseStream, for a retry through Converse. */
+export function isStreamingToolUseUnsupportedError(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e ?? "");
+  return /doesn't support tool use in streaming mode/i.test(message);
+}
+
+/**
+ * Nova Pro, Lite, Micro and Premier write their reasoning into the text as
+ * literal `<thinking>...</thinking>` (Nova Pro, seen live 2026-11-08), so the
+ * GUI showed the reasoning as the answer. Nova 2 uses reasoningContent and
+ * does not match.
+ */
+export function writesThinkingTags(modelId: string): boolean {
+  return /nova-(pro|lite|micro|premier)/i.test(modelId);
+}
+
+const THINKING_OPEN = "<thinking>";
+const THINKING_CLOSE = "</thinking>";
+
+/** Text split into what is shown as the answer and what is shown as reasoning. */
+export interface ThinkingSplit {
+  content: string;
+  reasoning: string;
+}
+
+/** The longest proper prefix of `tag` that `text` ends with, as a length. */
+function trailingTagPrefix(text: string, tag: string): number {
+  const max = Math.min(text.length, tag.length - 1);
+  for (let n = max; n > 0; n--) {
+    if (tag.startsWith(text.slice(-n))) return n;
+  }
+  return 0;
+}
+
+/**
+ * Lifts `<thinking>...</thinking>` out of a text stream into reasoning, one
+ * block at a time: `push` takes each text delta and returns what can be shown
+ * now, holding back a trailing fragment that could still become a tag;
+ * `flush` releases what is held when the block ends. Text outside the tags
+ * stays content; the newlines right after a closing tag are dropped so the
+ * answer does not start with a blank line. Two copies, as above.
+ */
+export class ThinkingTagSplitter {
+  private hold = "";
+  private inside = false;
+  private skipNewlines = false;
+
+  push(text: string): ThinkingSplit {
+    let buffered = this.hold + text;
+    this.hold = "";
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    for (;;) {
+      if (this.skipNewlines) {
+        buffered = buffered.replace(/^[\r\n]+/, "");
+        if (buffered) this.skipNewlines = false;
+      }
+      const tag = this.inside ? THINKING_CLOSE : THINKING_OPEN;
+      const at = buffered.indexOf(tag);
+      if (at !== -1) {
+        this.emit(out, buffered.slice(0, at));
+        buffered = buffered.slice(at + tag.length);
+        this.inside = !this.inside;
+        if (!this.inside) this.skipNewlines = true;
+        continue;
+      }
+      const partial = trailingTagPrefix(buffered, tag);
+      this.hold = partial ? buffered.slice(-partial) : "";
+      this.emit(out, partial ? buffered.slice(0, -partial) : buffered);
+      return out;
+    }
+  }
+
+  /** What is still held when the block ends: a fragment that never became a tag. */
+  flush(): ThinkingSplit {
+    const out: ThinkingSplit = { content: "", reasoning: "" };
+    this.emit(out, this.hold);
+    this.hold = "";
+    return out;
+  }
+
+  private emit(out: ThinkingSplit, text: string): void {
+    if (!text) return;
+    if (this.inside) out.reasoning += text;
+    else out.content += text;
+  }
+}
+
+/**
+ * The model ID to retry with when the prefixed one is refused as invalid: the
+ * bare ID, but only when the prefix was guessed from the region by `auto`. An
+ * explicit prefix or an ID the user wrote with a prefix is their choice and is
+ * not second-guessed.
+ */
+export function crossRegionFallbackModelId(
+  modelId: string,
+  setting: string | undefined,
+  region: string | undefined,
+): string | undefined {
+  if (setting !== "auto") return undefined;
+  const applied = applyCrossRegionInference(modelId, setting, region);
+  return applied === modelId ? undefined : modelId;
+}
+
+export type BedrockReasoningEffort = "low" | "medium" | "high";
+
+/** What a Converse request sends to turn a model's reasoning on or off. */
+export interface BedrockReasoningRequest {
+  /** Spread into `additionalModelRequestFields`; empty when nothing is sent. */
+  additionalModelRequestFields: Record<string, unknown>;
+  /** Nova 2 refuses `maxTokens` when its reasoning effort is `high`. */
+  omitMaxTokens: boolean;
+}
+
+const NOVA_2_MODEL = /nova-2-/i;
+/** Qwen3 and DeepSeek V3.2 share a backend that takes `reasoning_effort`. */
+const REASONING_EFFORT_MODEL = /(^|\.)(qwen\.|deepseek\.v3)/i;
+
+/**
+ * The reasoning switch per model family, measured live on 2026-11-08
+ * (probe-model-families.md):
+ *
+ * - Claude: Anthropic's `thinking` (adaptive with `output_config.effort` on
+ *   the models that take it, else `budget_tokens`).
+ * - Nova 2 (`nova-2-`): `reasoningConfig: { type: "enabled",
+ *   maxReasoningEffort }`, and no `maxTokens` at `high`. Nova Pro, Lite,
+ *   Micro and Premier refuse any `reasoningConfig`.
+ * - Qwen3 and DeepSeek V3.2: `reasoning_effort` low, medium or high turns
+ *   reasoning on; `"none"` turns it off, and is sent only when the config
+ *   says `reasoning: false`, never by default. `xhigh` is refused.
+ * - DeepSeek R1 reasons always and refuses every additional field; Llama
+ *   refuses `thinking` as an extraneous key; Mistral ignores it. Nothing is
+ *   sent to them.
+ *
+ * There are two copies, this one and the one in
+ * packages/openai-adapters/src/apis/bedrockHelpers.ts (see
+ * `bedrockSupportsOneHourCache` for why); bedrockReasoningFields.vitest.ts
+ * fails if they disagree.
+ */
+export function bedrockReasoningFields(
+  modelId: string,
+  reasoning: boolean | undefined,
+  budgetTokens: number,
+): BedrockReasoningRequest {
+  const none = { additionalModelRequestFields: {}, omitMaxTokens: false };
+  if (/claude/i.test(modelId)) {
+    if (!reasoning) return none;
+    if (supportsAdaptiveThinking(modelId)) {
+      return {
+        additionalModelRequestFields: {
+          thinking: { type: "adaptive" },
+          output_config: { effort: budgetTokensToEffort(budgetTokens) },
+        },
+        omitMaxTokens: false,
+      };
+    }
+    return {
+      additionalModelRequestFields: {
+        thinking: { type: "enabled", budget_tokens: budgetTokens },
+      },
+      omitMaxTokens: false,
+    };
+  }
+  if (NOVA_2_MODEL.test(modelId)) {
+    if (!reasoning) return none;
+    const effort = budgetTokensToEffort(budgetTokens);
+    return {
+      additionalModelRequestFields: {
+        reasoningConfig: { type: "enabled", maxReasoningEffort: effort },
+      },
+      omitMaxTokens: effort === "high",
+    };
+  }
+  if (REASONING_EFFORT_MODEL.test(modelId)) {
+    if (reasoning === undefined) return none;
+    return {
+      additionalModelRequestFields: {
+        reasoning_effort: reasoning
+          ? budgetTokensToEffort(budgetTokens)
+          : "none",
+      },
+      omitMaxTokens: false,
+    };
+  }
+  return none;
+}
+
+/**
+ * The sampling fields a Claude model on Bedrock accepts: `temperature` and
+ * `topP` together are refused even without thinking ("cannot both be
+ * specified"), so only `temperature` is kept when both are set; with thinking
+ * on, `temperature` other than 1 and `topP` below 0.95 are refused, so neither
+ * is sent. Other families take both. `topK` is never sent on Bedrock.
+ *
+ * Two copies, as `bedrockReasoningFields`.
+ */
+export function bedrockSamplingParams(
+  modelId: string,
+  temperature: number | undefined,
+  topP: number | undefined,
+  reasoning: boolean,
+): { temperature?: number; topP?: number } {
+  if (!/claude/i.test(modelId)) return { temperature, topP };
+  if (reasoning) return {};
+  if (temperature !== undefined && topP !== undefined) return { temperature };
+  return { temperature, topP };
+}
+
+/**
+ * DeepSeek V3.2 on Bedrock ends the text block before each `toolUse` block
+ * with this fragment of its own tool-call markup (fullwidth bars), in Converse
+ * and in the stream.
+ */
+export const DEEPSEEK_DSML_MARKER = "<\uFF5CDSML\uFF5Cfunction_calls";
+
+export function leaksDsmlMarker(modelId: string): boolean {
+  return /(^|\.)deepseek\.v3/i.test(modelId);
+}
+
+/**
+ * Splits text buffered from one content block into what can be shown now and
+ * what has to wait: the marker may arrive split across deltas, so a trailing
+ * piece that could still become it is held back, and once the marker is seen
+ * it and everything after it are held for `flushDsmlHold` to drop at the end
+ * of the block.
+ */
+export function holdBackDsmlMarker(buffered: string): {
+  emit: string;
+  hold: string;
+} {
+  const at = buffered.indexOf(DEEPSEEK_DSML_MARKER);
+  if (at !== -1) {
+    return { emit: buffered.slice(0, at), hold: buffered.slice(at) };
+  }
+  const max = Math.min(buffered.length, DEEPSEEK_DSML_MARKER.length - 1);
+  for (let n = max; n > 0; n--) {
+    if (DEEPSEEK_DSML_MARKER.startsWith(buffered.slice(-n))) {
+      return { emit: buffered.slice(0, -n), hold: buffered.slice(-n) };
+    }
+  }
+  return { emit: buffered, hold: "" };
+}
+
+/** What held-back text to show when its block ends: nothing if it was the marker. */
+export function flushDsmlHold(hold: string): string {
+  return hold.startsWith(DEEPSEEK_DSML_MARKER) ? "" : hold;
+}
+
+/**
+ * Whether a conversation cache point may only follow a text block of a user
+ * message. Nova refuses a cachePoint next to a toolResult ("extraneous key
+ * [cachePoint]", seen live 2026-11-08 at the second request of every
+ * multi-turn run), so a user message made of tool results gets none. Claude
+ * takes a cache point after a toolResult.
+ */
+export function bedrockCachePointAfterTextOnly(modelId: string): boolean {
+  return !/claude/i.test(modelId);
+}
+
+/** Bedrock's `stopReason` as OpenAI's `finish_reason`. */
+export function bedrockFinishReason(
+  stopReason: string,
+): "stop" | "length" | "tool_calls" | "content_filter" {
+  switch (stopReason) {
+    case "max_tokens":
+    case "model_context_window_exceeded":
+      return "length";
+    case "tool_use":
+      return "tool_calls";
+    case "content_filtered":
+    case "guardrail_intervened":
+      return "content_filter";
+    default:
+      return "stop";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Model access and inference profile hints (added 2026-11-08)
+// ---------------------------------------------------------------------------
+
+/**
+ * The account's access to a model, from GetFoundationModelAvailability:
+ * "needs-access" when the agreement is NOT_AVAILABLE (or the identity is not
+ * authorised, not entitled, or the region does not serve it), "pending" while
+ * an agreement request is open, else "available".
+ */
+export type BedrockModelAccess = "available" | "needs-access" | "pending";
+
+/** Subset of GetFoundationModelAvailabilityResponse we rely on. */
+export interface FoundationModelAvailabilityLike {
+  agreementAvailability?: { status?: string; errorMessage?: string };
+  authorizationStatus?: string;
+  entitlementAvailability?: string;
+  regionAvailability?: string;
+}
+
+export function modelAccessFromAvailability(
+  availability: FoundationModelAvailabilityLike,
+): BedrockModelAccess {
+  const agreement = availability.agreementAvailability?.status;
+  if (agreement === "PENDING") return "pending";
+  if (
+    agreement === "NOT_AVAILABLE" ||
+    agreement === "ERROR" ||
+    availability.authorizationStatus === "NOT_AUTHORIZED" ||
+    availability.entitlementAvailability === "NOT_AVAILABLE" ||
+    availability.regionAvailability === "NOT_AVAILABLE"
+  ) {
+    return "needs-access";
+  }
+  return "available";
+}
+
+/**
+ * The base model IDs worth an availability lookup: every third-party model in
+ * the catalog. Amazon's own models need no agreement, and application
+ * profiles over unknown models have no base to ask about.
+ */
+export function modelsNeedingAccessCheck(
+  catalog: BedrockModelOption[],
+): string[] {
+  const ids = new Set<string>();
+  for (const option of catalog) {
+    const baseId = option.baseModelId;
+    if (!baseId || option.kind === "application-profile") continue;
+    if (option.provider === "Amazon" || baseId.startsWith("amazon.")) continue;
+    ids.add(baseId);
+  }
+  return [...ids];
+}
+
+/** Stamp each catalog entry with the access state of its base model. */
+export function applyModelAccess(
+  catalog: BedrockModelOption[],
+  access: ReadonlyMap<string, BedrockModelAccess>,
+): BedrockModelOption[] {
+  return catalog.map((option) => {
+    const state = option.baseModelId
+      ? access.get(option.baseModelId)
+      : undefined;
+    return state ? { ...option, access: state } : option;
+  });
+}
+
+/** The profile IDs to use in place of a bare model ID. */
+export interface InferenceProfileSuggestion {
+  /** The geographic profile (`us.`, `eu.`, ...), the one for `region` if listed. */
+  regional?: string;
+  /** The `global.` profile, when the catalog lists one. */
+  global?: string;
+}
+
+/**
+ * For a bare model ID that the catalog offers only through inference profiles,
+ * the profile IDs to use instead. Undefined when the ID already carries a
+ * prefix, is an ARN, is offered on demand, or is unknown to the catalog (an
+ * unknown ID is reported by Bedrock itself, and a stale catalog must not
+ * second-guess it).
+ */
+export function inferenceProfileSuggestion(
+  catalog: Pick<BedrockModelOption, "id" | "kind" | "baseModelId">[],
+  modelId: string,
+  region: string | undefined,
+): InferenceProfileSuggestion | undefined {
+  if (modelId.startsWith("arn:")) return undefined;
+  if (INFERENCE_PROFILE_PREFIXES.some((p) => modelId.startsWith(`${p}.`))) {
+    return undefined;
+  }
+  if (catalog.some((o) => o.kind === "on-demand" && o.id === modelId)) {
+    return undefined;
+  }
+  const profiles = catalog.filter(
+    (o) => o.kind === "inference-profile" && o.baseModelId === modelId,
+  );
+  if (profiles.length === 0) return undefined;
+
+  const wanted = inferenceProfilePrefixForRegion(region);
+  const geographic = profiles.filter((o) => !o.id.startsWith("global."));
+  const regional =
+    geographic.find((o) => wanted && o.id.startsWith(`${wanted}.`)) ??
+    geographic[0];
+  const global = profiles.find((o) => o.id.startsWith("global."));
+  return { regional: regional?.id, global: global?.id };
+}
+
+/** The config warning for a bare ID that needs an inference profile. */
+export function inferenceProfileWarning(
+  modelId: string,
+  region: string | undefined,
+  suggestion: InferenceProfileSuggestion,
+): string {
+  const ids = [suggestion.regional, suggestion.global].filter(
+    (id): id is string => !!id,
+  );
+  const useIds =
+    ids.length === 0
+      ? ""
+      : ` or use the profile ID ${ids.map((id) => `\`${id}\``).join(" or ")}`;
+  return (
+    `Bedrock model \`${modelId}\` is only offered through an inference profile` +
+    `${region ? ` in ${region}` : ""}, so requests with this ID will be refused. ` +
+    `Set \`crossRegionInference: auto\` under \`env\`${useIds}.`
+  );
 }

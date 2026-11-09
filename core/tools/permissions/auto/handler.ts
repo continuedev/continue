@@ -10,6 +10,7 @@ import { ReviewEnvironment, ReviewHistory } from "./prompt";
 import {
   DEFAULT_REVIEW_TIMEOUT_MS,
   reviewToolCall,
+  ReviewerReasoning,
   unavailable,
 } from "./review";
 import { AutoReviewSessions } from "./state";
@@ -54,6 +55,8 @@ export interface AutoReviewDeps {
   enabled: boolean;
   /** The model chosen for the reviewer role; never a chat model. */
   reviewer: Pick<ILLM, "chat"> | null | undefined;
+  /** `modeModels.reviewer.reasoningEffort`, as completion options. */
+  reviewerReasoning?: ReviewerReasoning;
   environment: ReviewEnvironment;
   sessions: AutoReviewSessions;
   timeoutMs?: number;
@@ -149,6 +152,7 @@ export async function autoReviewToolCall(
         timeoutMs: deps.timeoutMs ?? DEFAULT_REVIEW_TIMEOUT_MS,
         signal: deps.signal,
         headless: req.headless,
+        reasoning: deps.reviewerReasoning,
       },
     ));
   if (!cached) state.remember(req.toolName, req.parsedArgs, raw);

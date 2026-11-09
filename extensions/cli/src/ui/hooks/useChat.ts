@@ -354,19 +354,30 @@ export function useChat({
       historyLength: newHistory.length,
     });
 
+    // The model as it is now, not as it was when this render happened: a
+    // Loop turn or a mode change may have just switched it (`modeModels`),
+    // and the props follow a render later
+    const live = services.model?.getState?.();
+    const turnModel = live?.model ?? model;
+    const turnLlmApi = live?.llmApi ?? llmApi;
+
     let failed = false;
     try {
       const streamCallbacks = createStreamCallbacks({
         setChatHistory: setChatHistory,
         setActivePermissionRequest,
-        llmApi,
-        model,
+        llmApi: turnLlmApi,
+        model: turnModel,
+        onShowStatusMessage,
       });
       // Steering: deliver queued messages at the next tool boundary when the
       // person asked for it (Enter on an empty prompt while the agent works),
       // and Loop mode's answers for the running item at the same boundary.
       streamCallbacks.onToolBoundary = withLoopSteering(() =>
-        buildSteeringMessage(messageQueue, { onShowStatusMessage, model }),
+        buildSteeringMessage(messageQueue, {
+          onShowStatusMessage,
+          model: turnModel,
+        }),
       );
       streamCallbacks.onModelStreaming = (streaming: boolean) => {
         modelStreamingRef.current = streaming;
@@ -375,8 +386,8 @@ export function useChat({
       // Execute streaming chat response
       await executeStreaming({
         chatHistory: newHistory,
-        model,
-        llmApi,
+        model: turnModel,
+        llmApi: turnLlmApi,
         controller,
         streamCallbacks,
         currentCompactionIndex,

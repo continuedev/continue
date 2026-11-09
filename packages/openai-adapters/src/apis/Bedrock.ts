@@ -3,6 +3,8 @@ import {
   ContentBlock,
   ContentBlockStart,
   ConversationRole,
+  ConverseCommand,
+  ConverseCommandOutput,
   ConverseStreamCommand,
   ConverseStreamCommandInput,
   ImageFormat,
@@ -20,7 +22,7 @@ import {
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
-  ChatCompletionMessageToolCall,
+  ChatCompletionMessageFunctionToolCall,
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
@@ -31,14 +33,29 @@ import {
 
 import {
   applyCrossRegionInference,
+  bedrockCachePartsForModel,
   bedrockCachePoint,
+  bedrockCachePointAfterTextOnly,
   bedrockCacheTtl,
+  bedrockFinishReason,
   bedrockModelAccessMessage,
+  bedrockReasoningFields,
+  bedrockSamplingParams,
+  bedrockToolsNeedNonStreaming,
   bedrockUsageToCompletionUsage,
-  getBedrockErrorHint,
+  crossRegionFallbackModelId,
+  effortToBudgetTokens,
   fillMissingToolResults,
+  flushDsmlHold,
+  getBedrockErrorHint,
+  holdBackDsmlMarker,
+  isInvalidModelIdentifierError,
+  isStreamingToolUseUnsupportedError,
+  leaksDsmlMarker,
   normalizeToolUseIds,
-  resolveBedrockCacheParts,
+  ThinkingSplit,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers.js";
 import {
   AutoCacheTtl,
@@ -82,13 +99,70 @@ function isTaskListBlockText(text: string | undefined): boolean {
   return !!text && text.startsWith(TASK_LIST_BLOCK_OPEN);
 }
 
-// Utility function to get or generate UUID for prompt caching
-function getSecureID(): string {
-  // Adding a type declaration for the static property
-  if (!(getSecureID as any).uuid) {
-    (getSecureID as any).uuid = uuidv4();
+/**
+ * Prefixed model IDs (`us.qwen...`) that Bedrock refused as invalid in this
+ * process because the model is only offered on demand. Requests for them go
+ * out with the bare ID from then on.
+ */
+const modelsWithoutInferencePrefix = new Set<string>();
+
+/**
+ * Models that answered a ConverseStream request with tools with "This model
+ * doesn't support tool use in streaming mode." in this process. Their
+ * requests with tools go through Converse from then on, like the models in
+ * bedrockToolsNeedNonStreaming.
+ */
+const modelsWithoutStreamingTools = new Set<string>();
+
+/** Nova 2 returns this in place of its reasoning text; the tokens are billed. */
+const NOVA_REDACTED_REASONING = "[REDACTED].";
+
+/** A chunk delta with the reasoning fields core's chunk reader understands. */
+type ReasoningDelta = ChatCompletionChunk.Choice["delta"] & {
+  reasoning_content?: string;
+  reasoning_details?: Record<string, unknown>[];
+};
+
+/** The reasoning fields of a Converse reasoning block or stream delta. */
+interface ReasoningLike {
+  text?: string;
+  signature?: string;
+  redactedContent?: Uint8Array;
+}
+
+/**
+ * Reasoning as the OpenAI-style fields core's chunk reader takes: text as
+ * reasoning_content, the signature and redacted bytes in reasoning_details
+ * (the signature is read from its first entry). Nova 2's placeholder text
+ * is redacted thinking, not a thought.
+ */
+function reasoningDeltaFor(
+  reasoning: ReasoningLike,
+  isNova2: boolean,
+): ReasoningDelta | undefined {
+  if (reasoning.redactedContent) {
+    return {
+      reasoning_details: [
+        {
+          type: "reasoning.encrypted",
+          data: Buffer.from(reasoning.redactedContent).toString("base64"),
+        },
+      ],
+    };
   }
-  return `<!-- SID: ${(getSecureID as any).uuid} -->`;
+  if (reasoning.text !== undefined) {
+    return isNova2 && reasoning.text === NOVA_REDACTED_REASONING
+      ? {
+          reasoning_details: [
+            { type: "reasoning.encrypted", data: reasoning.text },
+          ],
+        }
+      : { reasoning_content: reasoning.text };
+  }
+  if (reasoning.signature) {
+    return { reasoning_details: [{ signature: reasoning.signature }] };
+  }
+  return undefined;
 }
 
 /**
@@ -296,7 +370,7 @@ export class BedrockApi implements BaseLlmApi {
   private _convertMessages(
     oaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     availableTools: Set<string>,
-    cache?: { conversation: boolean; ttl?: "1h" },
+    cache?: { conversation: boolean; ttl?: "1h"; afterTextOnly?: boolean },
   ): Message[] {
     let currentRole: "user" | "assistant" = "user";
     let currentBlocks: ContentBlock[] = [];
@@ -432,54 +506,88 @@ export class BedrockApi implements BaseLlmApi {
 
     // If caching is enabled, add cache points
     if (cache?.conversation) {
-      this._addCachingToLastTwoUserMessages(converted, cache.ttl);
+      this._addCachingToLastTwoUserMessages(
+        converted,
+        cache.ttl,
+        cache.afterTextOnly ?? false,
+      );
     }
 
     return converted;
   }
 
   /**
-   * Put cache points on the last two user messages, and make the cached prefix
-   * unique to this process.
+   * Put cache points on the last two user messages.
    *
-   * Bedrock caches at the AWS account level, so identical prompts from
-   * different users or processes would share entries. A random ID in the
-   * prompt prevents that. It has to be in the same place on every request: if
-   * it were appended to the last two user messages, a message would lose its
-   * ID when it fell out of that window, its bytes would change, and the cached
-   * conversation would stop matching. So the ID goes on the first user message
-   * only, and every later cached prefix includes it.
+   * No per-process marker goes into the prompt. One used to (a random
+   * `<!-- SID: ... -->` on the first user message, meant to keep users of one
+   * AWS account from sharing cache entries), but a cache hit needs the
+   * identical prefix and yields nothing but a cheaper request, so the marker
+   * bought no isolation and made every resumed or forked session rewrite its
+   * whole history at the cache-write price instead of reading it (measured
+   * 2026-11-08).
    *
    * The task list block (TASK_LIST_BLOCK_OPEN) is the last text of the last
    * user message and changes between requests, so the cache point goes before
    * it: the next request, which no longer has the block there, then starts
    * with exactly the bytes this one cached.
+   *
+   * With `afterTextOnly` (Nova) a cache point goes right after the last text
+   * block of a user message, and a user message with no text block (tool
+   * results only) gets none: Nova refuses a cachePoint next to a toolResult
+   * ("extraneous key [cachePoint]"), which ended every multi-turn Nova run at
+   * its second request. Claude takes it after a toolResult.
    */
-  private _addCachingToLastTwoUserMessages(converted: Message[], ttl?: "1h") {
-    const first = converted.find((m) => m.role === "user");
-    first?.content?.forEach((block) => {
-      if (block.text && !isTaskListBlockText(block.text)) {
-        block.text += getSecureID();
-      }
-    });
-
+  private _addCachingToLastTwoUserMessages(
+    converted: Message[],
+    ttl?: "1h",
+    afterTextOnly = false,
+  ) {
     let numCached = 0;
-    for (let i = converted.length - 1; i >= 0; i--) {
+    for (let i = converted.length - 1; i >= 0 && numCached < 2; i--) {
       const message = converted[i];
-      if (message.role === "user") {
-        const content = message.content ?? [];
+      if (message.role !== "user") continue;
+      const content = message.content ?? [];
+      if (afterTextOnly) {
+        const at = content.findLastIndex(
+          (block) =>
+            block.text !== undefined && !isTaskListBlockText(block.text),
+        );
+        if (at === -1) continue;
+        content.splice(at + 1, 0, bedrockCachePoint(ttl));
+      } else {
         const last = content[content.length - 1];
         if (content.length > 1 && isTaskListBlockText(last?.text)) {
           content.splice(content.length - 1, 0, bedrockCachePoint(ttl));
         } else {
           content.push(bedrockCachePoint(ttl));
         }
-        numCached++;
       }
-      if (numCached === 2) {
-        break;
-      }
+      numCached++;
     }
+  }
+
+  /**
+   * `reasoning_effort` from the OpenAI body as the reasoning switch: unset
+   * sends nothing, `none` turns reasoning off where a model takes an explicit
+   * off, and the others turn it on (`minimal` as low, `xhigh` and `max` as
+   * high, the most any Bedrock family accepts). The config has no reasoning
+   * field of its own, so the body is the only source.
+   */
+  private reasoningFromBody(oaiBody: ChatCompletionCreateParams): {
+    reasoning: boolean | undefined;
+    budgetTokens: number;
+  } {
+    const effort = oaiBody.reasoning_effort;
+    if (!effort) return { reasoning: undefined, budgetTokens: 0 };
+    if (effort === "none") return { reasoning: false, budgetTokens: 0 };
+    const level =
+      effort === "minimal" || effort === "low"
+        ? "low"
+        : effort === "medium"
+          ? "medium"
+          : "high";
+    return { reasoning: true, budgetTokens: effortToBudgetTokens(level) };
   }
 
   private _convertBody(
@@ -502,17 +610,19 @@ export class BedrockApi implements BaseLlmApi {
     const availableTools = new Set<string>();
     let toolConfig: ToolConfiguration | undefined = undefined;
 
-    // Only Claude models take cache points. The others (GPT, Nova, Grok, ...)
-    // either cache by themselves or not at all, and reject a request that
-    // carries a cachePoint field, so `promptCaching: true` must not reach them.
-    const parts =
-      /claude/i.test(oaiBody.model) && !optsOutOfPromptCache(oaiBody)
-        ? resolveBedrockCacheParts(
-            this.config.promptCaching,
-            this.config.cacheBehavior,
-            !!systemMessageText,
-          )
-        : { tools: false, system: false, conversation: false };
+    // Cache points go only where the model accepts them: Claude takes them on
+    // the tools, the system prompt and the messages; Nova on the system prompt
+    // and the messages only; GPT and Grok cache by themselves and reject a
+    // request that carries a cachePoint field anywhere, so `promptCaching:
+    // true` must not reach them. See `bedrockCachePointFields`.
+    const parts = optsOutOfPromptCache(oaiBody)
+      ? { tools: false, system: false, conversation: false }
+      : bedrockCachePartsForModel(
+          oaiBody.model,
+          this.config.promptCaching,
+          this.config.cacheBehavior,
+          !!systemMessageText,
+        );
 
     // The lifetime to ask for on every cache point of this request, only for a
     // model that accepts one (an unsupported `ttl` can fail the request).
@@ -547,6 +657,9 @@ export class BedrockApi implements BaseLlmApi {
             throw new Error(`Unsupported tool type in Bedrock: ${tool.type}`);
           }
         }),
+        // Without it Llama 3.3 writes the call as plain JSON text; every
+        // tool-capable family accepts it (checked live, 2026-11-08).
+        toolChoice: { auto: {} },
       } as ToolConfiguration;
 
       // Add cache point after the tool list
@@ -567,10 +680,26 @@ export class BedrockApi implements BaseLlmApi {
         this._convertMessages(oaiBody.messages, availableTools, {
           conversation: parts.conversation,
           ttl: cacheTtl,
+          afterTextOnly: bedrockCachePointAfterTextOnly(oaiBody.model),
         }),
         "The user cancelled this tool call.",
       ),
       oaiBody.model,
+    );
+
+    // The reasoning switch differs per family (see bedrockReasoningFields);
+    // Claude's sampling fields depend on whether thinking is on.
+    const { reasoning, budgetTokens } = this.reasoningFromBody(oaiBody);
+    const reasoningRequest = bedrockReasoningFields(
+      oaiBody.model,
+      reasoning,
+      budgetTokens,
+    );
+    const sampling = bedrockSamplingParams(
+      oaiBody.model,
+      oaiBody.temperature ?? undefined,
+      oaiBody.top_p ?? undefined,
+      reasoning === true,
     );
 
     // Build final request body
@@ -583,9 +712,11 @@ export class BedrockApi implements BaseLlmApi {
       messages: convertedMessages,
       ...this.extraConverseFields(),
       inferenceConfig: {
-        temperature: oaiBody.temperature,
-        topP: oaiBody.top_p,
-        maxTokens: oaiBody.max_tokens,
+        temperature: sampling.temperature,
+        topP: sampling.topP,
+        maxTokens: reasoningRequest.omitMaxTokens
+          ? undefined
+          : oaiBody.max_tokens,
         stopSequences: Array.isArray(oaiBody.stop)
           ? oaiBody.stop.filter((s) => s.trim() !== "").slice(0, 4)
           : oaiBody.stop
@@ -606,19 +737,156 @@ export class BedrockApi implements BaseLlmApi {
       body.toolConfig = toolConfig;
     }
 
-    // Add reasoning if needed
-    // TODO REASONING
-    // if (this.c) {
-    //   body.additionalModelRequestFields = {
-    //     thinking: {
-    //       type: "enabled",
-    //       budget_tokens:
-    //         oaiBody.additionalModelRequestFields.reasoningBudgetTokens,
-    //     },
-    //   };
-    // }
+    if (Object.keys(reasoningRequest.additionalModelRequestFields).length) {
+      body.additionalModelRequestFields =
+        reasoningRequest.additionalModelRequestFields;
+    }
 
     return body;
+  }
+
+  /**
+   * Sends a ConverseStream request. A prefixed model ID that Bedrock does not
+   * know is retried once as `fallbackModelId` (the bare ID, when the prefix
+   * came from `crossRegionInference: auto`) and remembered, so later requests
+   * skip the failing attempt.
+   */
+  private async sendConverseStream(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+  ) {
+    if (fallbackModelId && modelsWithoutInferencePrefix.has(input.modelId!)) {
+      input.modelId = fallbackModelId;
+    }
+    try {
+      return await client.send(new ConverseStreamCommand(input), {
+        abortSignal: signal,
+      });
+    } catch (e) {
+      if (
+        !fallbackModelId ||
+        input.modelId === fallbackModelId ||
+        !isInvalidModelIdentifierError(e)
+      ) {
+        throw e;
+      }
+      modelsWithoutInferencePrefix.add(input.modelId!);
+      input.modelId = fallbackModelId;
+      return await client.send(new ConverseStreamCommand(input), {
+        abortSignal: signal,
+      });
+    }
+  }
+
+  /** Converse (no stream) with the same prefix retry as sendConverseStream. */
+  private async sendConverse(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+  ): Promise<ConverseCommandOutput> {
+    if (fallbackModelId && modelsWithoutInferencePrefix.has(input.modelId!)) {
+      input.modelId = fallbackModelId;
+    }
+    try {
+      return await client.send(new ConverseCommand(input), {
+        abortSignal: signal,
+      });
+    } catch (e) {
+      if (
+        !fallbackModelId ||
+        input.modelId === fallbackModelId ||
+        !isInvalidModelIdentifierError(e)
+      ) {
+        throw e;
+      }
+      modelsWithoutInferencePrefix.add(input.modelId!);
+      input.modelId = fallbackModelId;
+      return await client.send(new ConverseCommand(input), {
+        abortSignal: signal,
+      });
+    }
+  }
+
+  /**
+   * A request with tools to a model that cannot stream them
+   * (bedrockToolsNeedNonStreaming): sent through Converse, and the whole
+   * reply yielded as the chunks the stream would have produced: text, each
+   * toolUse block at its own index, reasoning, then the finish_reason chunk
+   * from stopReason and the usage chunk.
+   */
+  private async *converseWholeMessage(
+    client: BedrockRuntimeClient,
+    input: ConverseStreamCommandInput,
+    signal: AbortSignal,
+    fallbackModelId: string | undefined,
+    model: string,
+  ): AsyncGenerator<ChatCompletionChunk> {
+    const response = await this.sendConverse(
+      client,
+      input,
+      signal,
+      fallbackModelId,
+    );
+    const id = response.$metadata?.requestId;
+    const isNova2 = /nova-2-/i.test(model);
+    let toolIndex = -1;
+    for (const block of response.output?.message?.content ?? []) {
+      if (block.text) {
+        yield chatChunk({ content: block.text, model, id });
+      } else if (block.reasoningContent) {
+        const reasoningDelta = reasoningDeltaFor(
+          {
+            ...block.reasoningContent.reasoningText,
+            redactedContent: block.reasoningContent.redactedContent,
+          },
+          isNova2,
+        );
+        if (reasoningDelta) {
+          yield chatChunkFromDelta({
+            model,
+            id,
+            delta: { role: "assistant", ...reasoningDelta },
+          });
+        }
+      } else if (block.toolUse) {
+        toolIndex++;
+        yield chatChunkFromDelta({
+          model,
+          id,
+          delta: {
+            tool_calls: [
+              {
+                index: toolIndex,
+                id: block.toolUse.toolUseId,
+                type: "function",
+                function: {
+                  name: block.toolUse.name,
+                  arguments: JSON.stringify(block.toolUse.input ?? {}),
+                },
+              },
+            ],
+          },
+        });
+      }
+    }
+    if (response.stopReason) {
+      yield chatChunkFromDelta({
+        model,
+        id,
+        delta: {},
+        finish_reason: bedrockFinishReason(response.stopReason),
+      });
+    }
+    if (response.usage) {
+      yield usageChatChunk({
+        model,
+        id,
+        usage: bedrockUsageToCompletionUsage(response.usage),
+      });
+    }
   }
 
   async chatCompletionNonStream(
@@ -628,7 +896,10 @@ export class BedrockApi implements BaseLlmApi {
     let completion = "";
     let usage: ChatCompletion["usage"];
     let requestId: string | undefined;
-    const toolCalls: ChatCompletionMessageToolCall[] = [];
+    let finishReason: ChatCompletion.Choice["finish_reason"] | undefined;
+    // Tool calls arrive as a start chunk (id and name) followed by argument
+    // fragments at the same index.
+    const toolCalls: ChatCompletionMessageFunctionToolCall[] = [];
 
     for await (const chunk of this.chatCompletionStream(
       {
@@ -643,12 +914,38 @@ export class BedrockApi implements BaseLlmApi {
       if (chunk.id) {
         requestId = chunk.id;
       }
-      if (chunk.choices[0]?.delta?.content) {
-        completion += chunk.choices[0].delta.content;
+      const choice = chunk.choices[0];
+      if (!choice) continue;
+      if (choice.delta?.content) {
+        completion += choice.delta.content;
       }
-      // TODO tool calls not supported
+      for (const call of choice.delta?.tool_calls ?? []) {
+        const existing = toolCalls[call.index];
+        if (!existing) {
+          toolCalls[call.index] = {
+            id: call.id ?? "",
+            type: "function",
+            function: {
+              name: call.function?.name ?? "",
+              arguments: call.function?.arguments ?? "",
+            },
+          };
+        } else {
+          if (call.function?.name) existing.function.name = call.function.name;
+          if (call.function?.arguments) {
+            existing.function.arguments += call.function.arguments;
+          }
+        }
+      }
+      if (
+        choice.finish_reason &&
+        Object.keys(choice.delta ?? {}).length === 0
+      ) {
+        finishReason = choice.finish_reason;
+      }
     }
 
+    const calls = toolCalls.filter(Boolean);
     return {
       // Bedrock's own request ID when it sent one: it is the ID in the
       // invocation log and the bill.
@@ -660,11 +957,12 @@ export class BedrockApi implements BaseLlmApi {
         {
           index: 0,
           logprobs: null,
-          finish_reason: "stop",
+          finish_reason:
+            calls.length > 0 ? "tool_calls" : (finishReason ?? "stop"),
           message: {
             role: "assistant",
             content: completion,
-            tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+            tool_calls: calls.length > 0 ? calls : undefined,
             refusal: null,
           },
         },
@@ -680,12 +978,53 @@ export class BedrockApi implements BaseLlmApi {
     const requestBody = this._convertBody(body);
 
     try {
-      const command = new ConverseStreamCommand({
-        ...requestBody,
-      });
-
       const client = await this.getClient();
-      const response = await client.send(command, { abortSignal: signal });
+      const fallbackModelId = crossRegionFallbackModelId(
+        body.model,
+        this.config.env?.crossRegionInference,
+        this.config.env?.region,
+      );
+
+      // Tools go through Converse for models that cannot stream them, and for
+      // a model that refused them in streaming mode earlier in this process.
+      const toolsWithoutStreaming =
+        !!requestBody.toolConfig &&
+        (bedrockToolsNeedNonStreaming(body.model) ||
+          modelsWithoutStreamingTools.has(body.model));
+      if (toolsWithoutStreaming) {
+        yield* this.converseWholeMessage(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+          body.model,
+        );
+        return;
+      }
+
+      let response;
+      try {
+        response = await this.sendConverseStream(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+        );
+      } catch (e) {
+        // Llama 4's refusal: retried once through Converse and remembered
+        if (!requestBody.toolConfig || !isStreamingToolUseUnsupportedError(e)) {
+          throw e;
+        }
+        modelsWithoutStreamingTools.add(body.model);
+        yield* this.converseWholeMessage(
+          client,
+          { ...requestBody },
+          signal,
+          fallbackModelId,
+          body.model,
+        );
+        return;
+      }
 
       if (!response?.stream) {
         throw new Error("No stream received from Bedrock API");
@@ -695,25 +1034,90 @@ export class BedrockApi implements BaseLlmApi {
       // billing. It is known before the first event, so every chunk carries it.
       const id = response.$metadata?.requestId;
 
+      // DeepSeek V3.2 leaks a fragment of its tool-call markup at the end of
+      // the text before a toolUse block; held-back text waits here until the
+      // block ends (see holdBackDsmlMarker).
+      const filterDsml = leaksDsmlMarker(body.model);
+      let dsmlHold = "";
+      // Nova Pro, Lite and Micro write their reasoning as <thinking> tags in
+      // the text; the splitter lifts it into reasoning_content, holding back
+      // a fragment that could still become a tag (see ThinkingTagSplitter).
+      const thinkingTags = writesThinkingTags(body.model)
+        ? new ThinkingTagSplitter()
+        : undefined;
+      const splitChunks = (split: ThinkingSplit): ChatCompletionChunk[] => {
+        const chunks: ChatCompletionChunk[] = [];
+        if (split.reasoning) {
+          chunks.push(
+            chatChunkFromDelta({
+              model: body.model,
+              id,
+              delta: {
+                role: "assistant",
+                reasoning_content: split.reasoning,
+              } as ReasoningDelta,
+            }),
+          );
+        }
+        if (split.content) {
+          chunks.push(
+            chatChunk({ content: split.content, model: body.model, id }),
+          );
+        }
+        return chunks;
+      };
+      const isNova2 = /nova-2-/i.test(body.model);
+      // Each toolUse block gets its own tool_calls index, so a reply with
+      // several calls is not merged into one.
+      let toolIndex = -1;
+
       for await (const chunk of response.stream) {
+        if (dsmlHold && (chunk.contentBlockStop || chunk.messageStop)) {
+          const text = flushDsmlHold(dsmlHold);
+          dsmlHold = "";
+          if (text) yield chatChunk({ content: text, model: body.model, id });
+        }
+        if (thinkingTags && (chunk.contentBlockStop || chunk.messageStop)) {
+          yield* splitChunks(thinkingTags.flush());
+        }
+
         if (chunk.contentBlockDelta?.delta) {
           const delta: any = chunk.contentBlockDelta.delta;
 
           // Handle text content
           if (delta.text) {
-            yield chatChunk({
-              content: delta.text,
-              model: body.model,
-              id,
-            });
+            let text = delta.text;
+            if (filterDsml) {
+              const split = holdBackDsmlMarker(dsmlHold + text);
+              dsmlHold = split.hold;
+              text = split.emit;
+            }
+            if (thinkingTags) {
+              yield* splitChunks(thinkingTags.push(text));
+              continue;
+            }
+            if (text) {
+              yield chatChunk({
+                content: text,
+                model: body.model,
+                id,
+              });
+            }
             continue;
           }
 
-          // Handle thinking content (if reasoning enabled)
-          if (delta.reasoningContent?.text) {
-            // TODO reasoning
-            // Reasoning is not directly supported in OpenAI format,
-            // but we could add it as a special message
+          // Reasoning, as the OpenAI-style fields core's chunk reader takes
+          // (see reasoningDeltaFor).
+          const reasoning = delta.reasoningContent;
+          if (reasoning) {
+            const reasoningDelta = reasoningDeltaFor(reasoning, isNova2);
+            if (reasoningDelta) {
+              yield chatChunkFromDelta({
+                model: body.model,
+                id,
+                delta: { role: "assistant", ...reasoningDelta },
+              });
+            }
             continue;
           }
 
@@ -725,7 +1129,7 @@ export class BedrockApi implements BaseLlmApi {
               delta: {
                 tool_calls: [
                   {
-                    index: 0,
+                    index: Math.max(toolIndex, 0),
                     id: delta.toolUse.toolUseId,
                     type: "function",
                     function: {
@@ -743,13 +1147,14 @@ export class BedrockApi implements BaseLlmApi {
           const start: ContentBlockStart = chunk.contentBlockStart.start;
 
           if (start.toolUse) {
+            toolIndex++;
             yield chatChunkFromDelta({
               model: body.model,
               id,
               delta: {
                 tool_calls: [
                   {
-                    index: 0,
+                    index: toolIndex,
                     id: start.toolUse.toolUseId,
                     type: "function",
                     function: {
@@ -761,6 +1166,18 @@ export class BedrockApi implements BaseLlmApi {
               },
             });
           }
+        }
+
+        // Why the reply ended, as OpenAI's finish_reason on a chunk with an
+        // empty delta, so a client can tell truncation (max_tokens) from a
+        // finished answer.
+        if (chunk.messageStop?.stopReason) {
+          yield chatChunkFromDelta({
+            model: body.model,
+            id,
+            delta: {},
+            finish_reason: bedrockFinishReason(chunk.messageStop.stopReason),
+          });
         }
 
         // The metadata event arrives last and carries the token counts,

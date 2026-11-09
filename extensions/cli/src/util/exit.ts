@@ -4,7 +4,7 @@ import { backgroundJobService } from "../services/BackgroundJobService.js";
 import { getSessionUsage } from "../session.js";
 import { telemetryService } from "../telemetry/telemetryService.js";
 
-import { formatCacheTally } from "./cacheTally.js";
+import { formatCacheTally, splitInputTokens } from "./cacheTally.js";
 import { hadUnhandledError } from "./errorState.js";
 import { getGitDiffSnapshot } from "./git.js";
 import { logger } from "./logger.js";
@@ -14,6 +14,8 @@ import {
   getAgentIdFromArgs,
   postAgentMetadata,
 } from "./metadata.js";
+import { formatReplyTally, getTruncatedReplies } from "./replyTally.js";
+import { formatSessionCost } from "./sessionCost.js";
 
 /**
  * Options for updating agent metadata
@@ -77,16 +79,18 @@ function collectSummary(
 function collectSessionUsage(metadata: Record<string, any>): void {
   try {
     const usage = getSessionUsage();
-    if (usage.totalCost > 0) {
+    if (usage.totalCost > 0 || usage.promptTokens > 0) {
+      // promptTokens is the processed input; the cache parts are always given
+      const { cacheRead, cacheWrite } = splitInputTokens(usage);
       metadata.usage = {
         totalCost: parseFloat(usage.totalCost.toFixed(6)),
+        ...(usage.costEstimated && { costEstimated: true }),
         promptTokens: usage.promptTokens,
         completionTokens: usage.completionTokens,
-        ...(usage.promptTokensDetails?.cachedTokens && {
-          cachedTokens: usage.promptTokensDetails.cachedTokens,
-        }),
-        ...(usage.promptTokensDetails?.cacheWriteTokens && {
-          cacheWriteTokens: usage.promptTokensDetails.cacheWriteTokens,
+        cachedTokens: cacheRead,
+        cacheWriteTokens: cacheWrite,
+        ...(getTruncatedReplies() > 0 && {
+          truncatedReplies: getTruncatedReplies(),
         }),
       };
     }
@@ -148,43 +152,39 @@ function displaySessionUsage(): void {
 
   try {
     const usage = getSessionUsage();
-    if (usage.totalCost === 0) {
+    if (usage.totalCost === 0 && usage.promptTokens === 0) {
       return; // No usage to display
     }
 
     logger.info("\n" + "=".repeat(60));
     logger.info("Session Usage Summary");
     logger.info("=".repeat(60));
-    logger.info(`Total Cost: $${usage.totalCost.toFixed(6)}`);
+    logger.info(`Total Cost: ${formatSessionCost(usage)}`);
     logger.info("");
     logger.info("Token Usage:");
-    logger.info(`  Input Tokens:      ${usage.promptTokens.toLocaleString()}`);
+    // Input is what the provider processed: uncached plus cache reads plus
+    // cache writes. The parts are always shown.
+    const { uncached, cacheRead, cacheWrite } = splitInputTokens(usage);
+    logger.info(
+      `  Input Tokens:      ${usage.promptTokens.toLocaleString()} processed`,
+    );
+    logger.info(`    Uncached:        ${uncached.toLocaleString()}`);
+    logger.info(`    Cache Read:      ${cacheRead.toLocaleString()}`);
+    logger.info(`    Cache Write:     ${cacheWrite.toLocaleString()}`);
     logger.info(
       `  Output Tokens:     ${usage.completionTokens.toLocaleString()}`,
     );
 
-    if (usage.promptTokensDetails?.cachedTokens) {
-      logger.info(
-        `  Cache Read Tokens: ${usage.promptTokensDetails.cachedTokens.toLocaleString()}`,
-      );
-    }
-
-    if (usage.promptTokensDetails?.cacheWriteTokens) {
-      logger.info(
-        `  Cache Write Tokens: ${usage.promptTokensDetails.cacheWriteTokens.toLocaleString()}`,
-      );
-    }
-
     const totalTokens = usage.promptTokens + usage.completionTokens;
     logger.info(`  Total Tokens:      ${totalTokens.toLocaleString()}`);
 
-    // Counted per request this run, so it can differ from the cumulative
+    // Counted per request this run, so they can differ from the cumulative
     // totals above when the session was resumed.
     const cacheLine = formatCacheTally();
-    if (cacheLine) {
-      logger.info("");
-      logger.info(cacheLine);
-    }
+    const cutOff = formatReplyTally();
+    if (cacheLine || cutOff) logger.info("");
+    if (cacheLine) logger.info(cacheLine);
+    if (cutOff) logger.info(cutOff);
     logger.info("=".repeat(60) + "\n");
   } catch (err) {
     logger.debug("Failed to display session usage (non-critical)", err as any);

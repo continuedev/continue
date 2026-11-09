@@ -13,6 +13,8 @@ interface CreateStreamCallbacksOptions {
   setActivePermissionRequest: React.Dispatch<React.SetStateAction<any>>;
   llmApi?: any;
   model?: any;
+  /** The TUI's temporary status line */
+  onShowStatusMessage?: (message: string) => void;
 }
 
 /**
@@ -21,10 +23,21 @@ interface CreateStreamCallbacksOptions {
 export function createStreamCallbacks(
   options: CreateStreamCallbacksOptions,
 ): any {
-  const { setChatHistory, setActivePermissionRequest, llmApi, model } = options;
+  const {
+    setChatHistory,
+    setActivePermissionRequest,
+    llmApi,
+    model,
+    onShowStatusMessage,
+  } = options;
 
   return {
     onContent: (_: string) => {},
+
+    // A notice about the request (a reply cut off at the output limit, say)
+    onStatusMessage: (message: string) => {
+      onShowStatusMessage?.(message);
+    },
 
     onContentComplete: async (content: string) => {
       // Do not add assistant messages via service; handleToolCalls is the single writer

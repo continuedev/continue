@@ -23,7 +23,6 @@ import { ALL_BUILT_IN_TOOLS } from "./allBuiltIns.js";
 import { askQuestionTool } from "./askQuestion.js";
 import { checkBackgroundJobTool } from "./checkBackgroundJob.js";
 import { editTool } from "./edit.js";
-import { exitTool } from "./exit.js";
 import { fetchTool } from "./fetch.js";
 import { listFilesTool } from "./listFiles.js";
 import { finishItemTool, holdQuestionTool, remindMeTool } from "./loopTools.js";
@@ -96,20 +95,26 @@ export async function getAllAvailableTools(
         finishItemTool,
       ]
     : [...BASE_BUILTIN_TOOLS];
-  // Only plan mode makes a list. Otherwise the model acts: it gets the tool
-  // only to keep a list a plan left.
-  if (
-    services.toolPermissions.getCurrentMode() !== "plan" &&
-    !loopItem &&
-    !getSessionTaskPlan()?.items.length
-  ) {
-    tools.splice(tools.indexOf(taskListTool), 1);
+  // Plan mode does not offer the task list: PresentPlan's to-dos become the
+  // list, and a model offered both resent the list instead of planning
+  // (research-bedrock-families.md item 3). Outside plan mode the model acts
+  // and gets the tool only to keep a list a plan left.
+  const mode = services.toolPermissions.getCurrentMode();
+  if (mode === "plan" || (!loopItem && !getSessionTaskPlan()?.items.length)) {
+    const at = tools.indexOf(taskListTool);
+    if (at !== -1) tools.splice(at, 1);
   }
 
-  // A question that waits for an answer would stall for good with nobody
-  // there to answer it: headless runs and `cn serve`, where there is no
-  // question box, and a loop, whose questions go through HoldQuestion
-  if (isHeadless || services.toolPermissions.isHeadless() || loopRunGoing()) {
+  // A loop's questions go through HoldQuestion. Headless runs and `cn serve`
+  // keep AskQuestion in plan mode only: there it does not wait (the question
+  // is held in the inbox, src/util/pendingQuestions.ts) and a model that
+  // asked in text would otherwise end its turn with no plan. While acting,
+  // a headless model decides for itself and reports what it assumed.
+  const headlessRun = isHeadless || services.toolPermissions.isHeadless();
+  if (
+    loopRunGoing() ||
+    (headlessRun && services.toolPermissions.getCurrentMode() !== "plan")
+  ) {
     tools.splice(tools.indexOf(askQuestionTool), 1);
   }
 
@@ -156,9 +161,9 @@ export async function getAllAvailableTools(
     isCapable,
   });
 
-  if (isHeadless) {
-    tools.push(exitTool);
-  }
+  // Exit is not offered to the model. In headless runs and `cn serve` a model
+  // that could not ask a question called it and killed the process; the
+  // tool stays registered (allBuiltIns) for permission policies that name it.
 
   // Presenting a plan is how plan mode ends, so only plan mode offers it.
   if (services.toolPermissions.getCurrentMode() === "plan") {

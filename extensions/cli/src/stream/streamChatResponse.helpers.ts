@@ -2,6 +2,7 @@
 /* eslint-disable max-lines */
 
 import type { ToolStatus, Usage } from "core/index.js";
+import { totalInputTokens } from "core/llm/utils/cacheStats.js";
 import { calculateRequestCost } from "core/llm/utils/calculateRequestCost.js";
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { ChatCompletionToolMessageParam } from "openai/resources/chat/completions.mjs";
@@ -390,26 +391,52 @@ export function processToolCallDelta(
   }
 }
 
-// Helper function to detect provider from model name
-function detectProvider(modelName: string): string {
+/** A guess from the model name, for a config without a provider. */
+function guessProviderFromName(modelName: string): string {
   const normalized = modelName.toLowerCase();
   if (normalized.includes("gpt") || normalized.includes("openai")) {
     return "openai";
   }
-  if (normalized.includes("claude") || normalized.includes("anthropic")) {
-    return "anthropic";
-  }
-  // Default to anthropic for backward compatibility
   return "anthropic";
 }
 
-// Simple fallback cost calculation for unknown models
+/**
+ * The provider the request's usage is counted and priced under: the model
+ * config's `provider` ("bedrock", "anthropic", "openai", ...). It decides the
+ * price table (a Nova model on Bedrock has its own) and whether the
+ * provider's `prompt_tokens` leaves out the cache. A guess from the model
+ * name was used before and priced every non-GPT model as Anthropic.
+ */
+export function pricingProvider(model: {
+  provider?: unknown;
+  model: string;
+}): string {
+  if (typeof model.provider === "string" && model.provider.trim()) {
+    return model.provider;
+  }
+  return guessProviderFromName(model.model);
+}
+
+/**
+ * Cost of a request to a model with no entry in the price tables: $1/MTok
+ * for uncached input, $2/MTok for output, and the cache at Claude's multiples
+ * of the input price (reads 0.1x, writes 1.25x), over the input the provider
+ * processed (uncached plus reads plus writes). A request whose whole prompt
+ * was a cache write has `promptTokens` 0 and still costs its write.
+ */
 function calculateFallbackCost(
-  inputTokens: number,
-  outputTokens: number,
+  usage: Usage,
+  provider: string,
+  model: string,
 ): number {
-  // Default pricing: $1/MTok input, $2/MTok output
-  return (inputTokens * 1 + outputTokens * 2) / 1_000_000;
+  const read = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const write = usage.promptTokensDetails?.cacheWriteTokens ?? 0;
+  const processed = totalInputTokens(provider, model, usage);
+  const uncached = Math.max(0, processed - read - write);
+  return (
+    (uncached * 1 + read * 0.1 + write * 1.25 + usage.completionTokens * 2) /
+    1_000_000
+  );
 }
 
 /**
@@ -447,6 +474,11 @@ export function recordStreamTelemetry(options: {
   // Calculate cost using comprehensive pricing that includes caching
   let cost: number;
   let usage: Usage;
+  // True when the fallback rate priced this request (no table for the model):
+  // the session total is then marked an estimate. Against the AWS list the
+  // fallback reported $4.00 for a $2.35 run (research-bedrock-families.md).
+  let estimated = false;
+  const provider = pricingProvider(model);
 
   if (fullUsage) {
     // Transform API usage format to Usage interface
@@ -471,24 +503,31 @@ export function recordStreamTelemetry(options: {
         : undefined,
     };
 
-    // Detect provider and calculate cost
-    const provider = detectProvider(model.model);
-    const costBreakdown = calculateRequestCost(provider, model.model, usage);
+    // Price under the config's provider. A provider with no price table
+    // (a proxy, say) falls back to the name guess, which prices Claude and
+    // GPT models by their vendors' lists; anything else gets the fallback.
+    const guessed = guessProviderFromName(model.model);
+    const costBreakdown =
+      calculateRequestCost(provider, model.model, usage) ??
+      (guessed === provider
+        ? null
+        : calculateRequestCost(guessed, model.model, usage));
 
     // Use fallback for unknown models
-    cost =
-      costBreakdown?.cost ??
-      calculateFallbackCost(
-        fullUsage.prompt_tokens,
-        fullUsage.completion_tokens,
-      );
+    if (costBreakdown) {
+      cost = costBreakdown.cost;
+    } else {
+      cost = calculateFallbackCost(usage, provider, model.model);
+      estimated = true;
+    }
   } else {
     // Fallback when fullUsage not available
     usage = {
       promptTokens: inputTokens,
       completionTokens: outputTokens,
     };
-    cost = calculateFallbackCost(inputTokens, outputTokens);
+    cost = calculateFallbackCost(usage, provider, model.model);
+    estimated = true;
   }
 
   // Use tokens from fullUsage if available, otherwise use the passed params
@@ -512,16 +551,11 @@ export function recordStreamTelemetry(options: {
   }
 
   telemetryService.recordCost(cost, model.model);
-  trackSessionUsage(cost, usage);
-  // The session totals add up the providers' own counts; the cache tally
-  // normalises them per request so a hit share can be taken from it. The real
-  // provider is passed too, for the vendors' per-provider cache minimums.
-  recordCacheTally(
-    detectProvider(model.model),
-    model.model,
-    usage,
-    typeof model.provider === "string" ? model.provider : undefined,
-  );
+  // The session totals count the input the provider processed (uncached plus
+  // cache reads plus writes), which needs the provider to know what its own
+  // count leaves out; the cache tally does the same per request.
+  trackSessionUsage(cost, usage, provider, model.model, estimated);
+  recordCacheTally(provider, model.model, usage);
 
   telemetryService.recordResponseTime(
     totalDuration,
@@ -751,7 +785,7 @@ export async function executeStreamedToolCalls(
             ? (permissionResult.denialMessage ?? "Held for the person.")
             : denialReason === "policy"
               ? permissionResult.denialMessage
-                ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way; find a safer route or tell the user what you need.`
+                ? `Command blocked by security policy: ${permissionResult.denialMessage} Do not retry it or reach the same result another way. Do what else the request needs, then say what you could not do and why.`
                 : `Command blocked by security policy`
               : `Permission denied by user`;
 

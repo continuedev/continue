@@ -21,10 +21,12 @@ import {
   IDE,
   IdeInfo,
   IdeSettings,
+  ILLM,
   ILLMLogger,
   InternalMcpOptions,
 } from "../..";
 import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
+import Bedrock from "../../llm/llms/Bedrock";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getAllPromptFiles } from "../../promptFiles/getPromptFiles";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -38,6 +40,37 @@ import { getCleanUriPath } from "../../util/uri";
 import { loadConfigContextProviders } from "../loadContextProviders";
 import { getAllDotContinueDefinitionFiles } from "../loadLocalAssistants";
 import { unrollLocalYamlBlocks } from "./loadLocalYamlBlocks";
+import * as YAML from "yaml";
+import {
+  stripUntrustedLoosening,
+  untrustedLooseningNotice,
+} from "../../tools/permissions/trust";
+
+/**
+ * A workspace block's YAML with the keys a repository may not set removed,
+ * and a notice for each file that had any. Unparseable YAML is returned as
+ * it was: the unroller reports it.
+ */
+function withoutUntrustedLoosening(
+  path: string,
+  content: string,
+  notices: ConfigValidationError[],
+): string {
+  let parsed: unknown;
+  try {
+    parsed = YAML.parse(content);
+  } catch {
+    return content;
+  }
+  const { config, removed } = stripUntrustedLoosening(parsed);
+  if (removed.length === 0) return content;
+  notices.push({
+    fatal: false,
+    uri: path,
+    message: untrustedLooseningNotice(getCleanUriPath(path), removed),
+  });
+  return YAML.stringify(config);
+}
 import { loadModelCatalog } from "../providers/modelsFile";
 import { loadProviderInstances } from "../providers/providersFile";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -59,6 +92,11 @@ async function loadConfigYaml(options: {
   // Add local .continuous blocks
   // Use "content" field to pass pre-read content directly, avoiding
   // fs.readFileSync which fails for vscode-remote:// URIs in WSL (#6242, #7810)
+  // A block that came with the workspace may tighten (deny, ask) but not
+  // loosen: its allow rules and reviewer guidance are dropped with a notice
+  // (core/tools/permissions/trust.ts; plans/policy-areas.md, "Settings").
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const trustNotices: ConfigValidationError[] = [];
   const localBlockPromises = BLOCK_TYPES.map(async (blockType) => {
     const localBlocks = await getAllDotContinueDefinitionFiles(
       ide,
@@ -68,7 +106,9 @@ async function loadConfigYaml(options: {
     return localBlocks.map((b) => ({
       uriType: "file" as const,
       fileUri: b.path,
-      content: b.content,
+      content: workspaceDirs.some((dir) => b.path.startsWith(dir))
+        ? withoutUntrustedLoosening(b.path, b.content, trustNotices)
+        : b.content,
     }));
   });
   const localPackageIdentifiers: PackageIdentifier[] = (
@@ -86,7 +126,7 @@ async function loadConfigYaml(options: {
     });
   };
 
-  const errors: ConfigValidationError[] = [];
+  const errors: ConfigValidationError[] = [...trustNotices];
 
   // Named provider instances (providers.yaml) that models reach with
   // `connection:`; shared by every config.
@@ -151,6 +191,23 @@ async function loadConfigYaml(options: {
     errors,
     configLoadInterrupted: false,
   };
+}
+
+/**
+ * A Bedrock model written as a bare ID that the account's catalog (as cached
+ * by the last listing; no call is made here) offers only through an
+ * inference profile fails at the first request; say so at config load.
+ */
+function bedrockInferenceProfileWarnings(
+  llms: ILLM[],
+): ConfigValidationError[] {
+  const warnings: ConfigValidationError[] = [];
+  for (const llm of llms) {
+    if (!(llm instanceof Bedrock)) continue;
+    const warning = llm.inferenceProfileWarning();
+    if (warning) warnings.push({ fatal: false, message: warning });
+  }
+  return warnings;
 }
 
 function nonNullifyConfigYaml(
@@ -365,12 +422,32 @@ export async function configYamlToContinueConfig(options: {
     }
   }
 
+  // Every loaded model once, whatever its roles: the reviewer may be any of them
+  const allLlms = Array.from(
+    new Set(Object.values(continueConfig.modelsByRole).flat()),
+  );
+
+  localErrors.push(...bedrockInferenceProfileWarnings(allLlms));
   const modeModelsResult = resolveModeModels(
     config.modeModels,
     continueConfig.modelsByRole.chat,
+    allLlms,
   );
   continueConfig.modeModels = modeModelsResult.modeModels;
   localErrors.push(...modeModelsResult.errors);
+  // `modeModels.reviewer` is the reviewer: it joins the role's list if it is
+  // not there and is selected (a Settings pick holds until reload, as a
+  // manual pick does for a mode; see rectifySelectedModelsFromGlobalContext).
+  const reviewerTitle = modeModelsResult.modeModels?.reviewer?.title;
+  if (reviewerTitle) {
+    const reviewer = allLlms.find((m) => m.title === reviewerTitle);
+    if (reviewer) {
+      if (!continueConfig.modelsByRole.reviewer.includes(reviewer)) {
+        continueConfig.modelsByRole.reviewer.unshift(reviewer);
+      }
+      continueConfig.selectedModelByRole.reviewer = reviewer;
+    }
+  }
   continueConfig.rulesByMode = config.rulesByMode;
 
   // Tool rules. Kept even when some entries are unreadable: those are skipped

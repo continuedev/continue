@@ -1,5 +1,9 @@
+import { timingSafeEqual } from "node:crypto";
+
+import chalk from "chalk";
 import type { ChatHistoryItem, Session, ToolStatus } from "core/index.js";
 import { createHistoryItem } from "core/util/messageConversion.js";
+import type { NextFunction, Request, Response } from "express";
 
 import {
   describePromptBlocked,
@@ -15,6 +19,70 @@ import {
 import { streamChatResponse } from "../stream/streamChatResponse.js";
 import { StreamCallbacks } from "../stream/streamChatResponse.types.js";
 import { logger } from "../util/logger.js";
+
+/**
+ * Where `cn serve` listens, and who may talk to it (plans/policy-areas.md,
+ * "cn serve"). The server takes messages, approvals and loop answers, and
+ * will take the policy levels, so anything that can reach the port can act
+ * as the person. It listens on loopback unless told otherwise, and any other
+ * interface needs a token that every request must carry.
+ */
+
+export const DEFAULT_SERVE_HOST = "127.0.0.1";
+
+/** True for an address only this computer can reach. */
+export function isLoopbackHost(host: string): boolean {
+  const h = host
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "");
+  return (
+    h === "localhost" ||
+    h === "::1" ||
+    h === "0:0:0:0:0:0:0:1" ||
+    /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)
+  );
+}
+
+/**
+ * Why the server must not start with these options, or undefined when it
+ * may: a host other than loopback with no token would let anything on the
+ * network drive the agent.
+ */
+export function serveBindingProblem(
+  host: string,
+  token: string | undefined,
+): string | undefined {
+  if (isLoopbackHost(host)) return undefined;
+  if (token && token.trim().length >= 16) return undefined;
+  if (token) {
+    return `--host ${host} listens beyond this computer, so --token must be at least 16 characters.`;
+  }
+  return `--host ${host} listens beyond this computer, so --token <token> is required; every request then carries "Authorization: Bearer <token>".`;
+}
+
+/** Whether a request's Authorization header carries the token, compared in constant time. */
+export function authorizeRequest(
+  authorization: string | undefined,
+  token: string,
+): boolean {
+  const match = /^Bearer\s+(.+)$/i.exec(authorization ?? "");
+  if (!match) return false;
+  const given = Buffer.from(match[1].trim());
+  const expected = Buffer.from(token);
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+/** Express middleware: every request must carry the token. */
+export function bearerTokenMiddleware(token: string) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (authorizeRequest(req.header("authorization"), token)) {
+      next();
+      return;
+    }
+    res.status(401).json({ error: "A bearer token is required." });
+  };
+}
 
 /**
  * Remove partial assistant message if the last message is an empty assistant message.
@@ -156,6 +224,11 @@ export async function streamChatResponseWithInterruption(
     // delivered here, between the tool results and the next model request.
     // Loop mode's answers for the running item go in at the same boundary.
     onToolBoundary: withLoopSteering(() => buildServeSteeringMessage()),
+    // A notice for whoever watches the server (a reply cut off at the output
+    // limit, say): the TUI puts it on its status line, serve logs it.
+    onStatusMessage: (message: string) => {
+      logger.info(chalk.yellow(message));
+    },
   };
 
   try {

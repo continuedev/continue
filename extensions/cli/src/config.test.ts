@@ -54,7 +54,12 @@ describe("createLlmApi() prompt caching settings", () => {
   const make = async (model: Partial<ModelConfig>) => {
     const constructLlmApi = vi.fn(() => ({}) as any);
     vi.resetModules();
-    vi.doMock("@continuedev/openai-adapters", () => ({ constructLlmApi }));
+    // The real helpers (bedrockCachePointFields), with only the constructor
+    // replaced, so the test sees what createLlmApi hands it.
+    vi.doMock("@continuedev/openai-adapters", async (importOriginal) => ({
+      ...(await importOriginal<Record<string, unknown>>()),
+      constructLlmApi,
+    }));
     const { createLlmApi } = await import("./config.js");
     createLlmApi(
       { name: "m", model: "m", ...model } as ModelConfig,
@@ -75,10 +80,31 @@ describe("createLlmApi() prompt caching settings", () => {
     expect(config.cacheBehavior).toEqual({ cacheConversation: true });
   });
 
-  test("leaves them undefined for a model that is not Claude", async () => {
-    const config = await make({ provider: "bedrock", model: "x" });
-    expect(config.promptCaching).toBeUndefined();
+  test.each(["x", "us.openai.gpt-6.1-sol", "amazon.nova-premier-v1:0"])(
+    "leaves them undefined for %s, which takes no cache point",
+    async (model) => {
+      const config = await make({ provider: "bedrock", model });
+      expect(config.promptCaching).toBeUndefined();
+      expect(config.cacheBehavior).toBeUndefined();
+    },
+  );
+
+  test("turns caching on, with no lifetime, for a Nova model the AWS table lists", async () => {
+    const config = await make({
+      provider: "bedrock",
+      model: "us.amazon.nova-2-lite-v1:0",
+    });
+    expect(config.promptCaching).toBe(true);
     expect(config.cacheBehavior).toBeUndefined();
+  });
+
+  test("keeps promptCaching: false on a Nova model", async () => {
+    const config = await make({
+      provider: "bedrock",
+      model: "us.amazon.nova-2-lite-v1:0",
+      defaultCompletionOptions: { promptCaching: false },
+    });
+    expect(config.promptCaching).toBe(false);
   });
 
   test("turns caching on with Auto for a Claude model on Bedrock when the config says nothing", async () => {

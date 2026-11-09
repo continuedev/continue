@@ -227,16 +227,45 @@ describe("Loop mode's driver in the CLI", () => {
     expect(next?.prompt).toContain("only this item: One");
   });
 
-  it("a re-plan that presents no plan stops the loop", async () => {
+  it("a re-plan that presents no plan is told once to present it, then stops the loop", async () => {
     await planOf("One");
     startLoopFromPlan("normal");
     runItem("stuck");
-    nextTurn(history().length);
+    const replan = nextTurn(history().length);
+    expect(replan?.kind).toBe("replan");
+    append(user(replan!.prompt));
+    // The re-plan ended with no PresentPlan: one nudge, in the same run
+    const nudge = nextTurn(history().length);
+    expect(nudge?.kind).toBe("replan");
+    expect(nudge?.prompt).toContain("Call PresentPlan now");
+    expect(loopNow().current?.kind).toBe("replan");
+    expect(loopNow().current?.nudged).toBe(true);
+    append(user(nudge!.prompt));
+    // Still no plan: now the loop stops
     expect(nextTurn(history().length)).toBeUndefined();
     expect(loopNow()).toMatchObject({
       status: "stopped",
       stopReason: "replan_failed",
     });
+  });
+
+  it("an item run that ends without FinishItem is told once to report, then counts as an attempt", async () => {
+    await planOf("One", "Two");
+    startLoopFromPlan("normal");
+    const turn = nextTurn(history().length);
+    expect(turn?.kind).toBe("item");
+    append(user(turn!.prompt));
+    // The run ended with no report
+    const nudge = nextTurn(history().length);
+    expect(nudge?.kind).toBe("item");
+    expect(nudge?.prompt).toContain("Call FinishItem now");
+    expect(loopNow().current?.itemId).toBe("1");
+    append(user(nudge!.prompt));
+    // Still no report: the run ends as an attempt and the item runs again
+    const again = nextTurn(history().length);
+    expect(again?.kind).toBe("item");
+    expect(again?.prompt).toContain("only this item: One");
+    expect(loopNow().items.find((i) => i.id === "1")?.attempts).toBe(2);
   });
 
   it("a loop saved mid-run comes back stopped, its item pending", async () => {

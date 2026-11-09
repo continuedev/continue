@@ -1,6 +1,7 @@
+import { buildTaskPlan } from "core/util/taskPlan.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { getSessionTaskPlan } from "../../session.js";
+import { getSessionTaskPlan, updateSessionTaskPlan } from "../../session.js";
 
 import {
   ENTER,
@@ -18,11 +19,23 @@ import {
 /**
  * The TaskList tool (and its Checklist alias) through the TUI: the list is
  * shown above the prompt and in the tool result, and every request that
- * offers the tool ends with the `<task_list>` block.
+ * offers the tool ends with the `<task_list>` block. Only a session that
+ * already has a list offers the tool in agent mode (plan mode makes its list
+ * through PresentPlan), so each test starts from a one-item list, seeded
+ * after the app has mounted and started its own session.
  */
 describe("TUIChat - task list", () => {
   beforeEach(resetFlowState);
   afterEach(resetFlowState);
+
+  /** A list the model then rewrites: what makes the tool available. */
+  function seedTaskList(text = "Read the code") {
+    const built = buildTaskPlan([{ text, status: "pending" }], {
+      now: new Date(),
+    });
+    if (!built.ok) throw new Error(built.error);
+    updateSessionTaskPlan(built.plan);
+  }
 
   it("shows the list the model writes and sends it as the last block of the next request", async () => {
     const llm = new ScriptedLlm([
@@ -39,10 +52,11 @@ describe("TUIChat - task list", () => {
       }),
       textTurn("list written"),
     ]);
-    await registerFlowServices({ llm, mode: "plan" });
+    await registerFlowServices({ llm, mode: "normal" });
     const ui = renderFlow();
+    seedTaskList();
     try {
-      await type(ui.stdin, "plan the fix");
+      await type(ui.stdin, "fix the bug");
       await type(ui.stdin, ENTER);
       await waitUntil(
         () => ui.allOutput().includes("list written"),
@@ -50,13 +64,14 @@ describe("TUIChat - task list", () => {
         ui.lastFrame,
       );
 
-      // The first request offers the tool but has no list yet
+      // The first request offers the tool and ends with the seeded list
       expect(llm.requests).toHaveLength(2);
       const offered = llm.requests[0].tools.map((t) => t.function.name);
       expect(offered).toContain("TaskList");
       expect(offered).not.toContain("Checklist");
       const firstTail = messageText(llm.requests[0].messages.at(-1)!);
-      expect(firstTail).not.toContain("<task_list>");
+      expect(firstTail).toContain("<task_list>");
+      expect(firstTail).toContain("[ ] 1. Read the code");
 
       // The second request ends with the list, after the tool result
       const second = llm.requests[1].messages;
@@ -94,8 +109,10 @@ describe("TUIChat - task list", () => {
       }),
       textTurn("checklist written"),
     ]);
-    await registerFlowServices({ llm, mode: "plan" });
+    await registerFlowServices({ llm, mode: "normal" });
     const ui = renderFlow();
+    // The item the checklist ticks, so the list stays these two
+    seedTaskList("Write the parser");
     try {
       await type(ui.stdin, "track this");
       await type(ui.stdin, ENTER);

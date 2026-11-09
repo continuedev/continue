@@ -1,19 +1,23 @@
 import type { ConfigYaml } from "@continuedev/config-yaml";
+import { MODEL_USES } from "../../util/modelUse";
 import { editConfigFile } from "../../util/paths";
 
-const MODES = ["chat", "agent", "plan"] as const;
+/** Every use the Models tab can write; the list uses are chat, plan and agent. */
+const MODES = MODEL_USES;
 
 /**
- * One mode's change from the Models tab. Fields left out are kept as they are
+ * One use's change from the Models tab. Fields left out are kept as they are
  * in config.yaml. `null` for `reasoningEffort` removes it.
  */
 export interface ModeModelChange {
   /** Default model when switching into the mode (by name). */
   model?: string;
-  /** Models offered in the mode (by name). `[]` removes the list. */
+  /** Models offered in the mode (by name). `[]` removes the list. Chat, plan and agent only. */
   models?: string[];
   reasoningEffort?: "off" | "low" | "medium" | "high" | null;
 }
+
+const LIST_USES: readonly string[] = ["chat", "plan", "agent"];
 
 /** A mode set to `null` has its entry removed; modes not present are untouched. */
 export type ModeModelsInput = Partial<
@@ -52,7 +56,11 @@ export function applyModeModelsUpdate(
     const models = dedupe(change.models);
 
     if (change.model !== undefined) entry.model = change.model;
-    if (change.models !== undefined) {
+    if (!LIST_USES.includes(mode)) {
+      // A single-model use: a list means nothing there, so none is written
+      // and `models` does not keep an entry alive.
+      delete entry.models;
+    } else if (change.models !== undefined) {
       if (models.length > 0) entry.models = models;
       else delete entry.models;
     }

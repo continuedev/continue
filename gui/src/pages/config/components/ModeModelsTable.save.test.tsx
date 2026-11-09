@@ -82,3 +82,27 @@ describe("ModeModelsTable: saving", () => {
     expect(saveButton().textContent).toBe("Save");
   });
 });
+
+describe("ModeModelsTable: Loop, Re-plan and Subagent columns", () => {
+  it("shows a star only, and saving sends one model", async () => {
+    const { user, calls } = await setupTable();
+    expect(screen.queryByLabelText("Loop: Alpha")).toBeNull();
+    await user.click(star("Loop", "Bravo"));
+    await user.click(star("Subagent", "Charlie"));
+    await user.click(saveButton());
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({
+      loop: { model: "Bravo" },
+      subagent: { model: "Charlie" },
+    });
+  });
+
+  it("pressing the starred model again clears the choice", async () => {
+    const { user, calls } = await setupTable({ replan: { title: "Alpha" } });
+    expect(star("Re-plan", "Alpha").getAttribute("aria-pressed")).toBe("true");
+    await user.click(star("Re-plan", "Alpha"));
+    await user.click(saveButton());
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ replan: null });
+  });
+});

@@ -5,8 +5,11 @@ import {
   LoopState,
   LoopStrategy,
   MessageModes,
+  ModelUse,
 } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
+import { finishItemNudge, presentPlanNudge } from "core/util/turnEnd";
+import { applyModeModel } from "./applyModeModel";
 import {
   acceptReplan,
   answerLoop,
@@ -99,7 +102,18 @@ async function displayPath(
   }
 }
 
-async function sendLoopTurn(dispatch: AppThunkDispatch, text: string) {
+/**
+ * Sends a Loop turn. The model is switched first to the one `modeModels` gives
+ * this kind of turn (`loop` for an item, `replan` otherwise, with the agent and
+ * plan entries as fallbacks): the mode's own effect runs after a render, which
+ * may be later than the request.
+ */
+async function sendLoopTurn(
+  dispatch: AppThunkDispatch,
+  text: string,
+  use?: ModelUse,
+) {
+  if (use) await dispatch(applyModeModel({ mode: use }));
   await dispatch(
     streamResponseThunk({
       editorState: doc(text),
@@ -397,6 +411,20 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
 
     // 1. Finish what ran.
     if (loop.current?.kind === "item") {
+      // A run that ended without its report is told once to call finish_item,
+      // in the same run; only a second such end counts as an attempt
+      // (core/util/turnEnd.ts)
+      if (!loop.current.report && !loop.current.nudged) {
+        commitLoop(dispatch, getState, {
+          ...loop,
+          current: { ...loop.current, nudged: true },
+        });
+        await sendLoopTurn(
+          dispatch,
+          finishItemNudge(BuiltInToolNames.FinishItem),
+        );
+        return;
+      }
       const queuedIds = new Set(
         state.session.queuedMessages
           .map((m) => m.loopAnswerId)
@@ -428,6 +456,20 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         BuiltInToolNames.PresentPlan,
       ).some((tc) => tc.status === "done");
       if (!presented) {
+        // One nudge first, in the same run: a small model wrote the
+        // present_plan call as text once in six runs, and one text reply
+        // must not end the whole loop (core/util/turnEnd.ts)
+        if (!loop.current.nudged) {
+          commitLoop(dispatch, getState, {
+            ...loop,
+            current: { ...loop.current, nudged: true },
+          });
+          await sendLoopTurn(
+            dispatch,
+            presentPlanNudge(BuiltInToolNames.PresentPlan),
+          );
+          return;
+        }
         commitLoop(
           dispatch,
           getState,
@@ -534,7 +576,7 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         );
         dispatch(setMode("agent"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt);
+        await sendLoopTurn(dispatch, prompt, "loop");
         return;
       }
       case "check":
@@ -576,7 +618,7 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
         });
         dispatch(setMode("plan"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt);
+        await sendLoopTurn(dispatch, prompt, "replan");
         return;
       }
     }

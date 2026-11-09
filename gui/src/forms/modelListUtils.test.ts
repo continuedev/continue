@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ModelPackage } from "../pages/AddNewModel/configs/models";
 import {
+  bedrockAccessNote,
   bedrockEndpointModelsToPackages,
   bedrockOptionsToPackages,
   computeModelLists,
@@ -83,6 +84,40 @@ describe("bedrockOptionsToPackages", () => {
       },
     ]);
     expect(p.deprecated).toBe(true);
+    expect(p.accessNote).toBeUndefined();
+  });
+
+  it("notes models the account cannot use yet", () => {
+    const base = {
+      name: "x",
+      provider: "Anthropic",
+      kind: "inference-profile" as const,
+    };
+    const [needs, legacy, pending, ok, unknown] = bedrockOptionsToPackages([
+      { ...base, id: "us.anthropic.a", access: "needs-access" },
+      { ...base, id: "us.anthropic.b", access: "needs-access", legacy: true },
+      { ...base, id: "us.anthropic.c", access: "pending" },
+      { ...base, id: "us.anthropic.d", access: "available" },
+      { ...base, id: "us.anthropic.e" },
+    ]);
+    expect(needs.accessNote).toBe("Needs access");
+    expect(legacy.accessNote).toBe("Legacy, not used in 30 days");
+    expect(legacy.deprecated).toBe(true);
+    expect(pending.accessNote).toBe("Access pending");
+    expect(ok.accessNote).toBeUndefined();
+    expect(unknown.accessNote).toBeUndefined();
+  });
+});
+
+describe("bedrockAccessNote", () => {
+  it("maps each access state", () => {
+    expect(bedrockAccessNote({ access: "needs-access" })).toBe("Needs access");
+    expect(bedrockAccessNote({ access: "needs-access", legacy: true })).toBe(
+      "Legacy, not used in 30 days",
+    );
+    expect(bedrockAccessNote({ access: "pending" })).toBe("Access pending");
+    expect(bedrockAccessNote({ access: "available" })).toBeUndefined();
+    expect(bedrockAccessNote({ legacy: true })).toBeUndefined();
   });
 });
 
@@ -118,6 +153,21 @@ describe("splitPopular", () => {
     const { top, other } = splitPopular(models, [], 2);
     expect(top.map((m) => m.params.model)).toEqual(["b", "d"]);
     expect(other.map((m) => m.params.model)).toEqual(["a", "c"]);
+  });
+
+  it("puts models the account cannot use after the usable ones, before deprecated", () => {
+    const models = [
+      pkg("locked", {
+        createdAt: "2026-06-01T00:00:00Z",
+        accessNote: "Needs access",
+      }),
+      pkg("old", { createdAt: "2026-05-01T00:00:00Z", deprecated: true }),
+      pkg("a", { createdAt: "2026-01-01T00:00:00Z" }),
+      pkg("b", { createdAt: "2026-03-01T00:00:00Z" }),
+    ];
+    const { top, other } = splitPopular(models, [], 1);
+    expect(top.map((m) => m.params.model)).toEqual(["b"]);
+    expect(other.map((m) => m.params.model)).toEqual(["a", "locked", "old"]);
   });
 
   it("uses curated order when there are no dates, then the title", () => {

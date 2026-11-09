@@ -240,7 +240,27 @@ function calculateAnthropicCost(
   if (!modelPricing) {
     return null; // Unknown model
   }
+  const regionalFactor = bedrockRegionalPriceFactor(model);
+  const note =
+    regionalFactor !== 1
+      ? `Prices: Anthropic list × ${regionalFactor} (Bedrock regional endpoint)`
+      : undefined;
+  return priceCachedUsage(model, usage, modelPricing, note);
+}
 
+/**
+ * Price a request whose `promptTokens` leaves out the cache (Anthropic's
+ * `input_tokens`, Bedrock's `inputTokens`): uncached input at the input rate,
+ * cache writes at the write rate (split by lifetime when reported), reads at
+ * the read rate. A request whose whole prompt was a cache write has
+ * `promptTokens` 0 and is still priced, at the write rate.
+ */
+function priceCachedUsage(
+  model: string,
+  usage: Usage,
+  modelPricing: ModelPricing,
+  note?: string,
+): CostBreakdown {
   // Calculate costs
   const inputCost = (usage.promptTokens / 1_000_000) * modelPricing.input;
   const outputCost = (usage.completionTokens / 1_000_000) * modelPricing.output;
@@ -309,9 +329,8 @@ function calculateAnthropicCost(
 
   // Build final breakdown string
   let breakdown = `Model: ${model}\n`;
-  const regionalFactor = bedrockRegionalPriceFactor(model);
-  if (regionalFactor !== 1) {
-    breakdown += `Prices: Anthropic list × ${regionalFactor} (Bedrock regional endpoint)\n`;
+  if (note) {
+    breakdown += `${note}\n`;
   }
   breakdown += breakdownParts.join("\n");
   if (breakdownParts.length > 1) {
@@ -322,6 +341,129 @@ function calculateAnthropicCost(
     cost: totalCost,
     breakdown,
   };
+}
+
+/**
+ * Amazon Nova on Bedrock, USD per million tokens, on-demand in-region rates
+ * for US East (N. Virginia). Read from the AWS Price List API on 2026-11-08
+ * (offer AmazonBedrock, region us-east-1, version 20261106184538, published
+ * 2026-11-06): the `USE1-Nova*-input-tokens`, `-output-tokens`,
+ * `-cache-read-input-token-count` and `-cache-write-input-token-count` rows.
+ * On every Nova row a cache read is 0.25x the input price and a cache write
+ * is $0.00. The same models reached through a cross-region profile (`us.`,
+ * `eu.`, `apac.`, `global.`) are priced at these list rates; the Price List
+ * shows no regional premium for Nova.
+ */
+function novaPricing(input: number, output: number): ModelPricing {
+  return {
+    input,
+    output,
+    cacheWrite: 0,
+    cacheWrite1h: 0,
+    cacheRead: input * 0.25,
+  };
+}
+
+const NOVA_PRICING: { match: RegExp; pricing: ModelPricing }[] = [
+  { match: /(^|\.)amazon\.nova-2-lite-v\d/i, pricing: novaPricing(0.33, 2.75) },
+  { match: /(^|\.)amazon\.nova-pro-v\d/i, pricing: novaPricing(0.8, 3.2) },
+  { match: /(^|\.)amazon\.nova-lite-v\d/i, pricing: novaPricing(0.06, 0.24) },
+  {
+    match: /(^|\.)amazon\.nova-micro-v\d/i,
+    pricing: novaPricing(0.035, 0.14),
+  },
+];
+
+/** The Nova price row for a Bedrock model ID, with or without a profile prefix. */
+export function findNovaPricing(model: string): ModelPricing | null {
+  return NOVA_PRICING.find((row) => row.match.test(model))?.pricing ?? null;
+}
+
+/** A row of BEDROCK_PRICING: input and output only, no cache rates. */
+function tokenPricing(input: number, output: number): ModelPricing {
+  return { input, output, cacheWrite: 0, cacheWrite1h: 0, cacheRead: 0 };
+}
+
+/**
+ * Other model families on Bedrock, USD per million tokens, standard on-demand
+ * rates for US East (N. Virginia) from the AWS Price List API (offer
+ * AmazonBedrock, region us-east-1, fetched 2026-11-08): the `-input-tokens`
+ * and `-output-tokens` rows. None of these families has a cache row (Bedrock
+ * refuses a cachePoint on them), so cache reads and writes are priced at 0.
+ * The `-mantle-...-standard` usage types carry the same prices, so the
+ * bedrock-mantle provider prices through this table too. Keys are the model
+ * ID without a geography prefix (`us.`, `eu.`, `apac.`, `global.`) and
+ * without the `-v1:0`, `-1:0` or `-instruct-v1:0` tail, which the match
+ * ignores. Nova Premier has no row: it is retired. Qwen3 Next 80B A3B has
+ * only flex and priority rows in the Price List and stays unpriced.
+ */
+const BEDROCK_PRICING: { id: string; pricing: ModelPricing }[] = [
+  { id: "deepseek.v3.2", pricing: tokenPricing(0.62, 1.85) },
+  { id: "openai.gpt-oss-120b", pricing: tokenPricing(0.15, 0.6) },
+  { id: "openai.gpt-oss-20b", pricing: tokenPricing(0.07, 0.3) },
+  {
+    id: "mistral.mistral-large-3-675b-instruct",
+    pricing: tokenPricing(0.5, 1.5),
+  },
+  { id: "meta.llama4-maverick-17b", pricing: tokenPricing(0.24, 0.97) },
+  { id: "meta.llama4-scout-17b", pricing: tokenPricing(0.17, 0.66) },
+  { id: "moonshotai.kimi-k2.5", pricing: tokenPricing(0.6, 3.0) },
+  { id: "qwen.qwen3-coder-next", pricing: tokenPricing(0.5, 1.2) },
+  { id: "qwen.qwen3-32b", pricing: tokenPricing(0.15, 0.6) },
+  { id: "qwen.qwen3-coder-30b-a3b", pricing: tokenPricing(0.15, 0.6) },
+  { id: "qwen.qwen3-vl-235b-a22b", pricing: tokenPricing(0.53, 2.66) },
+  { id: "zai.glm-5", pricing: tokenPricing(1.0, 3.2) },
+  { id: "minimax.minimax-m2.5", pricing: tokenPricing(0.3, 1.2) },
+  { id: "nvidia.nemotron-super-3-120b", pricing: tokenPricing(0.15, 0.65) },
+].map((row) => ({ ...row }));
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * The BEDROCK_PRICING row for a model ID: the key preceded by nothing or a
+ * geography prefix, and followed by nothing or a `-`/`:` tail
+ * (`us.meta.llama4-scout-17b-instruct-v1:0`, `openai.gpt-oss-120b-1:0`,
+ * `deepseek.v3.2`). `deepseek.v3.2` does not match `deepseek.v3.1`.
+ */
+export function findBedrockPricing(model: string): ModelPricing | null {
+  for (const row of BEDROCK_PRICING) {
+    const match = new RegExp(`(^|\\.)${escapeRegExp(row.id)}([-:]|$)`, "i");
+    if (match.test(model)) return row.pricing;
+  }
+  return null;
+}
+
+/**
+ * Bedrock (and bedrock-mantle, which serves the same models at the same
+ * prices): Nova by its own table, the other families by BEDROCK_PRICING,
+ * Claude by Anthropic's list prices with the regional premium. Any other
+ * Bedrock model is unpriced.
+ */
+function calculateBedrockCost(
+  model: string,
+  usage: Usage,
+): CostBreakdown | null {
+  const nova = findNovaPricing(model);
+  if (nova) {
+    return priceCachedUsage(
+      model,
+      usage,
+      nova,
+      "Prices: AWS Price List, us-east-1 on-demand (Amazon Nova)",
+    );
+  }
+  const other = findBedrockPricing(model);
+  if (other) {
+    return priceCachedUsage(
+      model,
+      usage,
+      other,
+      "Prices: AWS Price List, us-east-1 on-demand",
+    );
+  }
+  return calculateAnthropicCost(model, usage);
 }
 
 interface OpenAIPrice {
@@ -458,10 +600,12 @@ export function calculateRequestCost(
   usage: Usage,
 ): CostBreakdown | null {
   switch (provider.toLowerCase()) {
+    case "bedrock":
+    case "bedrock-mantle":
+      return calculateBedrockCost(model, usage);
     case "anthropic":
     // Claude models served by other providers use the same list prices as an
     // estimate. Regional pricing, data residency and reseller margins can differ.
-    case "bedrock":
     case "vertexai":
     case "openrouter":
       return calculateAnthropicCost(model, usage);

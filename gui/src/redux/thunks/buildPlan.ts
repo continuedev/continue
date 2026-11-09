@@ -1,5 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { planBuildMessage, taskPlanFromPlanFile } from "core/util/planFile";
+import {
+  describeDecisions,
+  parsePlanFile,
+  planBuildMessage,
+  taskPlanFromPlanFile,
+} from "core/util/planFile";
 import { findUriInDirs } from "core/util/uri";
 import { setMode, setTaskPlan } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -28,6 +33,8 @@ async function displayPath(
  *
  * A file that cannot be read or whose to-dos break the list rules leaves the
  * current list as it is; the message still tells the model to read the file.
+ * The file's decisions, answered or open, follow the message so the model
+ * knows what was decided (as the CLI's PresentPlan does).
  */
 export const buildPlan = createAsyncThunk<
   void,
@@ -35,8 +42,10 @@ export const buildPlan = createAsyncThunk<
   ThunkApiType
 >("plan/build", async ({ planFile }, { dispatch, getState, extra }) => {
   const ide = extra.ideMessenger.ide;
+  let decisionLines = "";
   try {
     const markdown = await ide.readFile(planFile);
+    decisionLines = describeDecisions(parsePlanFile(markdown).decisions);
     const result = taskPlanFromPlanFile(markdown, getState().session.taskPlan);
     if (result.ok) {
       dispatch(setTaskPlan(result.plan));
@@ -49,9 +58,10 @@ export const buildPlan = createAsyncThunk<
 
   dispatch(setMode("agent"));
 
-  const text = planBuildMessage(
+  const message = planBuildMessage(
     await displayPath(planFile, () => ide.getWorkspaceDirs()),
   );
+  const text = decisionLines ? `${message}\n\n${decisionLines}` : message;
   await dispatch(
     streamResponseThunk({
       editorState: {

@@ -71,6 +71,24 @@ export function mergeBedrockEndpoints(
   return merged;
 }
 
+/**
+ * The picker's note for a model the account cannot use yet, from the access
+ * state Bedrock reported. A legacy model with no agreement is the "not used
+ * in the last 30 days" case, which Bedrock refuses with a 404.
+ */
+export function bedrockAccessNote(
+  option: Pick<BedrockModelOptionInfo, "access" | "legacy">,
+): string | undefined {
+  switch (option.access) {
+    case "needs-access":
+      return option.legacy ? "Legacy, not used in 30 days" : "Needs access";
+    case "pending":
+      return "Access pending";
+    default:
+      return undefined;
+  }
+}
+
 function createdAtMs(pkg: ModelPackage): number {
   const t = pkg.createdAt ? Date.parse(pkg.createdAt) : NaN;
   return Number.isNaN(t) ? 0 : t;
@@ -115,6 +133,7 @@ export function bedrockOptionsToPackages(
       isOpenSource: false,
       deprecated: o.legacy ? true : undefined,
       needsAnthropicUseCase: o.needsAnthropicUseCase ? true : undefined,
+      accessNote: bedrockAccessNote(o),
     }));
 }
 
@@ -158,6 +177,7 @@ export function mergeLiveModels(
           createdAt: l.createdAt ?? match.createdAt,
           deprecated: l.deprecated,
           needsAnthropicUseCase: l.needsAnthropicUseCase,
+          accessNote: l.accessNote,
         }
       : l;
   });
@@ -166,7 +186,8 @@ export function mergeLiveModels(
 /**
  * Split models into a short "popular" list and the rest. Newest first (when the
  * provider reports dates), then the curated order, then alphabetical.
- * Deprecated models are never promoted.
+ * Models the account cannot use yet come after the usable ones, and deprecated
+ * models last; neither is promoted.
  */
 export function splitPopular(
   models: ModelPackage[],
@@ -197,11 +218,14 @@ export function splitPopular(
         a.title.localeCompare(b.title),
     );
 
-  const active = sorted(unique.filter((p) => !p.deprecated));
+  const active = sorted(unique.filter((p) => !p.deprecated && !p.accessNote));
+  const noAccess = sorted(
+    unique.filter((p) => !p.deprecated && !!p.accessNote),
+  );
   const deprecated = sorted(unique.filter((p) => p.deprecated));
   return {
     top: active.slice(0, count),
-    other: [...active.slice(count), ...deprecated],
+    other: [...active.slice(count), ...noAccess, ...deprecated],
   };
 }
 

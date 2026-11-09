@@ -131,6 +131,51 @@ describe("PresentPlan", () => {
     expect(result).toContain("Use it everywhere");
   });
 
+  it("asks the decisions first, writes the answers to the file and tells the model", async () => {
+    vi.mocked(quizService.askQuestion)
+      .mockImplementationOnce(async () => "November 8, 2026")
+      .mockImplementationOnce(async () => "Build");
+    const result = await presentPlanTool.run({
+      ...args,
+      decisions: [
+        {
+          question: "Which format should formatDate return?",
+          options: ["ISO 8601", "November 8, 2026"],
+          pick: "ISO 8601",
+          type: "scope",
+          todos: [1],
+        },
+      ],
+    });
+
+    expect(quizService.askQuestion).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        question: "Decision 1 of 1: Which format should formatDate return?",
+        options: ["ISO 8601", "November 8, 2026"],
+        defaultAnswer: "ISO 8601",
+      }),
+    );
+    const text = fs.readFileSync(file, "utf-8");
+    expect(text).toContain("## Decisions");
+    expect(text).toContain("  - answer: November 8, 2026");
+    expect(result).toContain(
+      "1. Which format should formatDate return? (to-dos 1): decided: November 8, 2026",
+    );
+    expect(store.mode).toBe("normal");
+  });
+
+  it("headless: the decisions wait in the file and the model is told not to settle them", async () => {
+    store.headless = true;
+    const result = await presentPlanTool.run({
+      ...args,
+      decisions: [{ question: "Which format?" }],
+    });
+    expect(quizService.askQuestion).not.toHaveBeenCalled();
+    expect(result).toContain("Its decision waits for the person in the file");
+    expect(fs.readFileSync(file, "utf-8")).toContain("- Which format?");
+  });
+
   it("Keep planning stays in plan mode, with or without feedback", async () => {
     store.answer = "Keep planning";
     const plain = await presentPlanTool.run(args);

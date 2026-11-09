@@ -115,3 +115,46 @@ describe("handleSlashCommands - /info", () => {
     expect(result?.output).toContain("Configuration service not available");
   });
 });
+
+describe("handleSlashCommands - /info usage", () => {
+  const mockAssistant = { prompts: [] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(process, "cwd").mockReturnValue("/test/working/directory");
+    vi.mocked(sessionModule.getSessionFilePath).mockReturnValue(
+      "/test/session.json",
+    );
+    vi.mocked(services.config.getState).mockReturnValue({
+      config: { name: "test-config", version: "1.0.0" } as any,
+      configPath: "/test/config.yaml",
+    });
+    vi.mocked(services.model.getModelInfo).mockReturnValue({
+      provider: "bedrock",
+      name: "m",
+    });
+  });
+
+  it("shows the total cost as a figure when every request was priced from a table", async () => {
+    vi.mocked(sessionModule.getSessionUsage).mockReturnValue({
+      totalCost: 1.5,
+      promptTokens: 100,
+      completionTokens: 10,
+    } as any);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
+    expect(result?.output).toContain("Total Cost: ");
+    expect(result?.output).toContain("$1.500000");
+    expect(result?.output).not.toContain("estimate");
+  });
+
+  it("marks the total as an estimate when a request was priced at the fallback rate", async () => {
+    vi.mocked(sessionModule.getSessionUsage).mockReturnValue({
+      totalCost: 4.0,
+      costEstimated: true,
+      promptTokens: 100,
+      completionTokens: 10,
+    } as any);
+    const result = await handleSlashCommands("/info", mockAssistant as any);
+    expect(result?.output).toContain("$4.000000 (estimate)");
+  });
+});

@@ -62,6 +62,29 @@ function getBashMaxLines(): number {
   );
 }
 
+/**
+ * One sentence for the tool description naming the shell the command runs in
+ * (the same choice as getShellCommand), so the model writes for it: without
+ * it, models wrote `a && b` on Windows, which Windows PowerShell rejects, and
+ * lost several calls per run.
+ */
+export function describeShell(
+  platform: NodeJS.Platform = process.platform,
+  shell: string | undefined = process.env.SHELL,
+  wsl: boolean = platform === "linux" && isRunningInWsl(),
+): string {
+  if (platform === "win32") {
+    return "Runs in Windows PowerShell 5.1 (powershell.exe) on Windows: chain commands with ; or a newline, not &&, and use PowerShell cmdlets and syntax.";
+  }
+  const name =
+    (shell || "/bin/bash")
+      .split(/[\\/]/)
+      .pop()
+      ?.replace(/\.exe$/i, "") || "bash";
+  const where = wsl ? "WSL" : platform === "darwin" ? "macOS" : platform;
+  return `Runs in ${name} as a login shell on ${where}.`;
+}
+
 // Helper function to use login shell on Unix/macOS and PowerShell on Windows and available shell in WSL
 function getShellCommand(command: string): { shell: string; args: string[] } {
   if (process.platform === "win32") {
@@ -118,11 +141,11 @@ export function runCommandInBackground(command: string): {
 export const runTerminalCommandTool: Tool = {
   name: "Bash",
   displayName: "Bash",
-  description: `Executes a terminal command and returns the output
+  description: `Executes a terminal command and returns the output. ${describeShell()}
 
 Commands are automatically executed from the current working directory (${process.cwd()}), so there's no need to change directories with 'cd' commands.
 
-IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc).
+IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed, awk, etc). A command that writes a file (redirection, Set-Content, node -e or python -c calling a write) counts as a file edit: use Write or Edit for it, and if Write or Edit was refused, the command is refused too.
 `,
   parameters: {
     type: "object",

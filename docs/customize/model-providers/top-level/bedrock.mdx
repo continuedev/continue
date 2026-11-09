@@ -53,6 +53,8 @@ Open the model selector, choose **Add Chat model**, and pick **Amazon Bedrock**:
 
 Listing models needs `bedrock:ListFoundationModels` and `bedrock:ListInferenceProfiles`. If your credentials can't list models you can still type a model ID in **Custom model ID**.
 
+**Test connection** also asks Bedrock which third-party models your account may use (`bedrock:GetFoundationModelAvailability`, which API keys can call). A model whose access agreement is missing is listed last and marked **Needs access** (or **Legacy, not used in 30 days** for a legacy model Bedrock no longer serves to accounts that have not used it recently); one with an open request shows **Access pending**. The list is kept for an hour per account and region under `~/.continuous/bedrock-catalog/`, so the prompt-cache tips and the config check that warns when a bare model ID needs an inference profile read it without further calls; **Test connection** always fetches a fresh list.
+
 ## Which authentication method should I use?
 
 | Method | Best for | Fields |
@@ -168,11 +170,22 @@ models:
 
 Whether a model supports a given tier or latency mode depends on the model and region; Bedrock returns a clear validation error if it doesn't. Extended thinking and prompt caching are controlled with `defaultCompletionOptions` (`reasoning`, `reasoningBudgetTokens`, `promptCaching`).
 
+### What is sent per model family
+
+Model families on Bedrock take different request fields, and the provider adjusts the request for each (measured live, November 2026):
+
+- **Reasoning.** Claude gets Anthropic's `thinking` (adaptive with an effort on Claude 4.6 and later, a token budget before that). Nova 2 gets `reasoningConfig` with an effort of low, medium or high from `reasoningBudgetTokens` (about 1K, 4K or 16K), and `maxTokens` is left out at high because the model refuses it there; Nova 2 returns its reasoning as the text `[REDACTED].` while billing the tokens, so it is shown as redacted thinking. Qwen3 and DeepSeek V3.2 get `reasoning_effort` (and `none` only when the config says `reasoning: false`). DeepSeek R1 always reasons and takes no field; Nova Pro, Lite, Micro and Premier, Llama and Mistral get nothing.
+- **Sampling.** Claude refuses `temperature` and `topP` together, so only `temperature` is sent when both are set, and neither is sent while thinking is on. Other families take both.
+- **Tools.** `toolChoice: auto` is always sent with tools (without it Llama writes the call as plain text). Tool use is on for Claude, every Nova, Mistral, Qwen3, GPT OSS, Llama 4 and DeepSeek V3; it stays off for DeepSeek R1 (which refuses tools) and Llama 3 (which refuses tools in streaming mode). Llama 4 refuses tools in streaming mode as well, and Qwen3 32B streams tool input with its opening fragment missing, so requests with tools to those models go through the non-streaming Converse call and the whole reply arrives at once; a model that answers "This model doesn't support tool use in streaming mode." is retried the same way and remembered for the process.
+- **Model IDs.** With `crossRegionInference: auto`, a model that is only offered on demand (Qwen, DeepSeek V3.2, the newer Mistral models) refuses the geographic prefix with "The provided model identifier is invalid"; the request is retried once with the bare ID and the choice is remembered for the process.
+- **Stop reasons.** A reply cut off at `maxTokens` arrives with `finish_reason: length`, and the CLI says so instead of treating it as complete.
+
 ## How to Enable Prompt Caching with Amazon Bedrock
 
 Bedrock allows Claude models to cache tool payloads, system messages, and chat
-messages between requests. Enable this behavior by adding
-`promptCaching: true` under `defaultCompletionOptions` in your model
+messages between requests, and Amazon Nova 2 Lite, Nova Pro, Nova Lite and
+Nova Micro to cache system messages and chat messages. Enable this behavior by
+adding `promptCaching: true` under `defaultCompletionOptions` in your model
 configuration.
 
 ```yaml title="config.yaml"
@@ -190,7 +203,7 @@ models:
 
 Prompt caching is not supported in JSON configuration files, so use the YAML syntax above to enable it.
 
-The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some models. See [Prompt Caching](../../deep-dives/prompt-caching.mdx).
+The cache lifetime is chosen from the chat toolbar, and 1 hour is available only for some Claude models; Nova takes 5 minutes only. See [Prompt Caching](../../deep-dives/prompt-caching.mdx).
 
 ## Authentication
 
@@ -334,6 +347,8 @@ If the certificate isn't trusted you'll see an error such as "unable to get loca
 | --- | --- |
 | "on-demand throughput isn't supported" | Set `crossRegionInference: auto` |
 | "You don't have access to the model" | Enable the model under **Model access** in the Bedrock console, in the same region |
+| "marked by provider as Legacy and you have not been actively using the model" | Bedrock no longer serves this legacy model to your account; pick a current model (**Test connection** marks the ones that need access) |
+| "Please make sure your API Key is valid" | A short-term API key works only in the region it was generated for: make `region` match it, or create a key for this region. A long-term key may have expired |
 | AWS SSO session expired | Run `aws sso login --profile <name>` |
 | "Could not load credentials" | Configure one of the methods above |
 | "unable to get local issuer certificate" / "self-signed certificate" | Your network inspects TLS. Set `requestOptions.useSystemCa: true` or `caBundlePath` ([details](#corporate-proxies-and-tls-inspection)) |

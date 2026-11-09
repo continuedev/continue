@@ -767,7 +767,7 @@ Run on 2026-11-07 against Strata, a single-slot OpenAI-compatible server on this
 
 ### Runs on Amazon Nova
 
-Run on 2026-11-08 on Nova 2 Lite (`us.amazon.nova-2-lite-v1:0`) through `cn serve`, in nine scenarios: planning, a basic loop, each strategy, a check that can never pass, deferral, stop and resume, and subagents alone and inside an item. A weaker model finds what a capable one steps around. Nothing was cached on Nova here, so a loop re-sends everything: the basic run read 928,000 prompt tokens.
+Run on 2026-11-08 on Nova 2 Lite (`us.amazon.nova-2-lite-v1:0`) through `cn serve`, in nine scenarios: planning, a basic loop, each strategy, a check that can never pass, deferral, stop and resume, and subagents alone and inside an item. A weaker model finds what a capable one steps around. Nothing was cached on Nova here, so a loop re-sends everything: the basic run read 928,000 prompt tokens. The cause was ours, not Nova's: no cache point was sent to it (plans/cache-next-features.md, "Nova on Bedrock"), fixed on `claude/bedrock-nova-cache`.
 
 **Bugs found, all fixed:**
 

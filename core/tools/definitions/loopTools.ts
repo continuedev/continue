@@ -1,5 +1,5 @@
 import { Tool } from "../..";
-import { LOOP_LIMITS } from "../../util/loopMode";
+import { LOOP_LIMITS, QUESTION_TYPES } from "../../util/loopMode";
 import {
   LOOP_REMINDER_LIMITS,
   LOOP_REMINDER_WHEN,
@@ -9,19 +9,25 @@ import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 /**
  * Loop mode's tools, offered only while the loop runs an item
  * (selectActiveTools). They run in the gui, which holds the loop's state.
- * Design: plans/loop-mode.md.
+ * Design: plans/loop-mode.md; the question types and the wording:
+ * plans/policy-areas.md and policy-areas-prompts.md in the session notes.
  */
 
 /** hold_question's description; `finishItem` is the name the reader knows finish_item by. */
 export function holdQuestionToolDescription(finishItem: string): string {
-  return `Put a question in the person's inbox without stopping. They answer while work goes on; the answer comes back to you or to a later run of the item.
+  return `Put a question in the person's inbox and keep working. They answer while work goes on; the answer reaches you now or a later run of this item.
 
-- kind "assumption" (the default choice): you go on with the default you state in \`assumption\`. If the person overrules it, the item is redone.
+- type: what a wrong answer would cost. access: something only the person can supply (a credential, a login, the output of something you cannot run). irreversible: deleting, publishing, migrating, anything hard to undo. security: credentials, permissions, exposure. cost: money or a large share of a budget. scope: what to build, add or drop. design: approach, library, architecture, interfaces, data flow. detail: naming, formatting, small defaults. A question on two of these takes the costlier one. Who answers depends on the type and the person's settings.
+- kind "assumption" (the usual choice): you go on with the default you state in \`assumption\`. If the person overrules it, the item is redone.
 - kind "blocking": only when there is no reasonable default. Do what you can without the answer, then call ${finishItem} with outcome "waiting".
+- options: two to four short choices when they exist, your default first.
 
 Make the question answerable on its own, without this conversation: say what it is about, the options, and your default.`;
 }
 
+// `type` is asked for in the description but not required by the schema: the
+// CLI rejects a call missing a required parameter, and a model that omits
+// the type must still be able to ask. A missing type is routed to the person.
 export const HOLD_QUESTION_PARAMETERS = {
   type: "object" as const,
   required: ["question", "kind"],
@@ -29,6 +35,11 @@ export const HOLD_QUESTION_PARAMETERS = {
     question: {
       type: "string",
       description: `The question, self-contained, at most ${LOOP_LIMITS.maxQuestionLength} characters`,
+    },
+    type: {
+      type: "string",
+      enum: [...QUESTION_TYPES],
+      description: "What a wrong answer would cost",
     },
     kind: {
       type: "string",
@@ -39,11 +50,16 @@ export const HOLD_QUESTION_PARAMETERS = {
       description:
         'The default you are continuing with. Required for kind "assumption".',
     },
+    options: {
+      type: "array",
+      items: { type: "string" },
+      description: "Two to four short choices, your default first",
+    },
   },
 };
 
 export const FINISH_ITEM_TOOL_DESCRIPTION =
-  'Report the item you were given and end your turn. outcome "done" when it is finished; "waiting" when it needs an answer to a blocking question; "stuck" when you cannot finish it (say why in summary); "later" when another item may settle it: the item comes back after the others, once, and needs `reminder`. A second "later" counts as stuck.';
+  'Report the item you were given and end your turn. This is the only way to end a turn: a turn that ends without it is not counted. outcome "done" when it is finished; "waiting" when it needs an answer to a blocking question; "stuck" when you cannot finish it (say why in summary); "later" when another item may settle it: the item comes back after the others, once, and needs `reminder`. A second "later" counts as stuck.';
 
 export const FINISH_ITEM_PARAMETERS = {
   type: "object" as const,

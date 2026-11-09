@@ -10,6 +10,12 @@ vi.mock("../systemMessage.js", () => ({
   constructSystemMessage: vi.fn(),
 }));
 
+// The instruction files' fingerprint: tests change it to simulate an edit
+const fingerprint = { value: "AGENTS.md:1:100" };
+vi.mock("../instructionFiles.js", () => ({
+  instructionFilesFingerprint: vi.fn(() => fingerprint.value),
+}));
+
 // Mock the logger
 vi.mock("../util/logger.js", () => ({
   logger: {
@@ -27,6 +33,7 @@ describe("SystemMessageService", () => {
   beforeEach(async () => {
     // Reset mocks
     vi.clearAllMocks();
+    fingerprint.value = "AGENTS.md:1:100";
 
     // Get mock reference
     const { constructSystemMessage } = await import("../systemMessage.js");
@@ -80,6 +87,7 @@ describe("SystemMessageService", () => {
         ["rule1"],
         "json",
         true,
+        undefined,
       );
       expect(message).toBe("Test system message");
     });
@@ -104,6 +112,7 @@ describe("SystemMessageService", () => {
         ["rule1"],
         "json",
         false,
+        undefined,
       );
     });
 
@@ -125,7 +134,84 @@ describe("SystemMessageService", () => {
         ["rule2", "rule3"],
         "json",
         undefined,
+        undefined,
       );
+    });
+  });
+
+  describe("caching per session", () => {
+    beforeEach(async () => {
+      constructSystemMessageMock.mockImplementation(
+        async (mode: string) => `message for ${mode}`,
+      );
+      await service.initialize({});
+    });
+
+    it("builds the message once and reuses it for later requests", async () => {
+      expect(await service.getSystemMessage("normal")).toBe(
+        "message for normal",
+      );
+      expect(await service.getSystemMessage("normal")).toBe(
+        "message for normal",
+      );
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("rebuilds on a mode switch and keeps each mode's message", async () => {
+      await service.getSystemMessage("normal");
+      expect(await service.getSystemMessage("plan")).toBe("message for plan");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+      // Back to the first mode: its message is still cached
+      await service.getSystemMessage("normal");
+      await service.getSystemMessage("plan");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("rebuilds when an instruction file changes, once", async () => {
+      await service.getSystemMessage("normal");
+      fingerprint.value = "AGENTS.md:2:120";
+      await service.getSystemMessage("normal");
+      await service.getSystemMessage("normal");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("rebuilds after invalidate()", async () => {
+      await service.getSystemMessage("normal");
+      service.invalidate();
+      await service.getSystemMessage("normal");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("rebuilds after updateConfig()", async () => {
+      await service.getSystemMessage("normal");
+      service.updateConfig({ headless: true });
+      await service.getSystemMessage("normal");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+      expect(constructSystemMessageMock).toHaveBeenLastCalledWith(
+        "normal",
+        undefined,
+        undefined,
+        true,
+        undefined,
+      );
+    });
+
+    it("rebuilds when the config service's value changes", async () => {
+      const { serviceContainer } = await import("./ServiceContainer.js");
+      await service.getSystemMessage("normal");
+      serviceContainer.emit("config:changed", { config: {} });
+      await service.getSystemMessage("normal");
+      expect(constructSystemMessageMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("stops listening to the config service after cleanup", async () => {
+      const { serviceContainer } = await import("./ServiceContainer.js");
+      await service.getSystemMessage("normal");
+      await service.cleanup();
+      serviceContainer.emit("config:changed", { config: {} });
+      // A fresh service after cleanup starts empty anyway; what matters is
+      // that the old listener is gone
+      expect(serviceContainer.listenerCount("config:changed")).toBe(0);
     });
   });
 

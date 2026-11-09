@@ -19,7 +19,9 @@ vi.mock("./hubLoader.js", () => ({
     .mockImplementation((spec: string) => Promise.resolve(spec)),
 }));
 
-const PLAN_MODE_STRING = "You are operating in _Plan Mode_";
+// The first lines of the shared turn texts (core/llm/prompts/turns.ts)
+const PLAN_MODE_STRING = "You are in plan mode.";
+const AGENT_MODE_STRING = "You are in agent mode.";
 
 describe("constructSystemMessage", () => {
   it("should return base system message with rules when additionalRules is provided", async () => {
@@ -46,7 +48,54 @@ describe("constructSystemMessage", () => {
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).toContain("<env>");
-    expect(result).toContain('<context name="gitStatus">');
+    expect(result).toContain("Platform:");
+  });
+
+  it("keeps the facts that change between runs out of the cached prefix", async () => {
+    // The date and the git status go in the first user message instead
+    // (src/environmentContext.ts), so two sessions in the same folder share
+    // the system checkpoint of the prompt cache.
+    const result = await constructSystemMessage("normal");
+
+    expect(result).not.toContain("Today's date:");
+    expect(result).not.toContain('<context name="gitStatus">');
+    expect(result).not.toContain("git status at the start of the conversation");
+    expect(result).toContain('<context name="environment">');
+  });
+
+  it("gives a Qwen model the short turn text and others the full one", async () => {
+    const qwenPlan = await constructSystemMessage(
+      "plan",
+      undefined,
+      undefined,
+      false,
+      "qwen.qwen3-coder-30b-a3b-v1:0",
+    );
+    expect(qwenPlan).toContain("do not make a task list");
+    expect(qwenPlan).toContain("End by calling PresentPlan, then stop");
+    const qwenAct = await constructSystemMessage(
+      "normal",
+      undefined,
+      undefined,
+      false,
+      "qwen3.8-flash-next-nvfp4-nvfp4",
+    );
+    expect(qwenAct).toContain("Keep going until the request is done");
+    const claude = await constructSystemMessage(
+      "plan",
+      undefined,
+      undefined,
+      false,
+      "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    );
+    expect(claude).toContain("Two kinds of unknowns");
+    expect(claude).not.toContain("do not make a task list");
+  });
+
+  it("is the same text for two calls in the same process", async () => {
+    expect(await constructSystemMessage("normal")).toBe(
+      await constructSystemMessage("normal"),
+    );
   });
 
   it("should handle whitespace-only rules message", async () => {
@@ -67,13 +116,6 @@ describe("constructSystemMessage", () => {
     const result = await constructSystemMessage("normal");
 
     expect(result).toContain("Platform:");
-  });
-
-  it("should include current date", async () => {
-    const result = await constructSystemMessage("normal");
-
-    expect(result).toContain("Today's date:");
-    expect(result).toContain(new Date().toISOString().split("T")[0]);
   });
 
   it("should format rules section correctly", async () => {
@@ -180,14 +222,12 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
-    expect(result).toContain("develop a plan before taking action");
-    expect(result).toContain("read-only tools");
-    expect(result).toContain(
-      "should not attempt to circumvent them to write / delete / create files",
-    );
+    expect(result).toContain("the person decides whether to do it");
+    expect(result).toContain("Your tools only read");
+    // The CLI's own tool name, not the IDE's
+    expect(result).toContain("call PresentPlan and stop");
+    expect(result).not.toContain("present_plan");
+    expect(result).not.toContain(AGENT_MODE_STRING);
   });
 
   it("should not add plan mode instructions when mode is not plan", async () => {
@@ -200,9 +240,7 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
-    expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain(AGENT_MODE_STRING);
   });
 
   it("should not add plan mode instructions when mode is normal", async () => {
@@ -210,9 +248,10 @@ Rule 3: Third rule`;
 
     expect(result).toContain("You are an agent in the Continuous CLI");
     expect(result).not.toContain(PLAN_MODE_STRING);
-    expect(result).not.toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain(AGENT_MODE_STRING);
+    // The act turn's rules against listing steps and stopping
+    expect(result).toContain("A reply with no tool call ends your turn");
+    expect(result).toContain("TaskList tool");
   });
 
   it("should include basic plan mode description", async () => {
@@ -224,8 +263,8 @@ Rule 3: Third rule`;
     );
 
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain("read-only tools");
-    expect(result).toContain("write / delete / create files");
+    expect(result).toContain("Your tools only read");
+    expect(result).toContain("Two kinds of unknowns");
   });
 
   it("should combine plan mode with headless mode instructions", async () => {
@@ -238,9 +277,7 @@ Rule 3: Third rule`;
 
     expect(result).toContain("IMPORTANT: You are running in headless mode");
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain("the person decides whether to do it");
   });
 
   it("should combine plan mode with JSON format instructions", async () => {
@@ -255,8 +292,6 @@ Rule 3: Third rule`;
       "IMPORTANT: You are operating in JSON output mode",
     );
     expect(result).toContain(PLAN_MODE_STRING);
-    expect(result).toContain(
-      "which means that your goal is to help the user investigate their ideas",
-    );
+    expect(result).toContain("the person decides whether to do it");
   });
 });

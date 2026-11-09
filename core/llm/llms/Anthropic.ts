@@ -51,6 +51,23 @@ export type AnthropicRequestParams = Omit<
 > &
   AnthropicThinkingParams;
 
+/**
+ * The sampling fields Claude accepts: `temperature` and `top_p` together are
+ * refused ("temperature and top_p cannot both be specified"), so only
+ * `temperature` is kept when both are set; with thinking on, `temperature`
+ * other than 1 and `top_p` below 0.95 are refused, so neither is sent. The
+ * same rule as `bedrockSamplingParams` for Claude on Bedrock.
+ */
+export function anthropicSamplingParams(
+  temperature: number | undefined,
+  topP: number | undefined,
+  reasoning: boolean,
+): { temperature?: number; top_p?: number } {
+  if (reasoning) return {};
+  if (temperature !== undefined && topP !== undefined) return { temperature };
+  return { temperature, top_p: topP };
+}
+
 class Anthropic extends BaseLLM {
   static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
@@ -75,16 +92,22 @@ class Anthropic extends BaseLLM {
 
   // Public for use within VertexAI
   public convertArgs(options: CompletionOptions): AnthropicRequestParams {
+    const thinking = getAnthropicThinkingParams(options);
+    const sampling = anthropicSamplingParams(
+      options.temperature,
+      options.topP,
+      thinking.thinking !== undefined,
+    );
     const finalOptions = {
       top_k: options.topK,
-      top_p: options.topP,
-      temperature: options.temperature,
+      top_p: sampling.top_p,
+      temperature: sampling.temperature,
       max_tokens: options.maxTokens ?? 2048,
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
       tools: options.tools?.map(this.convertToolToAnthropicTool),
-      ...getAnthropicThinkingParams(options),
+      ...thinking,
       tool_choice: options.toolChoice
         ? {
             type: "tool" as const,

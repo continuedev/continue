@@ -9,7 +9,7 @@ import { totalInputTokens } from "core/llm/utils/cacheStats.js";
  * cache while a GPT request's includes it, so a hit share taken from the sums
  * of a mixed session would be wrong. In memory only; counts, no content.
  */
-interface CacheTally {
+export interface CacheTally {
   requests: number;
   inputTokens: number;
   readTokens: number;
@@ -70,6 +70,48 @@ export function recordCacheTally(
 }
 
 const n = (value: number) => value.toLocaleString("en-US");
+
+/**
+ * A session's processed input split into its parts; uncached is never
+ * negative. `promptTokens` here is the processed total (src/session.ts).
+ */
+export function splitInputTokens(usage: {
+  promptTokens: number;
+  promptTokensDetails?: { cachedTokens?: number; cacheWriteTokens?: number };
+}): { uncached: number; cacheRead: number; cacheWrite: number } {
+  const cacheRead = usage.promptTokensDetails?.cachedTokens ?? 0;
+  const cacheWrite = usage.promptTokensDetails?.cacheWriteTokens ?? 0;
+  return {
+    uncached: Math.max(0, usage.promptTokens - cacheRead - cacheWrite),
+    cacheRead,
+    cacheWrite,
+  };
+}
+
+/** The tally with its summary line, for `cn serve`'s GET /state. */
+export interface CacheTallySnapshot extends CacheTally {
+  /** The line the TUI prints at exit, or undefined when there is nothing to say. */
+  summary?: string;
+}
+
+export function cacheTallySnapshot(): CacheTallySnapshot {
+  const t = getCacheTally();
+  return { ...t, summary: formatCacheTally(t) };
+}
+
+/**
+ * A line for the end of every turn, whatever happened: formatCacheTally's
+ * when the cache was used or something was too short, otherwise a plain
+ * statement that nothing was read or written. Undefined before any request.
+ */
+export function describeCacheTally(
+  t: Readonly<CacheTally> = tally,
+): string | undefined {
+  const line = formatCacheTally(t);
+  if (line) return line;
+  if (t.requests === 0) return undefined;
+  return `Prompt cache: ${n(t.requests)} request${t.requests === 1 ? "" : "s"}, nothing read from or written to the cache`;
+}
 
 /**
  * One line for the end of a session, or undefined when there is nothing to

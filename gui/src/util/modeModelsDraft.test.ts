@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildUpdate,
+  clearDefault,
   draftFromConfig,
   hasChanges,
   setDefault,
@@ -174,5 +175,34 @@ describe("buildUpdate", () => {
     expect(update).toEqual({
       agent: { model: "A", reasoningEffort: "medium" },
     });
+  });
+});
+
+describe("single-model uses (loop, replan, subagent)", () => {
+  it("reads the configured model as the one starred model", () => {
+    const d = draftFromConfig(
+      cfg({ loop: { title: "H", reasoningEffort: "off" } }),
+    );
+    expect(d.loop).toMatchObject({
+      offered: ["H"],
+      defaultTitle: "H",
+      effort: "off",
+    });
+    expect(d.replan.offered).toEqual([]);
+  });
+
+  it("starring sends one model, never a list; clearing removes the entry", () => {
+    const before = draftFromConfig({});
+    let after = { ...before, loop: setDefault(before.loop, "H") };
+    expect(buildUpdate(before, after)).toEqual({ loop: { model: "H" } });
+    after = { ...after, loop: setDefault(after.loop, "O") };
+    expect(buildUpdate(before, after)).toEqual({ loop: { model: "O" } });
+    const configured = draftFromConfig(cfg({ replan: { title: "O" } }));
+    expect(
+      buildUpdate(configured, {
+        ...configured,
+        replan: clearDefault(configured.replan),
+      }),
+    ).toEqual({ replan: null });
   });
 });

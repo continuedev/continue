@@ -3,12 +3,16 @@ import path from "path";
 import { pathToFileURL } from "url";
 
 import {
+  answeredDecisions,
   choosePlanFileName,
+  describeDecisions,
   PLAN_LIMITS,
   planBuildMessage,
+  type PlanDecision,
   planKeepPlanningResult,
   PLANS_DIR,
   PRESENT_PLAN_CLI_TOOL_NAME,
+  PRESENT_PLAN_DECISIONS_PARAMETER,
   PRESENT_PLAN_TODO_DETAILS_PARAMETER,
   PRESENT_PLAN_TOOL_DESCRIPTION,
   serializePlanFile,
@@ -45,6 +49,7 @@ interface PresentPlanArgs {
   plan?: unknown;
   todos?: unknown;
   todo_details?: unknown;
+  decisions?: unknown;
 }
 
 function checkedArgs(args: PresentPlanArgs) {
@@ -81,6 +86,7 @@ export async function savePlan(args: PresentPlanArgs, cwd = process.cwd()) {
       title: parsed.title,
       body: parsed.body,
       items: result.plan.items,
+      decisions: parsed.decisions,
     }),
   );
   // The file first: the task list change re-renders the progress strip,
@@ -91,7 +97,41 @@ export async function savePlan(args: PresentPlanArgs, cwd = process.cwd()) {
     file,
     relativePath: `${PLANS_DIR}/${fileName}`,
     plan: result.plan,
+    decisions: parsed.decisions,
+    /** Writes the file again with the person's answers to the decisions. */
+    writeAnswers(answered: PlanDecision[]) {
+      fs.writeFileSync(
+        file,
+        serializePlanFile({
+          title: parsed.title,
+          body: parsed.body,
+          items: result.plan.items,
+          decisions: answered,
+        }),
+      );
+    },
   };
+}
+
+/**
+ * The plan's decisions, asked one by one before the plan question: the
+ * options as buttons with the model's pick as the default, or free text.
+ */
+async function askDecisions(
+  decisions: PlanDecision[],
+): Promise<PlanDecision[]> {
+  const answers: { question: string; answer: string }[] = [];
+  for (const [i, decision] of decisions.entries()) {
+    const answer = await quizService.askQuestion({
+      question: `Decision ${i + 1} of ${decisions.length}: ${decision.question}`,
+      options: decision.options ?? [],
+      defaultAnswer: decision.pick,
+    });
+    if (answer?.trim()) {
+      answers.push({ question: decision.question, answer: answer.trim() });
+    }
+  }
+  return answeredDecisions(decisions, answers);
 }
 
 /**
@@ -140,6 +180,7 @@ export const presentPlanTool: Tool = {
         items: { type: "string" },
       },
       todo_details: PRESENT_PLAN_TODO_DETAILS_PARAMETER as any,
+      decisions: PRESENT_PLAN_DECISIONS_PARAMETER as any,
     },
   },
   preprocess: async (args: PresentPlanArgs) => {
@@ -149,6 +190,17 @@ export const presentPlanTool: Tool = {
       ...(parsed.body
         ? [{ type: "text" as const, content: parsed.body, paddingLeft: 2 }]
         : []),
+      ...(parsed.decisions.length
+        ? [
+            {
+              type: "text" as const,
+              content: parsed.decisions
+                .map((d, i) => `Decision ${i + 1}: ${d.question}`)
+                .join("\n"),
+              paddingLeft: 2,
+            },
+          ]
+        : []),
       {
         type: "checklist" as const,
         content: parsed.items.map((i) => `- [ ] ${String(i.text)}`).join("\n"),
@@ -157,7 +209,8 @@ export const presentPlanTool: Tool = {
     return { args, preview };
   },
   run: async (args: PresentPlanArgs): Promise<string> => {
-    const { file, relativePath, plan } = await savePlan(args);
+    const { file, relativePath, plan, decisions, writeAnswers } =
+      await savePlan(args);
 
     // Loop mode's re-plan: the loop decides whether the new plan starts the
     // next round by itself (its autonomy level) or waits for the person in
@@ -168,10 +221,25 @@ export const presentPlanTool: Tool = {
     }
 
     if (services.toolPermissions.isHeadless()) {
-      // Nobody can approve: the file is the result.
+      // Nobody can approve: the file is the result. Its decisions wait in
+      // the file for the person; the model must not settle them.
       safeStderr(`Plan saved to ${relativePath}\n`);
-      return `Plan saved to ${relativePath} with ${plan.items.length} to-dos. This is a headless run, so nobody can approve it now: do not implement anything. Stop, and end your reply with the line "Plan: ${relativePath}".`;
+      const open = decisions.length
+        ? ` Its ${decisions.length === 1 ? "decision waits" : `${decisions.length} decisions wait`} for the person in the file; do not settle ${decisions.length === 1 ? "it" : "them"}.`
+        : "";
+      return `Plan saved to ${relativePath} with ${plan.items.length} to-dos.${open} This is a headless run, so nobody can approve it now: do not implement anything. Stop, and end your reply with the line "Plan: ${relativePath}".`;
     }
+
+    // The decisions first, each with its options and the model's pick as the
+    // default; the answers go into the file, so Build reads them back.
+    let decided = decisions;
+    if (decisions.length > 0 && !isLoopEntry()) {
+      decided = await askDecisions(decisions);
+      writeAnswers(decided);
+    }
+    const decisionLines = describeDecisions(decided);
+    const withDecisions = (text: string) =>
+      decisionLines ? `${text}\n\n${decisionLines}` : text;
 
     // The loop entry (Shift+Tab): the person already chose to build in a loop
     const answer = isLoopEntry()
@@ -181,7 +249,7 @@ export const presentPlanTool: Tool = {
     if (answer === PRESENT_PLAN_BUILD) {
       reloadPlanFile(file);
       services.toolPermissions.switchMode("normal");
-      return `The user approved the plan and switched out of plan mode, so you can now edit files (each edit asks for approval). ${planBuildMessage(relativePath)}\n\nCurrent task list:\n${taskPlanToMarkdown(getSessionTaskPlan())}`;
+      return `The user approved the plan and switched out of plan mode, so you can now edit files (each edit asks for approval). ${withDecisions(planBuildMessage(relativePath))}\n\nCurrent task list:\n${taskPlanToMarkdown(getSessionTaskPlan())}`;
     }
     if (answer === PRESENT_PLAN_BUILD_IN_LOOP) {
       // Loop mode: the CLI runs the to-dos one at a time, each in its own
@@ -192,7 +260,7 @@ export const presentPlanTool: Tool = {
         return "The user approved the plan and chose to build it in a loop: each to-do will be given to you on its own turn. Do not start on it now; end your turn.";
       }
       reloadPlanFile(file);
-      return `The user approved the plan and switched out of plan mode. ${planBuildMessage(relativePath)}`;
+      return `The user approved the plan and switched out of plan mode. ${withDecisions(planBuildMessage(relativePath))}`;
     }
     return planKeepPlanningResult(
       answer === PRESENT_PLAN_KEEP_PLANNING ? undefined : answer,

@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 
 import { ContinueError, ContinueErrorReason } from "core/util/errors.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,6 +14,10 @@ import { markFileAsRead, readFilesSet } from "./readFile.js";
 import { generateDiff } from "./writeFile.js";
 
 // Mock the dependencies
+const headless = vi.hoisted(() => ({ value: false }));
+vi.mock("../services/index.js", () => ({
+  services: { toolPermissions: { isHeadless: () => headless.value } },
+}));
 vi.mock("../telemetry/telemetryService.js");
 vi.mock("../telemetry/utils.js");
 vi.mock("./writeFile.js");
@@ -29,7 +34,8 @@ vi.mock("fs", async () => {
 });
 
 describe("editTool", () => {
-  const testFilePath = "/tmp/test-edit-file.txt";
+  // Inside the working directory: a file outside it gets a preview note
+  const testFilePath = path.join(process.cwd(), "test-edit-file.txt");
   const originalContent = "Hello world\nThis is a test file\nGoodbye world";
 
   beforeEach(() => {
@@ -228,6 +234,67 @@ describe("editTool", () => {
 
       const result = await editTool.preprocess!(args);
       expect(result.args.newContent).toContain("Hi there");
+    });
+  });
+});
+
+describe("editTool and the working directory", () => {
+  const outsidePath = path.resolve(process.cwd(), "..", "elsewhere.txt");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    headless.value = false;
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readFileSync).mockReturnValue("Hello world");
+    vi.mocked(fs.realpathSync).mockImplementation((p) => p.toString());
+    vi.mocked(generateDiff).mockReturnValue("mocked diff");
+  });
+
+  afterEach(() => {
+    readFilesSet.clear();
+    headless.value = false;
+  });
+
+  it("says in the preview when the file is outside the working directory", async () => {
+    markFileAsRead(outsidePath);
+    const result = await editTool.preprocess!({
+      file_path: outsidePath,
+      old_string: "Hello",
+      new_string: "Hi",
+    });
+    expect(result.preview?.[0]).toMatchObject({
+      type: "text",
+      content: expect.stringContaining("Outside the working directory"),
+    });
+    expect(result.preview?.[0].content).toContain(outsidePath);
+    expect(result.preview?.[0].content).toContain(process.cwd());
+  });
+
+  it("refuses such an edit in a headless run, naming the path and the working directory", async () => {
+    headless.value = true;
+    markFileAsRead(outsidePath);
+    const error = await editTool.preprocess!({
+      file_path: outsidePath,
+      old_string: "Hello",
+      new_string: "Hi",
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(ContinueError);
+    expect(error.message).toContain("Edit was not run");
+    expect(error.message).toContain(outsidePath);
+    expect(error.message).toContain(process.cwd());
+  });
+
+  it("adds nothing for a file inside the working directory", async () => {
+    const inside = path.join(process.cwd(), "src", "inside.txt");
+    markFileAsRead(inside);
+    const result = await editTool.preprocess!({
+      file_path: inside,
+      old_string: "Hello",
+      new_string: "Hi",
+    });
+    expect(result.preview?.[0]).toEqual({
+      type: "text",
+      content: "Will make the following changes:",
     });
   });
 });

@@ -96,3 +96,33 @@ describe("modeModels through unrolling", () => {
     });
   });
 });
+
+describe("modeModels: the uses beyond the modes", () => {
+  it("accepts one model each for loop, replan, reviewer and subagent", () => {
+    const parsed = modeModelsSchema.parse({
+      loop: { model: "Haiku", reasoningEffort: "off" },
+      replan: { model: "Opus" },
+      reviewer: { model: "Judge", reasoningEffort: "low" },
+      subagent: { model: "Sonnet" },
+    });
+    expect(parsed.loop).toEqual({ model: "Haiku", reasoningEffort: "off" });
+    expect(parsed.reviewer?.reasoningEffort).toBe("low");
+  });
+
+  it("needs a model there: a list alone is not enough", () => {
+    expect(() =>
+      modeModelsSchema.parse({ loop: { models: ["Haiku"] } }),
+    ).toThrow();
+    expect(() => modeModelsSchema.parse({ reviewer: { model: "" } })).toThrow();
+  });
+
+  it("is part of config.yaml with the modes", () => {
+    const cfg = configYamlSchema.parse({
+      name: "c",
+      version: "1",
+      models: [{ name: "Opus", provider: "anthropic", model: "claude-opus" }],
+      modeModels: { plan: { model: "Opus" }, replan: { model: "Opus" } },
+    });
+    expect(cfg.modeModels?.replan?.model).toBe("Opus");
+  });
+});

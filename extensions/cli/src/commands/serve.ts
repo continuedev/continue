@@ -31,7 +31,12 @@ import { logger } from "../util/logger.js";
 import { readStdinSync } from "../util/stdin.js";
 
 import { ExtendedCommandOptions } from "./BaseCommandOptions.js";
-import { type ServerState } from "./serve.helpers.js";
+import {
+  bearerTokenMiddleware,
+  DEFAULT_SERVE_HOST,
+  serveBindingProblem,
+  type ServerState,
+} from "./serve.helpers.js";
 import {
   getServeStateSnapshot,
   processMessages,
@@ -42,6 +47,10 @@ import {
 interface ServeOptions extends ExtendedCommandOptions {
   timeout?: string;
   port?: string;
+  /** Interface to listen on; loopback unless told otherwise */
+  host?: string;
+  /** Bearer token every request must carry; required off loopback */
+  token?: string;
   /** Storage identifier for remote sync */
   id?: string;
 }
@@ -66,6 +75,20 @@ export function shouldQueueInitialPrompt(
   return !hasConversation;
 }
 
+/** The startup lines: which assistant, model and config file serve runs with. */
+function logServeConfiguration(
+  assistantName: string | undefined,
+  model: { provider: string; model: string },
+  configFile: string | undefined,
+): void {
+  console.log(chalk.blue(`\nConfiguration:`));
+  console.log(chalk.dim(`  Assistant: ${assistantName}`));
+  console.log(chalk.dim(`  Model: ${model.provider}/${model.model}`));
+  if (configFile) {
+    console.log(chalk.dim(`  Config file: ${configFile}`));
+  }
+}
+
 export async function serve(prompt?: string, options: ServeOptions = {}) {
   // Set agent ID for error reporting if provided
   setAgentId(options.id);
@@ -83,6 +106,14 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
   const timeoutSeconds = parseInt(options.timeout || "300", 10);
   const timeoutMs = timeoutSeconds * 1000;
   const port = parseInt(options.port || "8000", 10);
+  // Loopback unless told otherwise; any other interface needs a token
+  const bindingProblem = serveBindingProblem(
+    options.host ?? DEFAULT_SERVE_HOST,
+    options.token,
+  );
+  if (bindingProblem) {
+    throw new Error(bindingProblem);
+  }
 
   // Environment install script will be deferred until after server startup to avoid blocking
 
@@ -114,17 +145,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     model: modelState.model,
   };
 
-  // Log configuration information
-  const assistantName = config.name;
-  const modelProvider = model.provider;
-  const modelName = model.model;
-
-  console.log(chalk.blue(`\nConfiguration:`));
-  console.log(chalk.dim(`  Assistant: ${assistantName}`));
-  console.log(chalk.dim(`  Model: ${modelProvider}/${modelName}`));
-  if (options.config) {
-    console.log(chalk.dim(`  Config file: ${options.config}`));
-  }
+  logServeConfiguration(config.name, model, options.config);
 
   // Initialize session with system message
   const systemMessage = await constructSystemMessage(
@@ -132,6 +153,7 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     options.rule,
     undefined,
     true,
+    model.model,
   );
 
   const initialHistory: ChatHistoryItem[] = [];
@@ -155,11 +177,15 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     // Fallback: continue even if service init fails; stream will still work with arrays
   }
 
-  // Initialize server state
+  // Initialize server state. The model is read when a turn is sent, not
+  // once here: a mode change or a Loop turn may have switched it
+  // (`modeModels`), and the switch lives in the model service's state.
   const state: ServerState = {
     session,
     config,
-    model,
+    get model() {
+      return services.model.getState().model ?? model;
+    },
     isProcessing: false,
     lastActivity: Date.now(),
     currentAbortController: null,
@@ -199,10 +225,16 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
 
   const app = express();
   app.use(express.json());
+  // Anything that reaches the port can act as the person (messages,
+  // approvals, loop answers), so off loopback every request carries a token
+  const host = options.host ?? DEFAULT_SERVE_HOST;
+  if (options.token) app.use(bearerTokenMiddleware(options.token));
 
   const messageCtx: ServeMessageContext = {
     state,
-    llmApi,
+    get llmApi() {
+      return services.model.getState().llmApi ?? llmApi;
+    },
     syncSessionHistory,
     onIdle: () => storageSyncService.markAgentStatusUnread(),
   };
@@ -320,8 +352,13 @@ export async function serve(prompt?: string, options: ServeOptions = {}) {
     setTimeout(handleExitResponse, 100);
   });
 
-  const server = app.listen(port, async () => {
-    console.log(chalk.green(`Server started on http://localhost:${port}`));
+  const server = app.listen(port, host, async () => {
+    console.log(chalk.green(`Server started on http://${host}:${port}`));
+    if (options.token) {
+      console.log(
+        chalk.dim("  Every request needs: Authorization: Bearer <token>"),
+      );
+    }
     console.log(chalk.dim("Endpoints:"));
     console.log(chalk.dim("  GET  /state      - Get current agent state"));
     console.log(

@@ -445,7 +445,13 @@ describe("TUIChat - message queue and steering", () => {
         ui.lastFrame,
       );
       const users = llm.requests[1].messages.filter((m) => m.role === "user");
-      expect(users.map(messageText)).toEqual(["start", "keep this"]);
+      // The first user message also carries the environment block (date and
+      // git status, src/environmentContext.ts); the person's words come first.
+      expect(
+        users.map(
+          (m) => messageText(m).split('\n\n<context name="environment">')[0],
+        ),
+      ).toEqual(["start", "keep this"]);
       await waitUntil(
         () => ui.allOutput().includes("resumed"),
         "the reply",

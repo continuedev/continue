@@ -14,6 +14,10 @@ import { markFileAsRead } from "./readFile.js";
 import { generateDiff } from "./writeFile.js";
 
 // Mock the dependencies
+const headless = vi.hoisted(() => ({ value: false }));
+vi.mock("../services/index.js", () => ({
+  services: { toolPermissions: { isHeadless: () => headless.value } },
+}));
 vi.mock("../telemetry/telemetryService.js");
 vi.mock("../telemetry/utils.js", () => ({
   calculateLinesOfCodeDiff: vi.fn().mockReturnValue({ added: 1, removed: 0 }),
@@ -36,7 +40,8 @@ vi.mock("fs", async () => {
 });
 
 describe("multiEditTool CLI specific", () => {
-  const testFilePath = "/tmp/test-multi-edit-file.txt";
+  // Inside the working directory: a file outside it gets a preview note
+  const testFilePath = path.join(process.cwd(), "test-multi-edit-file.txt");
   const originalContent = "Hello world\nThis is a test file\nGoodbye world";
 
   beforeEach(() => {
@@ -134,7 +139,7 @@ describe("multiEditTool CLI specific", () => {
       expect(result.preview).toHaveLength(2);
       expect(result.preview?.[0]).toEqual({
         type: "text",
-        content: "Will apply 1 edit to /tmp/test-multi-edit-file.txt:",
+        content: `Will apply 1 edit to ${testFilePath}:`,
       });
       expect(result.preview?.[1]).toEqual({
         type: "diff",
@@ -263,7 +268,7 @@ describe("multiEditTool CLI specific", () => {
     });
 
     it("should leave absolute paths unchanged", async () => {
-      const absolutePath = "/tmp/absolute-file.txt";
+      const absolutePath = path.join(process.cwd(), "absolute-file.txt");
       markFileAsRead(absolutePath);
 
       const args = {
@@ -301,5 +306,45 @@ describe("multiEditTool CLI specific", () => {
         "Hi there\nThis is a test file\nGoodbye world",
       );
     });
+  });
+});
+
+describe("multiEditTool and the working directory", () => {
+  const outsidePath = path.resolve(process.cwd(), "..", "elsewhere.txt");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    headless.value = false;
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readFileSync).mockReturnValue("Hello world");
+    vi.mocked(fs.realpathSync).mockImplementation((p) => p.toString());
+  });
+
+  afterEach(() => {
+    headless.value = false;
+  });
+
+  it("says in the preview when the file is outside the working directory", async () => {
+    markFileAsRead(outsidePath);
+    const result = await multiEditTool.preprocess!({
+      file_path: outsidePath,
+      edits: [{ old_string: "Hello", new_string: "Hi" }],
+    });
+    expect(result.preview?.[0].content).toContain(
+      "Outside the working directory",
+    );
+    expect(result.preview?.[1].content).toContain("Will apply 1 edit");
+  });
+
+  it("refuses such an edit in a headless run", async () => {
+    headless.value = true;
+    markFileAsRead(outsidePath);
+    const error = await multiEditTool.preprocess!({
+      file_path: outsidePath,
+      edits: [{ old_string: "Hello", new_string: "Hi" }],
+    }).catch((e) => e);
+    expect(error).toBeInstanceOf(ContinueError);
+    expect(error.message).toContain("MultiEdit was not run");
+    expect(error.message).toContain(process.cwd());
   });
 });

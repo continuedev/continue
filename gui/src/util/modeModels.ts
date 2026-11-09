@@ -2,29 +2,40 @@ import type {
   BrowserSerializedContinueConfig,
   MessageModes,
   ModeReasoningEffort,
+  ModelUse,
 } from "core";
+import { modeModelFor } from "core/util/modelUse";
 
-/** Thinking budget (tokens) each reasoning effort maps to. */
-export const REASONING_EFFORT_BUDGET_TOKENS = {
-  low: 1024,
-  medium: 4096,
-  high: 16384,
-} as const;
+export {
+  REASONING_EFFORT_BUDGET_TOKENS,
+  reasoningOptionsForEffort,
+} from "core/util/modelUse";
 
 type ModeModelsInput = Pick<BrowserSerializedContinueConfig, "modeModels">;
 
+/** A mode or use the request can be for; "background" has no model of its own. */
+type UseOrMode = ModelUse | MessageModes;
+
+function asUse(use: UseOrMode): ModelUse | undefined {
+  return use === "background" ? undefined : use;
+}
+
 /**
- * Title of the chat model a mode should use: the user's manual pick for that
- * mode if there is one, otherwise the `modeModels` entry, otherwise undefined
+ * Title of the chat model a use should have: the user's manual pick for that
+ * mode if there is one, otherwise the `modeModels` entry (a Loop item falls
+ * back to the agent entry, a re-plan to the plan entry), otherwise undefined
  * (the current model is kept).
  */
 export function getModeModelTitle(
   config: ModeModelsInput,
-  mode: MessageModes,
+  use: UseOrMode,
   overrides: Partial<Record<MessageModes, string>> = {},
 ): string | undefined {
-  if (mode === "background") return undefined;
-  return overrides[mode] ?? config.modeModels?.[mode]?.title;
+  const u = asUse(use);
+  if (!u) return undefined;
+  return (
+    overrides[u as MessageModes] ?? modeModelFor(config.modeModels, u)?.title
+  );
 }
 
 /**
@@ -79,26 +90,12 @@ export function nextModelTitle(
   return candidates[next].value;
 }
 
-/** Reasoning effort configured for a mode, if any. */
+/** Reasoning effort configured for a use, with the same fallbacks as the model. */
 export function getModeReasoningEffort(
   config: ModeModelsInput,
-  mode: MessageModes,
+  use: UseOrMode,
 ): ModeReasoningEffort | undefined {
-  if (mode === "background") return undefined;
-  return config.modeModels?.[mode]?.reasoningEffort;
-}
-
-/**
- * Completion-option fields for a mode's reasoning effort. Returns undefined
- * when the mode sets none.
- */
-export function reasoningOptionsForEffort(
-  effort: ModeReasoningEffort | undefined,
-): { reasoning: boolean; reasoningBudgetTokens?: number } | undefined {
-  if (!effort) return undefined;
-  if (effort === "off") return { reasoning: false };
-  return {
-    reasoning: true,
-    reasoningBudgetTokens: REASONING_EFFORT_BUDGET_TOKENS[effort],
-  };
+  const u = asUse(use);
+  if (!u) return undefined;
+  return modeModelFor(config.modeModels, u)?.reasoningEffort;
 }

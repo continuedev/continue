@@ -9,6 +9,8 @@ import {
   CostBreakdown,
   findAnthropicPricing,
   normalizeClaudeModelId,
+  findBedrockPricing,
+  findNovaPricing,
 } from "./calculateRequestCost";
 
 interface TestCase {
@@ -354,12 +356,17 @@ describe("calculateRequestCost cache lifetimes and providers", () => {
     expect(result!.cost).toBeGreaterThan(0);
   });
 
-  it("returns null for non-Claude models on those providers", () => {
+  it("returns null for models those providers have no price for", () => {
     expect(
-      calculateRequestCost("bedrock", "amazon.nova-pro-v1:0", {
-        promptTokens: 1000,
-        completionTokens: 1000,
-      }),
+      calculateRequestCost(
+        "bedrock",
+        // Llama 3.3 has no row (Llama 4 does, in BEDROCK_PRICING)
+        "meta.llama3-3-70b-instruct-v1:0",
+        {
+          promptTokens: 1000,
+          completionTokens: 1000,
+        },
+      ),
     ).toBeNull();
     expect(
       calculateRequestCost("openrouter", "openai/gpt-4o", {
@@ -665,5 +672,148 @@ describe("Fable and Mythos prices", () => {
       })!.cost;
     expect(per("global.anthropic.claude-fable-5-1")).toBeCloseTo(10, 6);
     expect(per("us.anthropic.claude-fable-5-1")).toBeCloseTo(11, 6);
+  });
+});
+
+describe("Amazon Nova on Bedrock", () => {
+  // AWS Price List, us-east-1 on-demand, read 2026-11-08: see NOVA_PRICING
+  it.each([
+    ["amazon.nova-2-lite-v1:0", 0.33, 2.75],
+    ["us.amazon.nova-2-lite-v1:0", 0.33, 2.75],
+    ["amazon.nova-pro-v1:0", 0.8, 3.2],
+    ["eu.amazon.nova-lite-v1:0", 0.06, 0.24],
+    ["apac.amazon.nova-micro-v1:0", 0.035, 0.14],
+  ])("%s is $%s in, $%s out per MTok", (id, input, output) => {
+    const pricing = findNovaPricing(id)!;
+    expect(pricing).not.toBeNull();
+    expect(pricing.input).toBe(input);
+    expect(pricing.output).toBe(output);
+    expect(pricing.cacheRead).toBeCloseTo(input * 0.25, 9);
+    expect(pricing.cacheWrite).toBe(0);
+  });
+
+  it("prices reads at a quarter of the input rate and writes at nothing", () => {
+    const result = calculateRequestCost("bedrock", "us.amazon.nova-pro-v1:0", {
+      promptTokens: 1_000_000,
+      completionTokens: 1_000_000,
+      promptTokensDetails: {
+        cachedTokens: 1_000_000,
+        cacheWriteTokens: 1_000_000,
+      },
+    })!;
+    expect(result).not.toBeNull();
+    // 0.80 input + 3.20 output + 0.20 read + 0 write
+    expect(result.cost).toBeCloseTo(4.2, 6);
+    expect(result.breakdown).toContain("Cache Read");
+    expect(result.breakdown).toContain(
+      "Cache Write (5m): 1,000,000 tokens × $0/MTok",
+    );
+  });
+
+  it("prices a request whose whole prompt was a cache write", () => {
+    // Bedrock reports inputTokens 0 when everything went to the cache
+    const result = calculateRequestCost(
+      "bedrock",
+      "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      {
+        promptTokens: 0,
+        completionTokens: 0,
+        promptTokensDetails: { cachedTokens: 0, cacheWriteTokens: 1_000_000 },
+      },
+    )!;
+    // $1 x 1.25 (5m write) x 1.10 (us. profile)
+    expect(result.cost).toBeCloseTo(1.375, 6);
+  });
+
+  it("leaves Nova unpriced on providers other than Bedrock", () => {
+    expect(
+      calculateRequestCost("openrouter", "amazon/nova-pro-v1", {
+        promptTokens: 10,
+        completionTokens: 10,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("other model families on Bedrock (AWS Price List, us-east-1, 2026-11-08)", () => {
+  const usage = { promptTokens: 1_000_000, completionTokens: 1_000_000 };
+
+  it.each([
+    ["deepseek.v3.2", 0.62, 1.85],
+    ["us.deepseek.v3.2", 0.62, 1.85],
+    ["openai.gpt-oss-120b-1:0", 0.15, 0.6],
+    ["us-gov.openai.gpt-oss-120b-1:0", 0.15, 0.6],
+    ["openai.gpt-oss-20b-1:0", 0.07, 0.3],
+    ["mistral.mistral-large-3-675b-instruct", 0.5, 1.5],
+    ["us.meta.llama4-maverick-17b-instruct-v1:0", 0.24, 0.97],
+    ["us.meta.llama4-scout-17b-instruct-v1:0", 0.17, 0.66],
+    ["moonshotai.kimi-k2.5", 0.6, 3.0],
+    ["qwen.qwen3-coder-next", 0.5, 1.2],
+    ["qwen.qwen3-32b-v1:0", 0.15, 0.6],
+    ["qwen.qwen3-coder-30b-a3b-v1:0", 0.15, 0.6],
+    ["qwen.qwen3-vl-235b-a22b", 0.53, 2.66],
+    ["zai.glm-5", 1.0, 3.2],
+    ["minimax.minimax-m2.5", 0.3, 1.2],
+    ["nvidia.nemotron-super-3-120b", 0.15, 0.65],
+  ])("%s is $%s in / $%s out per MTok", (id, input, output) => {
+    const pricing = findBedrockPricing(id)!;
+    expect(pricing).toMatchObject({ input, output });
+    expect(calculateRequestCost("bedrock", id, usage)!.cost).toBeCloseTo(
+      input + output,
+      6,
+    );
+  });
+
+  it("matches the whole ID, so deepseek.v3.2 is not deepseek.v3.1 and the row ends at the tail", () => {
+    expect(findBedrockPricing("deepseek.v3.1")).toBeNull();
+    expect(findBedrockPricing("deepseek.v3.25")).toBeNull();
+    expect(findBedrockPricing("qwen.qwen3-32b-v1:0")).not.toBeNull();
+  });
+
+  it("has no price for Nova Premier (retired) or Qwen3 Next 80B A3B (no standard row)", () => {
+    expect(findBedrockPricing("us.amazon.nova-premier-v1:0")).toBeNull();
+    expect(findBedrockPricing("qwen.qwen3-next-80b-a3b")).toBeNull();
+    expect(
+      calculateRequestCost("bedrock", "qwen.qwen3-next-80b-a3b", usage),
+    ).toBeNull();
+  });
+
+  it("charges nothing for cache reads or writes: Bedrock does not cache these families", () => {
+    const result = calculateRequestCost("bedrock", "qwen.qwen3-coder-next", {
+      promptTokens: 1_000_000,
+      completionTokens: 0,
+      promptTokensDetails: {
+        cachedTokens: 1_000_000,
+        cacheWriteTokens: 1_000_000,
+      },
+    })!;
+    expect(result.cost).toBeCloseTo(0.5, 6);
+  });
+
+  it("prices bedrock-mantle through the same table (the Mantle usage types carry the same rates)", () => {
+    expect(
+      calculateRequestCost("bedrock-mantle", "openai.gpt-oss-120b", usage)!
+        .cost,
+    ).toBeCloseTo(0.75, 6);
+    expect(
+      calculateRequestCost("bedrock-mantle", "qwen.qwen3-32b", usage)!.cost,
+    ).toBeCloseTo(0.75, 6);
+    // Claude on Mantle: Anthropic's list prices, as on Bedrock
+    expect(
+      calculateRequestCost(
+        "bedrock-mantle",
+        "anthropic.claude-haiku-4-5",
+        usage,
+      ),
+    ).toEqual(
+      calculateRequestCost("bedrock", "anthropic.claude-haiku-4-5", usage),
+    );
+  });
+
+  it("still prices Nova by its own table and Claude by Anthropic's", () => {
+    expect(findBedrockPricing("us.amazon.nova-pro-v1:0")).toBeNull();
+    expect(
+      calculateRequestCost("bedrock", "us.amazon.nova-pro-v1:0", usage)!.cost,
+    ).toBeCloseTo(4.0, 6);
   });
 });

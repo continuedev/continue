@@ -77,7 +77,9 @@ models:
     const userMessage = mockServer.requests[0].body.messages.find(
       (m: any) => m.role === "user",
     );
-    expect(userMessage.content).toBe("Hi there");
+    // The prompt comes first; the environment block (date, git status) rides
+    // on the first user message after it (src/environmentContext.ts)
+    expect(userMessage.content.split("\n\n<context ")[0]).toBe("Hi there");
   }, 20000);
 
   it("should create config but fail with invalid API key when no config exists", async () => {

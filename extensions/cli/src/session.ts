@@ -11,6 +11,7 @@ import type {
   TaskPlan,
   Usage,
 } from "core/index.js";
+import { totalInputTokens } from "core/llm/utils/cacheStats.js";
 import historyManager from "core/util/history.js";
 import { restoreLoop } from "core/util/loopMode.js";
 import { v4 as uuidv4 } from "uuid";
@@ -194,12 +195,35 @@ class SessionManager {
     return this.getCurrentSession().sessionId;
   }
 
-  trackUsage(cost: number, usage: Usage): void {
+  /**
+   * Add one request. `promptTokens` in the session totals is the input the
+   * provider processed: uncached input plus cache reads plus cache writes
+   * (`totalInputTokens`), whatever the provider's own count leaves out. A
+   * Bedrock request whose whole prompt was a cache write reports
+   * `inputTokens` 0 and still counts its write here. Without a provider the
+   * provider's count is taken as the whole input. `estimated` marks a cost
+   * priced at the fallback rate (no price table for the model): the session
+   * total is then an estimate and is shown as one.
+   */
+  trackUsage(
+    cost: number,
+    usage: Usage,
+    provider?: string,
+    model?: string,
+    estimated = false,
+  ): void {
     // Accumulate cost
     this.sessionUsage.totalCost += cost;
+    if (estimated) {
+      this.sessionUsage.costEstimated = true;
+    }
 
     // Accumulate token counts
-    this.sessionUsage.promptTokens += usage.promptTokens;
+    const processedInput =
+      provider && model
+        ? totalInputTokens(provider, model, usage)
+        : usage.promptTokens;
+    this.sessionUsage.promptTokens += processedInput;
     this.sessionUsage.completionTokens += usage.completionTokens;
 
     // Accumulate cache tokens if present
@@ -705,10 +729,23 @@ export function onLoopChange(listener: LoopListener): () => void {
 }
 
 /**
- * Track cost for the current session
+ * Track cost and tokens for the current session. `provider` and `model` let
+ * the input total count what the provider's own `promptTokens` leaves out.
  */
-export function trackSessionUsage(cost: number, usage: Usage): void {
-  SessionManager.getInstance().trackUsage(cost, usage);
+export function trackSessionUsage(
+  cost: number,
+  usage: Usage,
+  provider?: string,
+  model?: string,
+  estimated = false,
+): void {
+  SessionManager.getInstance().trackUsage(
+    cost,
+    usage,
+    provider,
+    model,
+    estimated,
+  );
 }
 
 /**

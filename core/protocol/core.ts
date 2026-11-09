@@ -116,6 +116,13 @@ export interface BedrockModelOptionInfo {
   legacy?: boolean;
   /** Anthropic model on an account that has not filled out the use-case form. */
   needsAnthropicUseCase?: boolean;
+  /**
+   * The account's access to the model (GetFoundationModelAvailability):
+   * absent when not checked, "needs-access" when the agreement is missing
+   * (a legacy model the account has not used lately shows the same), and
+   * "pending" while an access request is open.
+   */
+  access?: "available" | "needs-access" | "pending";
 }
 
 export type BedrockListModelsResult =

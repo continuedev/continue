@@ -59,6 +59,7 @@ export const presentPlanImpl: ClientToolImpl = async (
       title: parsed.title,
       body: parsed.body,
       items: result.plan.items,
+      decisions: parsed.decisions,
     }),
   );
 
@@ -80,7 +81,7 @@ export const presentPlanImpl: ClientToolImpl = async (
         description: relativePath,
         content: loopStarted
           ? `Plan saved to ${relativePath}. The loop started building it, one to-do per turn: stop here.`
-          : planProposedResult(relativePath, result.plan),
+          : planProposedResult(relativePath, result.plan, parsed.decisions),
         uri: { type: "file", value: fileUri },
         hidden: false,
       },

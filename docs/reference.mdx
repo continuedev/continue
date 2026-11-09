@@ -117,7 +117,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `stop`: An array of stop tokens that will terminate the completion.
   - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ and some Ollama models.
   - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
-  - `promptCaching`: Boolean to cache the tool definitions, system prompt and conversation for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter. On Anthropic and Bedrock it is on by default in Agent, Plan and Background modes (and in the CLI) when neither this nor `cacheBehavior` says anything; off in Chat, and off by default on Vertex AI and OpenRouter. `false` turns it off and also overrides `cacheBehavior`. See [Prompt Caching](./customize/deep-dives/prompt-caching.mdx).
+  - `promptCaching`: Boolean to cache the tool definitions, system prompt and conversation for Claude models on Anthropic, Amazon Bedrock, Vertex AI and OpenRouter, and the system prompt and conversation for Amazon Nova 2 Lite, Pro, Lite and Micro on Bedrock. On Anthropic and Bedrock it is on by default in Agent, Plan and Background modes (and in the CLI) when neither this nor `cacheBehavior` says anything; off in Chat, and off by default on Vertex AI and OpenRouter. `false` turns it off and also overrides `cacheBehavior`. See [Prompt Caching](./customize/deep-dives/prompt-caching.mdx).
   - `keepAlive`: For Ollama, the number of seconds to keep the model loaded after the last request (default: `1800`).
 
 - `cacheBehavior`: Which parts of a request to cache. Read only when `defaultCompletionOptions.promptCaching` is not set. The toolbar in the chat window can override the lifetime. See [Prompt Caching](./customize/deep-dives/prompt-caching.mdx).
@@ -209,7 +209,7 @@ models:
 
 ### `modeModels`
 
-Use a different chat model (and reasoning effort) in each mode, for example a stronger model to plan and a faster one to act. Each entry names a model defined under `models` (by its `name`).
+Which model does what: a different model (and reasoning effort) for each mode, for Loop items and re-plans, for the Auto reviewer and for subagents. For example a stronger model to plan and review, and a faster one to act. Each entry names a model defined under `models` (by its `name`) or in your [model catalog](/customize/model-catalog).
 
 ```yaml title="config.yaml"
 models:
@@ -223,6 +223,11 @@ models:
     model: us.anthropic.claude-sonnet-4-6
     env:
       region: us-east-1
+  - name: Nova Lite
+    provider: bedrock
+    model: us.amazon.nova-2-lite-v1:0
+    env:
+      region: us-east-1
 
 modeModels:
   plan:
@@ -231,17 +236,39 @@ modeModels:
   agent:
     model: Claude Sonnet
     reasoningEffort: low
+  loop:
+    model: Nova Lite # each to-do of a loop
+  replan:
+    model: Claude Opus # the plan between rounds
+  reviewer:
+    model: Claude Sonnet
+    reasoningEffort: off
+  subagent:
+    model: Nova Lite
 ```
 
-- `chat`, `agent`, `plan`: the modes you can set. Each takes:
+The entries, and what each falls back to when it is not set:
+
+| Entry      | Used for                                                                | Without an entry                                      |
+| ---------- | ----------------------------------------------------------------------- | ----------------------------------------------------- |
+| `chat`     | Chat mode                                                               | whichever model is selected                           |
+| `plan`     | Plan mode                                                               | whichever model is selected                           |
+| `agent`    | Agent mode                                                              | whichever model is selected                           |
+| `loop`     | each item of a Loop (the to-do turns)                                   | `agent`                                               |
+| `replan`   | a Loop's re-plans, check-ins and repairs                                | `plan`                                                |
+| `reviewer` | the [reviewer](/customize/model-roles/reviewer) in Auto approval mode   | the model picked for the reviewer role in Settings    |
+| `subagent` | subagents whose definition does not name a model                        | the model of the turn that started the subagent       |
+
+- `chat`, `agent` and `plan` each take:
   - `model`: the `name` of one of your chat models, selected when you switch into the mode.
   - `models` (optional): a list of model `name`s to offer in the mode. Give `model`, `models`, or both. With only `models`, the default is the first entry that exists. The default is always part of the list and is listed first, and duplicates are removed. The model picker shows these first, and the model shortcut cycles only through them.
   - `reasoningEffort` (optional): `off`, `low`, `medium` or `high`. This maps to a thinking budget of about 1K, 4K or 16K tokens for models that support extended thinking.
-- Switching mode switches the selected chat model, and the mode menu shows which model and effort each mode uses.
-- A mode without an entry keeps whichever model is currently selected.
+- `loop`, `replan`, `reviewer` and `subagent` take `model` and `reasoningEffort` only: nothing offers a picker there, so there is no list. `loop`, `replan` and `subagent` name chat models. `reviewer` may name any model, whatever its `roles`; it is added to the reviewer role and selected, and a reviewer picked in Settings then holds until the window reloads.
+- Switching mode switches the selected chat model, and the mode menu shows which model and effort each mode uses. A Loop switches the model for each turn it sends: the `loop` model for an item, the `replan` model for a re-plan.
 - If you pick a model by hand in the model selector, that choice is used for the current mode until you reload the window. The reasoning toggle in the chat input overrides `reasoningEffort`.
 - A name that doesn't match one of your models is ignored, with a warning in the config errors. If nothing in an entry matches, the entry is ignored.
-- You can also set all of this from **Settings > Models > Models per mode**: tick the models each mode offers, star the default, pick a reasoning effort and press Save. Saving edits `config.yaml` in place and keeps your comments. It needs a `config.yaml` (not a `config.json`), and is not shown in the JetBrains plugin yet.
+- You can also set all of this from **Settings > Models > Which model does what**: tick the models each mode offers, star the default, star one model for Loop, Re-plan and Subagent, pick a reasoning effort and press Save. Saving edits `config.yaml` in place and keeps your comments. It needs a `config.yaml` (not a `config.json`), and is not shown in the JetBrains plugin yet. The reviewer is picked under **Additional model roles**.
+- **In the CLI** (`cn`, `cn serve`), `modeModels` picks the model the same way: switching to Plan mode takes the `plan` model, leaving it the `agent` model, and a Loop takes `loop` and `replan` per turn; `reviewer` names the model `--auto-review` asks. The CLI does not apply `reasoningEffort`: set the effort in the model's own options, or pick a [catalog variant](/customize/model-catalog#variants) such as `Claude Opus#high`. Subagents in the CLI are models with the `subagent` role, so `modeModels.subagent` does not apply there.
 
 ---
 

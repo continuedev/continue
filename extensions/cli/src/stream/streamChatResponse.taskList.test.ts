@@ -83,7 +83,11 @@ describe("the task list in the CLI request", () => {
   it("is the last message, after the history", async () => {
     const messages = await sentMessages([readTool, taskListTool]);
     expect(messages.map((m) => m.role)).toEqual(["system", "user", "user"]);
-    expect(messages[1].content).toBe("fix it");
+    // The first user message carries the environment block (date, git status)
+    const first = String(messages[1].content);
+    expect(first.startsWith('fix it\n\n<context name="environment">')).toBe(
+      true,
+    );
     const tail = String(messages.at(-1)?.content);
     expect(tail.startsWith("<task_list>\n")).toBe(true);
     expect(tail).toContain("[>] 2. Fix");

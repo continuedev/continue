@@ -88,27 +88,32 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
     // ...). Only rule out non-chat models; override with `capabilities` if needed.
     "bedrock-mantle": (model) =>
       !/embed|rerank|image|whisper|tts|speech/i.test(model),
+    // Checked live on 2026-11-08 (Converse and ConverseStream): Claude, Nova
+    // 2 Lite, Nova Pro, Mistral Large 3, Qwen3 and DeepSeek V3.2 return
+    // toolUse blocks. DeepSeek R1 refuses tools outright. Llama 3.3 calls
+    // tools only outside streaming, so it stays off. Llama 4 refuses tools
+    // in ConverseStream too ("This model doesn't support tool use in
+    // streaming mode.") but returns a proper toolUse block from Converse, so
+    // it stays on and the provider sends its tool requests without streaming
+    // (bedrockToolsNeedNonStreaming in llms/bedrockHelpers.ts).
     bedrock: (model) => {
-      if (model.includes("claude-2") || model.includes("claude-instant")) {
+      const id = model.toLowerCase();
+      if (id.includes("claude-2") || id.includes("claude-instant")) {
         return false;
       }
-      if (
-        [
-          "claude",
-          "nova-lite",
-          "nova-pro",
-          "nova-micro",
-          "nova-premier",
-          "gpt-oss",
-          "llama4",
-          "llama-4",
-          "deepseek",
-        ].some((part) => model.toLowerCase().includes(part))
-      ) {
-        return true;
+      if (/deepseek[.-]r1/.test(id)) {
+        return false;
       }
-
-      return false;
+      return [
+        "claude",
+        "nova",
+        "gpt-oss",
+        "llama4",
+        "llama-4",
+        "deepseek",
+        "mistral",
+        "qwen",
+      ].some((part) => id.includes(part));
     },
     mistral: (model) => {
       // https://docs.mistral.ai/capabilities/function_calling/

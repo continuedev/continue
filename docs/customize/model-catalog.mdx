@@ -36,11 +36,17 @@ modeModels:
     model: Claude Sonnet
   agent:
     model: Qwen3.8 Flash#act
+  loop:
+    model: Qwen3.8 Flash#act # each to-do of a loop
+  replan:
+    model: Claude Sonnet # the plan between rounds
+  reviewer:
+    model: Qwen3.8 Flash#plan
 ```
 
 - `from: Name` uses the catalog model as it is, and `from: Name#variant` with that variant's changes.
 - The config entry can add `roles` and change any field for this config. Its name is the reference (`Qwen3.8 Flash#act`) unless it sets `name`.
-- A model or variant that `modeModels` picks but the config's `models` list does not have is added as a chat model, so a model assigned to a mode does not need to be listed twice.
+- A model or variant that `modeModels` picks but the config's `models` list does not have is added as a chat model, so a model assigned to a mode does not need to be listed twice. This holds for every `modeModels` entry: the modes, `loop`, `replan`, `reviewer` and `subagent` (see [`modeModels`](/reference#modemodels) for what each one covers and falls back to).
 
 ## How the settings combine
 

@@ -310,6 +310,12 @@ export interface SessionUsage extends Usage {
    * to models without a known price add nothing (see `ModelUsage.pricedRequests`).
    */
   totalCost: number;
+  /**
+   * True when part of `totalCost` was priced at a fallback rate because the
+   * model has no entry in the price tables, so the figure is an estimate and
+   * is shown as one.
+   */
+  costEstimated?: boolean;
   /** Totals per model, keyed `provider/model`. */
   byModel?: Record<string, ModelUsage>;
   /** The latest request, for the context-window display. */
@@ -454,6 +460,21 @@ export interface LoopItemState {
  */
 export type LoopQuestionKind = "blocking" | "assumption" | "approval";
 
+/**
+ * What a wrong answer to a question would cost, as the agent labels it
+ * (plans/policy-areas.md, "Questions are about who decides"). Recorded with
+ * the question; the Questions level will route on it, with checks. The list
+ * is QUESTION_TYPES in core/util/loopMode.ts.
+ */
+export type QuestionType =
+  | "access"
+  | "irreversible"
+  | "security"
+  | "cost"
+  | "scope"
+  | "design"
+  | "detail";
+
 export interface LoopQuestion {
   /** IDGAF: the agent decided this itself; it never reached the inbox */
   decidedAlone?: boolean;
@@ -462,6 +483,8 @@ export interface LoopQuestion {
   itemId?: string;
   question: string;
   kind: LoopQuestionKind;
+  /** The agent's label for what a wrong answer would cost */
+  type?: QuestionType;
   /** The default the item continued with (kind assumption) */
   assumption?: string;
   /** The held tool call (kind approval) */
@@ -626,6 +649,12 @@ export interface LoopState {
     checkIn?: string;
     /** A repair re-plan (fix forward): the failed item's text */
     itemText?: string;
+    /**
+     * The run ended once without its report (finish_item, or a re-plan's
+     * present_plan) and was told to call it; a second such end counts
+     * (core/util/turnEnd.ts)
+     */
+    nudged?: boolean;
   };
   /**
    * The re-plan whose plan waits to be accepted: what it was for, so
@@ -2459,10 +2488,15 @@ export type RulesByModeConfig = Partial<
   Record<"chat" | "agent" | "plan", boolean>
 >;
 
-/** Per-mode model selection from `modeModels:` in config.yaml. */
-export type ModeModelsConfig = Partial<
-  Record<"chat" | "agent" | "plan", ModeModelSetting>
->;
+/**
+ * What a model can be used for: the three chat modes, Loop item turns,
+ * Loop re-plans, the Auto reviewer and subagents (see core/util/modelUse.ts).
+ */
+export type ModelUse =
+  "chat" | "agent" | "plan" | "loop" | "replan" | "reviewer" | "subagent";
+
+/** Which model does what, from `modeModels:` in config.yaml. */
+export type ModeModelsConfig = Partial<Record<ModelUse, ModeModelSetting>>;
 
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;

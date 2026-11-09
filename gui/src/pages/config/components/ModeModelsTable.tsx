@@ -13,7 +13,7 @@ import {
   TABLE_MODES,
   TableMode,
 } from "../../../util/modeModelsDraft";
-import { MODE_LABEL, ModeCell } from "./ModeCell";
+import { MODE_FALLBACK_HINT, MODE_LABEL, ModeCell } from "./ModeCell";
 
 const EFFORTS: { value: ModeReasoningEffort | ""; label: string }[] = [
   { value: "", label: "Default" },
@@ -28,8 +28,9 @@ type Status =
 
 /**
  * Choose which chat models each mode offers (`modeModels.<mode>.models`), a
- * default per mode, and a reasoning effort. Edits stay in a draft until Save,
- * which writes config.yaml with comments kept.
+ * default per mode, one model each for Loop items, re-plans and subagents,
+ * and a reasoning effort. Edits stay in a draft until Save, which writes
+ * config.yaml with comments kept.
  */
 export function ModeModelsTable() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -90,10 +91,12 @@ export function ModeModelsTable() {
   return (
     <Card>
       <div className="mb-3">
-        <div className="text-base font-medium">Models per mode</div>
+        <div className="text-base font-medium">Which model does what</div>
         <p className="mt-1 text-xs text-description">
           Tick the models each mode offers. The star marks the one selected when
-          you switch into the mode. Saved to config.yaml.
+          you switch into the mode. Loop items, re-plans and subagents take one
+          model each; left blank, they use the Agent model, the Plan model and
+          the starting turn's model. Saved to config.yaml.
         </p>
       </div>
 
@@ -102,7 +105,11 @@ export function ModeModelsTable() {
           <tr className="text-left text-xs text-description">
             <th className="py-1 font-normal">Model</th>
             {TABLE_MODES.map((mode) => (
-              <th key={mode} className="px-2 py-1 text-center font-normal">
+              <th
+                key={mode}
+                className="px-2 py-1 text-center font-normal"
+                title={MODE_FALLBACK_HINT[mode]}
+              >
                 {MODE_LABEL[mode]}
               </th>
             ))}

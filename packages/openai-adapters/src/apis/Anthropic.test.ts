@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CACHING_STRATEGIES } from "./AnthropicCachingStrategies.js";
 import { addCacheControlToLastTwoUserMessages } from "./AnthropicUtils.js";
-import { AnthropicApi } from "./Anthropic.js";
+import { AnthropicApi, anthropicSamplingParams } from "./Anthropic.js";
 
 describe("AnthropicApi", () => {
   describe("_convertBody applies cache_control to last two user messages", () => {
@@ -108,6 +108,37 @@ describe("AnthropicApi", () => {
         );
         expect((textPart as any)?.cache_control).toBeUndefined();
       }
+    });
+  });
+
+  describe("sampling fields", () => {
+    const api = new AnthropicApi({ provider: "anthropic", apiKey: "test-key" });
+    const messages = [{ role: "user" as const, content: "Hi" }];
+
+    it("sends temperature or top_p, never both", () => {
+      const both = api._convertToCleanAnthropicBody({
+        model: "claude-sonnet-4-5",
+        messages,
+        temperature: 0.5,
+        top_p: 0.9,
+      });
+      expect(both.temperature).toBe(0.5);
+      expect(both.top_p).toBeUndefined();
+
+      const topOnly = api._convertToCleanAnthropicBody({
+        model: "claude-sonnet-4-5",
+        messages,
+        top_p: 0.9,
+      });
+      expect(topOnly.temperature).toBeUndefined();
+      expect(topOnly.top_p).toBe(0.9);
+    });
+
+    it("anthropicSamplingParams sends neither with thinking on", () => {
+      expect(anthropicSamplingParams(0.5, 0.9, true)).toEqual({});
+      expect(anthropicSamplingParams(0.5, 0.9, false)).toEqual({
+        temperature: 0.5,
+      });
     });
   });
 });

@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import path from "path";
 
 import { validateSingleEdit } from "core/edit/searchAndReplace/findAndReplaceUtils.js";
 import { executeFindAndReplace } from "core/edit/searchAndReplace/performReplace.js";
@@ -14,12 +13,27 @@ import {
 
 import { EditOperation } from "./multiEdit.js";
 import { readFilesSet, readFileTool } from "./readFile.js";
-import { Tool } from "./types.js";
+import { Tool, ToolCallPreview } from "./types.js";
+import {
+  checkWorkspaceWrite,
+  outsideWorkspacePreview,
+  resolveWorkspacePath,
+} from "./workspaceBoundary.js";
 import { generateDiff } from "./writeFile.js";
 
-export function validateAndResolveFilePath(args: any): {
+/**
+ * Checks the edit's target: present, inside the working directory (or
+ * refused headless, see workspaceBoundary.ts), existing, and read first.
+ * `outsidePreview` is the preview line to show when the file is outside the
+ * working directory, for the approval prompt.
+ */
+export function validateAndResolveFilePath(
+  args: any,
+  toolName = "Edit",
+): {
   originalPath: string;
   resolvedPath: string;
+  outsidePreview: ToolCallPreview[];
 } {
   const { file_path } = args;
 
@@ -30,9 +44,9 @@ export function validateAndResolveFilePath(args: any): {
     );
   }
 
-  const absolutePath = path.isAbsolute(file_path)
-    ? file_path
-    : path.resolve(process.cwd(), file_path);
+  const absolutePath = resolveWorkspacePath(file_path);
+  const outside = checkWorkspaceWrite(toolName, absolutePath);
+  const outsidePreview = outside ? [outsideWorkspacePreview(outside)] : [];
 
   const resolvedPath = fs.realpathSync(absolutePath);
 
@@ -54,7 +68,7 @@ export function validateAndResolveFilePath(args: any): {
     );
   }
 
-  return { originalPath: file_path, resolvedPath: resolvedPath };
+  return { originalPath: file_path, resolvedPath, outsidePreview };
 }
 
 export interface EditArgs extends EditOperation {
@@ -106,7 +120,10 @@ WARNINGS:
   preprocess: async (args) => {
     const { old_string, new_string, replace_all } = args as EditArgs;
 
-    const { resolvedPath } = validateAndResolveFilePath(args);
+    const { resolvedPath, outsidePreview } = validateAndResolveFilePath(
+      args,
+      editTool.name,
+    );
 
     const { oldString, newString, replaceAll } = validateSingleEdit(
       old_string,
@@ -133,6 +150,7 @@ WARNINGS:
         oldContent,
       },
       preview: [
+        ...outsidePreview,
         {
           type: "text",
           content: "Will make the following changes:",

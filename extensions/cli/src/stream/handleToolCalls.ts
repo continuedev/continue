@@ -21,6 +21,13 @@ import {
 } from "../tools/index.js";
 import { logger } from "../util/logger.js";
 
+import { recordRefusals } from "./refusalCap.js";
+import {
+  checkRepeatedCall,
+  recordInvalidCalls,
+  recordRepeatOutcome,
+  startRepeatRound,
+} from "./repeatGuard.js";
 import {
   executeStreamedToolCalls,
   preprocessStreamedToolCalls,
@@ -58,6 +65,77 @@ function setLocalToolResult(
     toolState.output = [
       { content, name: `Tool Result`, description: "Tool execution result" },
     ];
+  }
+}
+
+/**
+ * The repeat guard's first pass: calls identical to the ones before them are
+ * answered with a refusal (written as a canceled tool result) and left out
+ * of `toRun`; `endTurn` says the repeats have reached the cap.
+ */
+function refuseRepeatedCalls(
+  toolCalls: ToolCall[],
+  ctx: {
+    callbacks: HandleToolCallsOptions["callbacks"];
+    useService: boolean;
+    chatHistorySvc: typeof services.chatHistory;
+    chatHistory: ChatHistoryItem[];
+  },
+): { toRun: ToolCall[]; endTurn: boolean } {
+  startRepeatRound();
+  let endTurn = false;
+  const toRun: ToolCall[] = [];
+  for (const tc of toolCalls) {
+    const verdict = checkRepeatedCall(tc);
+    endTurn ||= verdict.endTurn;
+    if (!verdict.refusal) {
+      toRun.push(tc);
+      continue;
+    }
+    ctx.callbacks?.onToolStart?.(tc.name, tc.arguments);
+    ctx.callbacks?.onToolResult?.(verdict.refusal, tc.name, "canceled");
+    if (ctx.useService) {
+      ctx.chatHistorySvc.addToolResult(tc.id, verdict.refusal, "canceled");
+    } else {
+      setLocalToolResult(ctx.chatHistory, tc.id, verdict.refusal, "canceled");
+    }
+  }
+  return { toRun, endTurn };
+}
+
+/**
+ * A round of calls that fail validation (missing parameters, an unknown
+ * tool) counts like a repeat, whatever the arguments: a model whose tool
+ * input arrives truncated sends a different broken call every time. The
+ * guard's note is appended to each error so the model reads it; returns
+ * whether the cap ends the turn.
+ */
+function noteInvalidRound(
+  errorChatEntries: { tool_call_id: string; content: unknown }[],
+  toRun: ToolCall[],
+): boolean {
+  const invalid = recordInvalidCalls(errorChatEntries.length > 0);
+  for (const errorEntry of errorChatEntries) {
+    const call = toRun.find((tc) => tc.id === errorEntry.tool_call_id);
+    if (call) recordRepeatOutcome(call, true);
+    if (invalid.refusal && typeof errorEntry.content === "string") {
+      errorEntry.content = `${errorEntry.content}\n\n${invalid.refusal}`;
+    }
+  }
+  return invalid.endTurn;
+}
+
+/**
+ * How each call went, so a refusal of the next repeat can say whether the
+ * earlier identical calls failed or succeeded.
+ */
+function recordRunOutcomes(
+  chatHistoryEntries: { tool_call_id: string; status: string }[],
+  toRun: ToolCall[],
+): void {
+  for (const entry of chatHistoryEntries) {
+    const call = toRun.find((tc) => tc.id === entry.tool_call_id);
+    if (call) recordRepeatOutcome(call, entry.status !== "done");
   }
 }
 
@@ -141,9 +219,22 @@ export async function handleToolCalls(
     chatHistory.push(createHistoryItem(messageWithUsage, [], toolCallStates));
   }
 
+  // The repeat guard: a call identical to the ones before it is refused
+  // without running, and enough repeats end the turn (repeatGuard.ts).
+  const repeats = refuseRepeatedCalls(toolCalls, {
+    callbacks,
+    useService,
+    chatHistorySvc,
+    chatHistory,
+  });
+  const { toRun } = repeats;
+  let repeatEndsTurn = repeats.endTurn;
+
   // First preprocess the tool calls
   const { preprocessedCalls, errorChatEntries } =
-    await preprocessStreamedToolCalls(isHeadless, toolCalls, callbacks);
+    await preprocessStreamedToolCalls(isHeadless, toRun, callbacks);
+
+  repeatEndsTurn ||= noteInvalidRound(errorChatEntries, toRun);
 
   // Add any preprocessing errors to the toolCallStates on the assistant message
   // (NOT as separate history items, which would cause duplicate tool_result messages)
@@ -189,11 +280,26 @@ export async function handleToolCalls(
     }
   }
 
-  if (isHeadless && hasRejection) {
-    logger.debug(
-      "Tool call rejected in headless mode - returning current content",
-    );
-    return true; // Signal early return needed
+  recordRunOutcomes(chatHistoryEntries, toRun);
+  if (repeatEndsTurn) {
+    logger.debug("Repeat guard reached; ending the turn");
+    return true;
+  }
+
+  // A refusal is a tool result the model reads and carries on from ("do what
+  // else the request needs, then say what you could not do"): the turn goes
+  // on. What ends it is the refusal cap, so that a model cannot spend the
+  // turn retrying around a rule. Headless used to end the turn on the first
+  // refusal, which made the refusal text unreachable
+  // (policy-areas-test-findings.md, agent-deny).
+  if (isHeadless) {
+    const refused = hasRejection
+      ? chatHistoryEntries.filter((e) => e.status === "canceled").length
+      : 0;
+    if (recordRefusals(refused, hasRejection)) {
+      logger.debug("Refusal cap reached in headless mode; ending the turn");
+      return true; // Signal early return needed
+    }
   }
 
   // Tool results are already added to toolCallStates in executeStreamedToolCalls

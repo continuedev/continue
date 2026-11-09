@@ -5,8 +5,17 @@ import {
   bedrockUsageToUsage,
   buildModelCatalog,
   getBedrockErrorHint,
+  applyModelAccess,
+  inferenceProfileSuggestion,
+  inferenceProfileWarning,
+  modelAccessFromAvailability,
+  modelsNeedingAccessCheck,
   globalProfileStatus,
   inferenceProfilePrefixForRegion,
+  bedrockToolsNeedNonStreaming,
+  isStreamingToolUseUnsupportedError,
+  ThinkingTagSplitter,
+  writesThinkingTags,
 } from "./bedrockHelpers";
 
 describe("inferenceProfilePrefixForRegion", () => {
@@ -118,6 +127,20 @@ describe("getBedrockErrorHint", () => {
   it("returns undefined for unrelated errors", () => {
     expect(getBedrockErrorHint(new Error("boom"), {})).toBeUndefined();
   });
+
+  it("says a model is retired when it has reached the end of its life", () => {
+    // Nova Premier, 2026-11-08: profile listed, availability AUTHORIZED,
+    // every request refused with this
+    const e = Object.assign(
+      new Error("This model version has reached the end of its life."),
+      { name: "ResourceNotFoundException" },
+    );
+    const hint = getBedrockErrorHint(e, { region: "us-east-1" })!;
+    expect(hint).toContain("retired");
+    expect(hint).toContain("Test connection");
+    expect(hint).not.toContain("crossRegionInference");
+    expect(hint).not.toContain("access");
+  });
 });
 
 describe("buildModelCatalog", () => {
@@ -201,10 +224,28 @@ describe("buildModelCatalog", () => {
       status: "INACTIVE",
       models: [],
     },
+    // Retired: the profile is still ACTIVE but the base model is no longer
+    // listed by ListFoundationModels (Nova Premier, 2026-11-08)
+    {
+      inferenceProfileId: "us.amazon.nova-premier-v1:0",
+      inferenceProfileName: "US Nova Premier",
+      type: "SYSTEM_DEFINED",
+      status: "ACTIVE",
+      models: [
+        {
+          modelArn:
+            "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-premier-v1:0",
+        },
+      ],
+    },
   ];
 
   const catalog = buildModelCatalog(fms, profiles);
   const ids = catalog.map((m) => m.id);
+
+  it("drops a system profile whose base model Bedrock no longer lists", () => {
+    expect(ids).not.toContain("us.amazon.nova-premier-v1:0");
+  });
 
   it("offers profile IDs for profile-only models and base IDs for on-demand ones", () => {
     expect(ids).toContain("us.anthropic.claude-sonnet-4-6");
@@ -248,6 +289,262 @@ describe("getBedrockErrorHint (discovery)", () => {
     );
     expect(getBedrockErrorHint(e, { region: "us-eest-1" })).toContain(
       "us-eest-1",
+    );
+  });
+});
+
+describe("getBedrockErrorHint (access and API keys)", () => {
+  it("explains the legacy 404 for a model the account has not used lately", () => {
+    const e = Object.assign(
+      new Error(
+        "Access denied. This Model is marked by provider as Legacy and you have not been actively using the model in the last 30 days. Please upgrade to an active model on Amazon Bedrock",
+      ),
+      { name: "ResourceNotFoundException" },
+    );
+    const hint = getBedrockErrorHint(e, { region: "us-east-1" })!;
+    expect(hint).toContain("30 days");
+    expect(hint).toContain("Test connection");
+  });
+
+  it("says a short-term API key is bound to its region", () => {
+    const e = new Error(
+      "Authentication failed: Please make sure your API Key is valid.",
+    );
+    const hint = getBedrockErrorHint(e, { region: "us-west-2", apiKey: true })!;
+    expect(hint).toContain("us-west-2");
+    expect(hint).toContain("region it was generated for");
+  });
+
+  it("says nothing about regions when no API key was used", () => {
+    const e = new Error(
+      "Authentication failed: Please make sure your API Key is valid.",
+    );
+    expect(getBedrockErrorHint(e, { region: "us-west-2" })).toBeUndefined();
+  });
+});
+
+describe("modelAccessFromAvailability", () => {
+  it("maps the agreement status", () => {
+    expect(
+      modelAccessFromAvailability({
+        agreementAvailability: { status: "AVAILABLE" },
+        authorizationStatus: "AUTHORIZED",
+        entitlementAvailability: "AVAILABLE",
+        regionAvailability: "AVAILABLE",
+      }),
+    ).toBe("available");
+    // Sonnet 4.5 on an account without an agreement (live, 2026-11-08).
+    expect(
+      modelAccessFromAvailability({
+        agreementAvailability: { status: "NOT_AVAILABLE" },
+        authorizationStatus: "AUTHORIZED",
+        entitlementAvailability: "AVAILABLE",
+        regionAvailability: "AVAILABLE",
+      }),
+    ).toBe("needs-access");
+    expect(
+      modelAccessFromAvailability({
+        agreementAvailability: { status: "PENDING" },
+      }),
+    ).toBe("pending");
+    expect(
+      modelAccessFromAvailability({
+        agreementAvailability: { status: "ERROR", errorMessage: "x" },
+      }),
+    ).toBe("needs-access");
+  });
+
+  it("treats a missing authorisation, entitlement or region as needing access", () => {
+    const ok = { agreementAvailability: { status: "AVAILABLE" } };
+    expect(
+      modelAccessFromAvailability({
+        ...ok,
+        authorizationStatus: "NOT_AUTHORIZED",
+      }),
+    ).toBe("needs-access");
+    expect(
+      modelAccessFromAvailability({
+        ...ok,
+        entitlementAvailability: "NOT_AVAILABLE",
+      }),
+    ).toBe("needs-access");
+    expect(
+      modelAccessFromAvailability({
+        ...ok,
+        regionAvailability: "NOT_AVAILABLE",
+      }),
+    ).toBe("needs-access");
+  });
+
+  it("is available when nothing says otherwise", () => {
+    expect(modelAccessFromAvailability({})).toBe("available");
+  });
+});
+
+describe("modelsNeedingAccessCheck / applyModelAccess", () => {
+  const catalog = [
+    {
+      id: "us.anthropic.claude-sonnet-4-5",
+      name: "Claude Sonnet 4.5 (us. cross-region)",
+      provider: "Anthropic",
+      kind: "inference-profile" as const,
+      baseModelId: "anthropic.claude-sonnet-4-5",
+      legacy: true,
+    },
+    {
+      id: "global.anthropic.claude-sonnet-4-5",
+      name: "Claude Sonnet 4.5 (global. cross-region)",
+      provider: "Anthropic",
+      kind: "inference-profile" as const,
+      baseModelId: "anthropic.claude-sonnet-4-5",
+      legacy: true,
+    },
+    {
+      id: "amazon.nova-pro-v1:0",
+      name: "Nova Pro",
+      provider: "Amazon",
+      kind: "on-demand" as const,
+      baseModelId: "amazon.nova-pro-v1:0",
+    },
+    {
+      id: "mistral.mistral-large-3",
+      name: "Mistral Large 3",
+      provider: "Mistral AI",
+      kind: "on-demand" as const,
+      baseModelId: "mistral.mistral-large-3",
+    },
+    {
+      id: "my-team-profile",
+      name: "Team (application profile)",
+      provider: "Application profiles",
+      kind: "application-profile" as const,
+      baseModelId: "anthropic.claude-unlisted",
+    },
+  ];
+
+  it("asks once per third-party base model and skips Amazon and application profiles", () => {
+    expect(modelsNeedingAccessCheck(catalog).sort()).toEqual([
+      "anthropic.claude-sonnet-4-5",
+      "mistral.mistral-large-3",
+    ]);
+  });
+
+  it("stamps every entry of a base model and leaves unanswered ones alone", () => {
+    const out = applyModelAccess(
+      catalog,
+      new Map([["anthropic.claude-sonnet-4-5", "needs-access" as const]]),
+    );
+    expect(out.map((o) => o.access)).toEqual([
+      "needs-access",
+      "needs-access",
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(out[0].legacy).toBe(true);
+  });
+});
+
+describe("inferenceProfileSuggestion", () => {
+  const catalog = [
+    {
+      id: "us.anthropic.claude-haiku-4-5",
+      kind: "inference-profile" as const,
+      baseModelId: "anthropic.claude-haiku-4-5",
+    },
+    {
+      id: "eu.anthropic.claude-haiku-4-5",
+      kind: "inference-profile" as const,
+      baseModelId: "anthropic.claude-haiku-4-5",
+    },
+    {
+      id: "global.anthropic.claude-haiku-4-5",
+      kind: "inference-profile" as const,
+      baseModelId: "anthropic.claude-haiku-4-5",
+    },
+    {
+      id: "us.meta.llama4",
+      kind: "inference-profile" as const,
+      baseModelId: "meta.llama4",
+    },
+    {
+      id: "amazon.nova-pro-v1:0",
+      kind: "on-demand" as const,
+      baseModelId: "amazon.nova-pro-v1:0",
+    },
+    {
+      id: "us.amazon.nova-pro-v1:0",
+      kind: "inference-profile" as const,
+      baseModelId: "amazon.nova-pro-v1:0",
+    },
+  ];
+
+  it("names the region's profile and the global one for a profile-only model", () => {
+    expect(
+      inferenceProfileSuggestion(
+        catalog,
+        "anthropic.claude-haiku-4-5",
+        "us-east-1",
+      ),
+    ).toEqual({
+      regional: "us.anthropic.claude-haiku-4-5",
+      global: "global.anthropic.claude-haiku-4-5",
+    });
+    expect(
+      inferenceProfileSuggestion(
+        catalog,
+        "anthropic.claude-haiku-4-5",
+        "eu-west-1",
+      ),
+    ).toEqual({
+      regional: "eu.anthropic.claude-haiku-4-5",
+      global: "global.anthropic.claude-haiku-4-5",
+    });
+  });
+
+  it("falls back to any geographic profile when the region has none", () => {
+    expect(
+      inferenceProfileSuggestion(catalog, "meta.llama4", "ap-south-1"),
+    ).toEqual({ regional: "us.meta.llama4", global: undefined });
+  });
+
+  it("says nothing for on-demand, prefixed, ARN or unknown IDs", () => {
+    const r = "us-east-1";
+    expect(
+      inferenceProfileSuggestion(catalog, "amazon.nova-pro-v1:0", r),
+    ).toBeUndefined();
+    expect(
+      inferenceProfileSuggestion(catalog, "us.anthropic.claude-haiku-4-5", r),
+    ).toBeUndefined();
+    expect(
+      inferenceProfileSuggestion(
+        catalog,
+        "arn:aws:bedrock:us-east-1:1:application-inference-profile/x",
+        r,
+      ),
+    ).toBeUndefined();
+    expect(
+      inferenceProfileSuggestion(catalog, "anthropic.nope", r),
+    ).toBeUndefined();
+    expect(
+      inferenceProfileSuggestion([], "anthropic.claude-haiku-4-5", r),
+    ).toBeUndefined();
+  });
+
+  it("writes a warning that names the IDs to use", () => {
+    const text = inferenceProfileWarning(
+      "anthropic.claude-haiku-4-5",
+      "us-east-1",
+      {
+        regional: "us.anthropic.claude-haiku-4-5",
+        global: "global.anthropic.claude-haiku-4-5",
+      },
+    );
+    expect(text).toContain("`anthropic.claude-haiku-4-5`");
+    expect(text).toContain("us-east-1");
+    expect(text).toContain("crossRegionInference: auto");
+    expect(text).toContain(
+      "`us.anthropic.claude-haiku-4-5` or `global.anthropic.claude-haiku-4-5`",
     );
   });
 });
@@ -387,5 +684,61 @@ describe("globalProfileStatus", () => {
     ]) {
       expect(globalProfileStatus([...catalog], id)).toBe("unknown");
     }
+  });
+});
+
+describe("tools through Converse for models that cannot stream them", () => {
+  it.each([
+    "us.meta.llama4-maverick-17b-instruct-v1:0",
+    "meta.llama4-scout-17b-instruct-v1:0",
+    "qwen.qwen3-32b-v1:0",
+  ])("%s needs the non-streaming route", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(true);
+  });
+
+  it.each([
+    "us.anthropic.claude-haiku-4-5",
+    "amazon.nova-pro-v1:0",
+    "qwen.qwen3-coder-next",
+    "us.meta.llama3-3-70b-instruct-v1:0",
+  ])("%s streams tools as usual", (id) => {
+    expect(bedrockToolsNeedNonStreaming(id)).toBe(false);
+  });
+
+  it("recognises Bedrock's refusal of tools in streaming mode", () => {
+    expect(
+      isStreamingToolUseUnsupportedError(
+        new Error("This model doesn't support tool use in streaming mode."),
+      ),
+    ).toBe(true);
+    expect(isStreamingToolUseUnsupportedError(new Error("boom"))).toBe(false);
+  });
+});
+
+describe("Nova's <thinking> tags in the text", () => {
+  it("applies to Nova Pro, Lite, Micro and Premier, not Nova 2", () => {
+    expect(writesThinkingTags("amazon.nova-pro-v1:0")).toBe(true);
+    expect(writesThinkingTags("us.amazon.nova-lite-v1:0")).toBe(true);
+    expect(writesThinkingTags("us.amazon.nova-2-lite-v1:0")).toBe(false);
+    expect(writesThinkingTags("us.anthropic.claude-haiku-4-5")).toBe(false);
+  });
+
+  it("lifts the tagged text into reasoning, across split deltas", () => {
+    const s = new ThinkingTagSplitter();
+    const parts = [
+      s.push("<thin"),
+      s.push("king>I rea"),
+      s.push("son</thi"),
+      s.push("nking>\n\nDone"),
+      s.flush(),
+    ];
+    expect(parts.map((p) => p.reasoning).join("")).toBe("I reason");
+    expect(parts.map((p) => p.content).join("")).toBe("Done");
+  });
+
+  it("releases a held '<' that was only text", () => {
+    const s = new ThinkingTagSplitter();
+    const parts = [s.push("a < b"), s.flush()];
+    expect(parts.map((p) => p.content).join("")).toBe("a < b");
   });
 });

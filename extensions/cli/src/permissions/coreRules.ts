@@ -85,14 +85,31 @@ const SESSION_ID = "cli";
 
 type ChatLike = NonNullable<AutoReviewDeps["reviewer"]>;
 
-/** The model with the `reviewer` role, wrapped so core's reviewer can call it. */
+/**
+ * The reviewer model, wrapped so core's reviewer can call it: the one
+ * `modeModels.reviewer` names (any model), else the first with the `reviewer`
+ * role. `modeModels.reviewer.reasoningEffort` is not applied in the CLI; a
+ * catalog variant (`Name#variant`) sets the effort there.
+ */
+export function reviewerModel(
+  assistant: AssistantUnrolled | null | undefined,
+): ModelConfig | undefined {
+  const named = (
+    assistant as { modeModels?: { reviewer?: { model?: string } } }
+  )?.modeModels?.reviewer?.model;
+  const models = (assistant?.models ?? []).filter((m): m is ModelConfig => !!m);
+  if (named) {
+    const byName = models.find((m) => (m.name ?? m.model) === named);
+    if (byName) return byName;
+  }
+  return models.find((m) => m.roles?.includes("reviewer" as never));
+}
+
 export function createReviewer(
   assistant: AssistantUnrolled | null | undefined,
   authConfig: Parameters<typeof createLlmApi>[1],
 ): ChatLike | null {
-  const model = assistant?.models?.find((m) =>
-    m?.roles?.includes("reviewer" as never),
-  ) as ModelConfig | undefined;
+  const model = reviewerModel(assistant);
   if (!model) return null;
   const api = createLlmApi(model, authConfig);
   if (!api) return null;

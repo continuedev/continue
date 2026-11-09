@@ -26,7 +26,6 @@ vi.mock("../services/index.js", () => ({
   services: {},
 }));
 
-// eslint-disable-next-line import/order
 import { getRequestTools } from "./handleToolCalls.js";
 
 const names = (r: any[]) => r.map((t) => t.function.name);
