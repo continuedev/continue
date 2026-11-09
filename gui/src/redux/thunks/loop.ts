@@ -48,6 +48,7 @@ import {
   replanReminderTarget,
   takeReminders,
 } from "core/util/loopReminders";
+import { modelForLoopItem } from "core/util/modelUse";
 import { parsePlanFile, taskPlanFromPlanFile } from "core/util/planFile";
 import { findUriInDirs } from "core/util/uri";
 import { selectEffectiveApprovalMode } from "../selectors/selectAutoApproval";
@@ -61,6 +62,7 @@ import {
   setTaskPlan,
 } from "../slices/sessionSlice";
 import { AppThunkDispatch, RootState, ThunkApiType } from "../store";
+import { getModeModelTitle } from "../../util/modeModels";
 import { commitLoop } from "../util/loopCommit";
 import { stampLoopFiles } from "../util/loopReminderFiles";
 
@@ -105,15 +107,16 @@ async function displayPath(
 /**
  * Sends a Loop turn. The model is switched first to the one `modeModels` gives
  * this kind of turn (`loop` for an item, `replan` otherwise, with the agent and
- * plan entries as fallbacks): the mode's own effect runs after a render, which
- * may be later than the request.
+ * plan entries as fallbacks), or to `title`, an item's own model: the mode's
+ * own effect runs after a render, which may be later than the request.
  */
 async function sendLoopTurn(
   dispatch: AppThunkDispatch,
   text: string,
   use?: ModelUse,
+  title?: string,
 ) {
-  if (use) await dispatch(applyModeModel({ mode: use }));
+  if (use) await dispatch(applyModeModel({ mode: use, title }));
   await dispatch(
     streamResponseThunk({
       editorState: doc(text),
@@ -568,15 +571,44 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
           loop,
           answers.map((a) => a.id),
         );
+        // The to-do's own model (TaskItem.model) wins over modeModels.loop;
+        // one that is not configured falls back to it, noted on the run.
+        // Without a loop entry the loop model is the selected one, or the
+        // one a previous item's own model switched away from.
+        const chatModels = state.config.config.modelsByRole.chat;
+        const configured = chatModels.find(
+          (m) =>
+            m.title ===
+            getModeModelTitle(
+              state.config.config,
+              "loop",
+              state.ui.modeModelOverrides,
+            ),
+        );
+        const modelBefore = loop.modelBefore;
+        const loopModel =
+          configured ??
+          chatModels.find((m) => m.title === modelBefore) ??
+          state.config.config.selectedModelByRole.chat ??
+          undefined;
+        const chosen = modelForLoopItem(item, chatModels, loopModel);
         loop = startItemRun(
           loop,
           action.itemId,
           state.session.history.length,
           now,
+          { model: chosen.record },
         );
+        // An own model leaves the loop model; the next turn comes back to it
+        const leaves =
+          !configured &&
+          !!item.model &&
+          !!chosen.model &&
+          chosen.model.title !== loopModel?.title;
+        loop = { ...loop, modelBefore: leaves ? loopModel?.title : undefined };
         dispatch(setMode("agent"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt, "loop");
+        await sendLoopTurn(dispatch, prompt, "loop", chosen.model?.title);
         return;
       }
       case "check":
@@ -616,9 +648,18 @@ export const advanceLoop = createAsyncThunk<void, undefined, ThunkApiType>(
           checkIn: action.checkIn,
           itemId: action.itemId,
         });
+        // Without a re-plan entry, come back from an item's own model
+        const back = getModeModelTitle(
+          state.config.config,
+          "replan",
+          state.ui.modeModelOverrides,
+        )
+          ? undefined
+          : loop.modelBefore;
+        if (back) loop = { ...loop, modelBefore: undefined };
         dispatch(setMode("plan"));
         commitLoop(dispatch, getState, loop);
-        await sendLoopTurn(dispatch, prompt, "replan");
+        await sendLoopTurn(dispatch, prompt, "replan", back);
         return;
       }
     }

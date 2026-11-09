@@ -15,6 +15,11 @@ import {
 import { renderChatMessage } from "core/util/messageContent";
 import { serializePlanFile } from "core/util/planFile";
 import { selectActiveTools } from "../../../redux/selectors/selectActiveTools";
+import {
+  INITIAL_PROFILES_STATE,
+  setProfiles,
+  setSelectedProfile,
+} from "../../../redux/slices/profilesSlice";
 import { setLoop, setPlanFile } from "../../../redux/slices/sessionSlice";
 import { setApprovalMode } from "../../../redux/slices/uiSlice";
 import { startLoopFromPlan } from "../../../redux/thunks/loop";
@@ -68,10 +73,21 @@ const ask = (
 
 const text = (m: ChatMessage | undefined) => (m ? renderChatMessage(m) : "");
 
-async function setup(todos: string[]) {
+/** A second chat model, for a to-do that names its own (TaskItem.model). */
+const OPUS = {
+  model: "opus-mock",
+  provider: "mock",
+  title: "Opus",
+  underlyingProviderName: "mock",
+};
+
+async function setup(todos: (string | { text: string; model?: string })[]) {
   const rendered = await renderWithProviders(<Chat />);
   const { store, ideMessenger } = rendered;
   await act(async () => {
+    // A selected profile, as in the IDE: switching the model needs one
+    store.dispatch(setProfiles(INITIAL_PROFILES_STATE.profiles));
+    store.dispatch(setSelectedProfile("local"));
     triggerConfigUpdate({
       store,
       ideMessenger,
@@ -82,7 +98,7 @@ async function setup(todos: string[]) {
           title: "Mock LLM",
           underlyingProviderName: "mock",
         };
-        current.modelsByRole.chat.push(llm);
+        current.modelsByRole.chat.push(llm, OPUS);
         current.selectedModelByRole.chat = llm;
         current.tools = [
           readFileTool,
@@ -106,8 +122,8 @@ async function setup(todos: string[]) {
       body: "Parse the grammar.",
       items: todos.map((t, i) => ({
         id: String(i + 1),
-        text: t,
         status: "pending" as const,
+        ...(typeof t === "string" ? { text: t } : t),
       })),
     }),
   };
@@ -130,12 +146,18 @@ async function setup(todos: string[]) {
 
   // The model: scripted turns in order; every request is recorded
   const turns: Turn[] = [];
-  const requests: { messages: ChatMessage[]; tools: string[] }[] = [];
+  const requests: {
+    messages: ChatMessage[];
+    tools: string[];
+    /** The title of the model the request went to */
+    title?: string;
+  }[] = [];
   ideMessenger.llmStreamChat = async function* (msg: any, signal) {
     requests.push({
       messages: msg.messages,
       // What the gui offered with this request
       tools: selectActiveTools(store.getState()).map((t) => t.function.name),
+      title: msg.title,
     });
     const turn = turns.shift();
     if (!turn) throw new Error("no turn scripted");
@@ -1004,6 +1026,82 @@ describe("Loop in the mode picker", () => {
     expect(h.itemStatus("2")).toBe("pending");
     expect(h.requests).toHaveLength(2);
     expect(h.store.getState().session.mode).toBe("chat");
+  });
+});
+
+describe("a to-do's own model", () => {
+  const el = (id: string) =>
+    document.querySelector<HTMLElement>(`[data-testid=${id}]`);
+  const selectedTitle = (h: Awaited<ReturnType<typeof setup>>) =>
+    h.store.getState().config.config.selectedModelByRole.chat?.title;
+
+  test("runs on the model its plan file line names; the other items run on the loop model", async () => {
+    const h = await setup([
+      "Write the lexer",
+      { text: "Design the grammar", model: "opus" },
+      "Add tests",
+    ]);
+    let release = () => {};
+    const held: Turn = async function* (signal) {
+      yield [{ role: "assistant", content: "Thinking" }];
+      await new Promise<void>((r) => (release = r));
+      yield* finish("done", "designed")(signal);
+    };
+    h.turns.push(
+      finish("done", "lexer written"),
+      held,
+      finish("done", "tested"),
+    );
+    await h.start();
+
+    await waitFor(() => expect(h.requests).toHaveLength(2));
+    // Item 2's request went to Opus (a family alias, resolved like a subagent's)
+    expect(h.requests.map((r) => r.title)).toEqual(["Mock LLM", "Opus"]);
+    expect(h.loop().items[1].model).toEqual({ title: "Opus" });
+    expect(h.loop().modelBefore).toBe("Mock LLM");
+    expect(el("loop-model-2")!.textContent).toBe("model: opus");
+    expect(el("loop-model-1")).toBeNull();
+
+    await act(async () => release());
+    await waitFor(() => expect(h.loop().status).toBe("stopped"));
+    expect(h.loop().stopReason).toBe("done");
+    // Item 3 came back to the model the loop started on, and so did the chat
+    expect(h.requests.map((r) => r.title)).toEqual([
+      "Mock LLM",
+      "Opus",
+      "Mock LLM",
+    ]);
+    expect(selectedTitle(h)).toBe("Mock LLM");
+  });
+
+  test("a model that is not configured falls back to the loop model, and the item says so", async () => {
+    const h = await setup([{ text: "Design the grammar", model: "GPT-9" }]);
+    let release = () => {};
+    const held: Turn = async function* (signal) {
+      yield [{ role: "assistant", content: "Thinking" }];
+      await new Promise<void>((r) => (release = r));
+      yield* finish("done", "designed")(signal);
+    };
+    h.turns.push(held);
+    await h.start();
+
+    await waitFor(() => expect(h.requests).toHaveLength(1));
+    expect(h.requests[0].title).toBe("Mock LLM");
+    expect(h.loop().items[0].model).toEqual({
+      title: "Mock LLM",
+      fallbackReason: 'model "GPT-9" is not configured; using Mock LLM',
+    });
+    expect(h.loop().modelBefore).toBeUndefined();
+    expect(el("loop-model-fallback-1")!.textContent).toContain(
+      "not configured, ran on Mock LLM",
+    );
+    // The task list carries the reason as the running item's note
+    expect(h.store.getState().session.taskPlan!.items[0].note).toContain(
+      "not configured",
+    );
+
+    await act(async () => release());
+    await waitFor(() => expect(h.loop().status).toBe("stopped"));
   });
 });
 

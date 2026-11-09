@@ -394,20 +394,83 @@ export function modelUseForMode(mode: string): "plan" | "agent" {
 }
 
 /**
- * Switch the chat model to the one `modeModels` gives a use, and let the TUI
+ * Switch the chat model to the one `modeModels` gives a use (or to a Loop
+ * item's own model, `itemModel`, when its to-do names one), and let the TUI
  * see it (the container's state is what the hooks read). Errors are logged:
  * a model that cannot be built must not stop the turn, which then goes to the
  * model already selected.
  */
 export async function applyModelForUse(
   use: Parameters<ModelService["switchToModelForUse"]>[0],
+  itemModel?: string,
 ): Promise<void> {
   try {
-    if (await modelService.switchToModelForUse(use)) {
+    if (await modelService.switchToModelForUse(use, itemModel)) {
       serviceContainer.set(SERVICE_NAMES.MODEL, modelService.getState());
     }
   } catch (error) {
     logger.error("Could not switch the model for this use", { use, error });
+  }
+}
+
+function currentModelName(): string | undefined {
+  const model = modelService.getState().model as { name?: string } | undefined;
+  return model?.name;
+}
+
+/** Switch to a chat model by its name, when it exists and is not current. */
+export async function applyModelNamed(name: string): Promise<void> {
+  try {
+    const index = modelService.getModelIndexByName(name);
+    if (index === -1 || index === modelService.getCurrentModelIndex()) return;
+    await modelService.switchModel(index);
+    serviceContainer.set(SERVICE_NAMES.MODEL, modelService.getState());
+  } catch (error) {
+    logger.error("Could not switch back to the model", { name, error });
+  }
+}
+
+/**
+ * Switch the model for a Loop turn: the use's model (`modeModels`), or the
+ * item's own (`itemModel`, TaskItem.model) when its to-do names one. Without
+ * a configured model for the use, an own model switches away from the model
+ * the person had selected; `modelBefore` is that model, left by an earlier
+ * own-model item, and every turn comes back to it first. Returns the model
+ * this turn leaves, for the next one to come back to, or undefined.
+ */
+export async function applyModelForLoopTurn(
+  use: Parameters<ModelService["switchToModelForUse"]>[0],
+  itemModel: string | undefined,
+  modelBefore: string | undefined,
+): Promise<string | undefined> {
+  let configured = false;
+  try {
+    configured = modelService.modelIndexForUse(use) !== -1;
+  } catch {
+    // not initialized: nothing to switch
+  }
+  if (!configured && modelBefore) await applyModelNamed(modelBefore);
+  const before = currentModelName();
+  await applyModelForUse(use, itemModel);
+  if (configured || !itemModel) return undefined;
+  const after = currentModelName();
+  return before && after && before !== after ? before : undefined;
+}
+
+/**
+ * What a Loop item's run records about its model when its to-do names one
+ * (TaskItem.model): the model it goes to, and why its own was not used.
+ * Undefined for an item that names none.
+ */
+export function loopItemModelRecord(
+  itemModel: string | undefined,
+): ReturnType<ModelService["resolveModelForUse"]>["record"] {
+  if (!itemModel) return undefined;
+  try {
+    return modelService.resolveModelForUse("loop", itemModel).record;
+  } catch (error) {
+    logger.error("Could not resolve the item's model", { itemModel, error });
+    return undefined;
   }
 }
 

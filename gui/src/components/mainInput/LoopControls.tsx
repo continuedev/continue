@@ -1,4 +1,10 @@
-import type { LoopCheckResult, LoopState, TaskItem, TaskPlan } from "core";
+import type {
+  LoopCheckResult,
+  LoopItemModel,
+  LoopState,
+  TaskItem,
+  TaskPlan,
+} from "core";
 import {
   blockingDependencies,
   describeLoopBudget,
@@ -98,6 +104,32 @@ function CheckLine({
         >
           {check.output.trim()}
         </pre>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The model the to-do names (TaskItem.model) and, once a run started, the one
+ * it went to when that was not it: the item's own model is not configured.
+ */
+function ModelLine({ task, model }: { task: TaskItem; model?: LoopItemModel }) {
+  if (!task.model) return null;
+  return (
+    <div
+      data-testid={`loop-model-${task.id}`}
+      className="ml-3 min-w-0 truncate text-2xs text-description-muted"
+      title={model?.fallbackReason ?? "The model this item runs with"}
+    >
+      model: {task.model}
+      {model?.fallbackReason && (
+        <span
+          data-testid={`loop-model-fallback-${task.id}`}
+          className="text-warning"
+        >
+          {" "}
+          · not configured, ran on {model.title}
+        </span>
       )}
     </div>
   );
@@ -211,6 +243,7 @@ export function LoopControls({
                   )}
                 </div>
                 <CheckLine task={task} check={state.check} />
+                <ModelLine task={task} model={state.model} />
               </li>
             );
           })}

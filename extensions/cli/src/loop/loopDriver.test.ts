@@ -40,6 +40,7 @@ import {
   consumeLoopTurnEnd,
   loopPlanBlockForRequest,
   loopRequestHistory,
+  prepareLoopTurn,
   requestLoopTurnEnd,
   resetLoopMemory,
   runLoopItemAgain,
@@ -541,7 +542,12 @@ describe("Loop mode's driver in the CLI", () => {
     const FAIL = "node -e \"console.log('1 test failed'); process.exit(3)\"";
 
     async function planWith(
-      todos: { text: string; check?: string; after?: number[] }[],
+      todos: {
+        text: string;
+        check?: string;
+        after?: number[];
+        model?: string;
+      }[],
     ) {
       await savePlan({ title: "Work", plan: "The work.", todos }, cwd);
     }
@@ -612,6 +618,34 @@ describe("Loop mode's driver in the CLI", () => {
       expect(runItem("done").prompt).toContain("only this item: Helper");
       expect(runItem("done").prompt).toContain("only this item: Docs");
       expect(loopPlanBlockForRequest()).toContain("[x] 2. Helper");
+    });
+
+    it("an item's turn names the item, and a model: line that is not configured is noted on its run", async () => {
+      await planWith([
+        { text: "Hard", model: "Claude Opus" },
+        { text: "Easy" },
+      ]);
+      const file = fs.readFileSync(
+        path.join(cwd, ".continuous", "plans", "work.md"),
+        "utf-8",
+      );
+      expect(file).toContain(
+        ["- [ ] Hard <!-- id: 1 -->", "  model: Claude Opus", ""].join("\n"),
+      );
+      expect(getSessionTaskPlan()?.items[0].model).toBe("Claude Opus");
+      startLoopFromPlan("normal");
+      const turn = runItem("done");
+      expect(turn.itemId).toBe("1");
+      // The harness has one model, test-model: the item falls back to it
+      expect(loopNow().items[0].model).toMatchObject({
+        fallbackReason: expect.stringContaining(
+          '"Claude Opus" is not configured',
+        ),
+      });
+      await prepareLoopTurn(turn);
+      expect(loopNow().modelBefore).toBeUndefined();
+      expect(runItem("done")).toMatchObject({ itemId: "2" });
+      expect(loopNow().items[1].model).toBeUndefined();
     });
   });
 });

@@ -119,4 +119,19 @@ describe("applyModeModel for Loop turns", () => {
       (store.getState() as any).config.config.selectedModelByRole.chat.title,
     ).toBe("Sonnet");
   });
+
+  it("a title given directly (an item's own model) wins over the loop entry", async () => {
+    const { store, posts } = setup({}, "Sonnet", { loop: { title: "Haiku" } });
+    await (store.dispatch as any)(
+      applyModeModel({ mode: "loop", selectedProfile: profile, title: "Opus" }),
+    );
+    expect(
+      (store.getState() as any).config.config.selectedModelByRole.chat.title,
+    ).toBe("Opus");
+    // A title that is not a chat model changes nothing
+    await (store.dispatch as any)(
+      applyModeModel({ mode: "loop", selectedProfile: profile, title: "Gone" }),
+    );
+    expect(posts).toHaveLength(1);
+  });
 });

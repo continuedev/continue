@@ -32,7 +32,7 @@ import {
 } from "core/util/planFile.js";
 import { finishItemNudge, presentPlanNudge } from "core/util/turnEnd.js";
 
-import { services } from "../services/index.js";
+import { loopItemModelRecord, services } from "../services/index.js";
 import { getSessionLoop, getSessionTaskPlan } from "../session.js";
 import { logger } from "../util/logger.js";
 
@@ -63,6 +63,8 @@ export interface LoopTurn {
   kind: "item" | "replan";
   /** The user message to send; it starts the run's fresh context */
   prompt: string;
+  /** An item turn: the item that runs (its to-do may name its model) */
+  itemId?: string;
 }
 
 /** What the loop does next: a model turn to send, or an item's check to run. */
@@ -276,10 +278,15 @@ export function nextLoopTurn(
           loop,
           answers.map((a) => a.id),
         );
-        loop = startItemRun(loop, action.itemId, historyLength, now);
+        // The to-do's own model (TaskItem.model) wins over modeModels.loop;
+        // one that is not configured falls back to it, noted on the run.
+        // prepareLoopTurn makes the switch before the turn is sent.
+        loop = startItemRun(loop, action.itemId, historyLength, now, {
+          model: loopItemModelRecord(item.model),
+        });
         enterItemMode();
         commitLoop(loop);
-        return { kind: "item", prompt };
+        return { kind: "item", prompt, itemId: action.itemId };
       }
       case "replan": {
         // A round's re-plan, a check-in, or a repair of one failed item
@@ -363,7 +370,7 @@ export class LoopRunner {
         if (step.kind === "check") {
           await runLoopCheck(step);
         } else {
-          await prepareLoopTurn(step.kind);
+          await prepareLoopTurn(step);
           await this.host.send(step);
         }
       }

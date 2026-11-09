@@ -436,7 +436,7 @@ async function drainMessages(ctx: ServeMessageContext) {
         }
         continue;
       }
-      await prepareLoopTurn(step.kind);
+      await prepareLoopTurn(step);
       await runTurn(ctx, step.prompt);
       continue;
     }

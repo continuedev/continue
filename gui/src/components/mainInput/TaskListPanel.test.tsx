@@ -17,7 +17,7 @@ const plan: TaskPlan = {
       activeForm: "Running migrations",
     },
     { id: "3", text: "Deploy", status: "blocked", note: "waiting for keys" },
-    { id: "4", text: "Announce", status: "pending" },
+    { id: "4", text: "Announce", status: "pending", model: "Claude Opus" },
   ],
   updatedAt: "2026-11-06T12:00:00.000Z",
   updatedBy: "model",
@@ -56,6 +56,11 @@ describe("TaskListPanel", () => {
     expect(screen.getByTestId("task-text-3").textContent).toContain(
       "waiting for keys",
     );
+    // The model a loop runs the item with, where its other fields show
+    expect(screen.getByTestId("task-model-4").textContent).toContain(
+      "Claude Opus",
+    );
+    expect(screen.queryByTestId("task-model-1")).toBeNull();
   });
 
   it("edits an item's text in place, as the user", async () => {
@@ -66,9 +71,11 @@ describe("TaskListPanel", () => {
     fireEvent.change(input, { target: { value: "Announce in #eng" } });
     fireEvent.keyDown(input, { key: "Enter" });
     const saved = store.getState().session.taskPlan!;
-    expect(saved.items.find((i) => i.id === "4")?.text).toBe(
-      "Announce in #eng",
-    );
+    expect(saved.items.find((i) => i.id === "4")).toMatchObject({
+      text: "Announce in #eng",
+      // An edit keeps the item's model
+      model: "Claude Opus",
+    });
     expect(saved.updatedBy).toBe("user");
   });
 

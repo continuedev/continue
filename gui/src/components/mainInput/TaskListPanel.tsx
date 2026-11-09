@@ -136,6 +136,16 @@ function TaskRow(props: {
             (item.status === "blocked" || item.status === "cancelled") && (
               <span className="text-description-muted"> ({item.note})</span>
             )}
+          {item.model && (
+            <span
+              data-testid={`task-model-${item.id}`}
+              title="The model a loop runs this item with"
+              className="text-description-muted"
+            >
+              {" "}
+              · {item.model}
+            </span>
+          )}
         </span>
       )}
       <button

@@ -29,6 +29,8 @@ export const TASK_PLAN_LIMITS = {
   maxIdLength: 40,
   /** A to-do's check command (TaskItem.check) */
   maxCheckLength: 500,
+  /** A to-do's model name (TaskItem.model) */
+  maxModelLength: 100,
   /** Completed items shown in the request block; older ones are a count */
   shownCompleted: 3,
 } as const;
@@ -76,6 +78,8 @@ export interface TaskItemInput {
   after?: unknown;
   /** A command that confirms the item is done (TaskItem.check) */
   check?: unknown;
+  /** The name of the chat model the item's Loop run goes to (TaskItem.model) */
+  model?: unknown;
 }
 
 export type TaskPlanResult =
@@ -378,12 +382,14 @@ function mergeIntoPrevious(
   return [...merged, ...items.filter((item) => !known.has(item.id))];
 }
 
-/** An item's check command and `after` positions, or why they are invalid. */
+/** An item's check command, model and `after` positions, or why they are invalid. */
 function itemExtras(
   raw: TaskItemInput,
   position: number,
   count: number,
-): { fields: { check?: string }; after: number[] } | { error: string } {
+):
+  | { fields: { check?: string; model?: string }; after: number[] }
+  | { error: string } {
   const check = optionalText(
     raw.check,
     "check",
@@ -391,10 +397,20 @@ function itemExtras(
     position,
   );
   if (check.error) return { error: check.error };
+  const model = optionalText(
+    raw.model,
+    "model",
+    TASK_PLAN_LIMITS.maxModelLength,
+    position,
+  );
+  if (model.error) return { error: model.error };
   const after = afterList(raw.after, position, count);
   if (typeof after === "string") return { error: after };
   return {
-    fields: check.value ? { check: check.value.replace(/\s*\n\s*/g, " ") } : {},
+    fields: {
+      ...(check.value && { check: check.value.replace(/\s*\n\s*/g, " ") }),
+      ...(model.value && { model: model.value.replace(/\s+/g, " ") }),
+    },
     after,
   };
 }
@@ -617,6 +633,7 @@ export function taskPlanConfirmation(plan: TaskPlan): string {
  * request block's own markers `[>]`, `[-]`, `[!]`. Other lines are ignored.
  * A trailing `<!-- id: 3 -->` comment (as plan files write it) gives the
  * item's id, so ids survive a round trip through a file the person edits.
+ * Indented `after:`, `check:` and `model:` lines under an item belong to it.
  */
 export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   const statusByMark: Record<string, TaskStatus> = {
@@ -629,11 +646,12 @@ export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   };
   const items: TaskItemInput[] = [];
   for (const line of markdown.split(/\r?\n/)) {
-    // `  after: 1, 2` and `  check: <command>` under a to-do belong to it
+    // `  after: 1, 2`, `  check: <command>` and `  model: <name>` under a
+    // to-do belong to it
     const attribute = line.match(ITEM_ATTRIBUTE);
     if (attribute && items.length > 0) {
       const last = items[items.length - 1];
-      const key = attribute[1].toLowerCase() as "after" | "check";
+      const key = attribute[1].toLowerCase() as "after" | "check" | "model";
       last[key] = attribute[2].trim();
       continue;
     }
@@ -659,10 +677,10 @@ export function parseMarkdownChecklist(markdown: string): TaskItemInput[] {
   return items;
 }
 
-/** An indented `after: 1, 2` or `check: <command>` line under a to-do. */
-const ITEM_ATTRIBUTE = /^(?:\t|\s{2,})(after|check)\s*:\s*(.*)$/i;
+/** An indented `after: 1, 2`, `check: <command>` or `model: <name>` line under a to-do. */
+const ITEM_ATTRIBUTE = /^(?:\t|\s{2,})(after|check|model)\s*:\s*(.*)$/i;
 
-/** The lines a plan file writes under a to-do for its `after` and `check`. */
+/** The lines a plan file writes under a to-do for its `after`, `check` and `model`. */
 export function taskItemAttributeLines(
   item: TaskItem,
   items: TaskItem[],
@@ -673,6 +691,7 @@ export function taskItemAttributeLines(
     .filter((p) => p > 0);
   if (positions.length) lines.push(`  after: ${positions.join(", ")}`);
   if (item.check) lines.push(`  check: ${item.check}`);
+  if (item.model) lines.push(`  model: ${item.model}`);
   return lines;
 }
 

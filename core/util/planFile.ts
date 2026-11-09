@@ -27,7 +27,14 @@ import {
  *
  * - [ ] Add a retry helper <!-- id: 1 -->
  * - [ ] Use it in upload() <!-- id: 2 -->
+ *   after: 1
+ *   check: npm test -- upload
+ *   model: Claude Opus
  * ```
+ *
+ * The indented lines under a to-do are optional: `after:` (the to-dos it
+ * waits for), `check:` (a command that confirms it is done) and `model:` (the
+ * `name` of the chat model its Loop run goes to instead of `modeModels.loop`).
  */
 
 /** Workspace-relative folder the plan files go in. */
@@ -326,6 +333,7 @@ function todoDetails(
       todo?: unknown;
       after?: unknown;
       check?: unknown;
+      model?: unknown;
     };
     const n = Number(d.todo);
     if (!Number.isInteger(n) || n < 1 || n > items.length) {
@@ -334,6 +342,7 @@ function todoDetails(
     const item = items[n - 1];
     if (d.after !== undefined) item.after = d.after;
     if (d.check !== undefined) item.check = d.check;
+    if (d.model !== undefined) item.model = d.model;
   }
   return undefined;
 }
@@ -470,9 +479,10 @@ function planDecisions(
 
 /**
  * Checks what the model sent to the plan tool: a title, the plan text and at
- * least one to-do. To-dos are strings (or `{ text, after?, check? }`), all
- * pending. `todo_details` adds `after` (1-based to-do numbers) and `check` (a
- * command that confirms the to-do is done) to to-dos sent as strings.
+ * least one to-do. To-dos are strings (or `{ text, after?, check?, model? }`),
+ * all pending. `todo_details` adds `after` (1-based to-do numbers), `check` (a
+ * command that confirms the to-do is done) and `model` (the chat model its
+ * Loop run goes to) to to-dos sent as strings.
  * `decisions` are the choices left to the person (planDecisions).
  */
 export function validatePlanArgs(args: {
@@ -523,13 +533,14 @@ export function validatePlanArgs(args: {
     }
     const extra =
       todo && typeof todo === "object"
-        ? (todo as { after?: unknown; check?: unknown })
+        ? (todo as { after?: unknown; check?: unknown; model?: unknown })
         : {};
     items.push({
       text,
       status: "pending",
       ...(extra.after !== undefined && { after: extra.after }),
       ...(extra.check !== undefined && { check: extra.check }),
+      ...(extra.model !== undefined && { model: extra.model }),
     });
   }
   const details = todoDetails(args.todo_details, items);
@@ -693,7 +704,7 @@ It saves the plan as a markdown file in the workspace (${PLANS_DIR}/<title>.md),
 - title: a short name for the work.
 - plan: the plan in markdown, for a person to read: the goal, the approach, the files involved, risks or open questions. Keep it short; do not repeat the to-dos.
 - todos: the implementation steps in order, one short line each. They become the task list you update while you build.
-- todo_details (optional): for a to-do that must wait for others, its \`after\` (the numbers of the to-dos it comes after); for one that a command can verify, its \`check\` (a command that exits 0 when the to-do is done, such as a focused test run). Size each to-do as one reviewable change that one check can verify.
+- todo_details (optional): for a to-do that must wait for others, its \`after\` (the numbers of the to-dos it comes after); for one that a command can verify, its \`check\` (a command that exits 0 when the to-do is done, such as a focused test run); for one that needs a stronger or cheaper model than the rest, its \`model\` (the name of one of the user's chat models; a loop runs that to-do on it). Size each to-do as one reviewable change that one check can verify.
 - decisions (optional): the choices left to the person: one they kept for themselves, or one a wrong answer makes costly (irreversible, security, cost, scope). Each has a self-contained question, two to four options, your pick, its type and the numbers of the to-dos that wait on it. A decision is not a to-do: it has no check and no status. Small choices are yours: decide them and write them in the plan as assumptions.
 
 Calling it again with the same title replaces that plan file, so revise a plan by presenting it again.`;
@@ -734,7 +745,7 @@ export const PRESENT_PLAN_DECISIONS_PARAMETER = {
 export const PRESENT_PLAN_TODO_DETAILS_PARAMETER = {
   type: "array",
   description:
-    "Optional. Per to-do: after (numbers of the to-dos it comes after) and check (a command that exits 0 when it is done).",
+    "Optional. Per to-do: after (numbers of the to-dos it comes after), check (a command that exits 0 when it is done) and model (the name of the chat model a loop runs it with).",
   items: {
     type: "object",
     required: ["todo"],
@@ -748,6 +759,11 @@ export const PRESENT_PLAN_TODO_DETAILS_PARAMETER = {
       check: {
         type: "string",
         description: "A command that exits 0 when this to-do is done",
+      },
+      model: {
+        type: "string",
+        description:
+          "The name of the chat model a loop runs this to-do with, instead of its usual one",
       },
     },
   },

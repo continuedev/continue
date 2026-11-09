@@ -66,6 +66,38 @@ function run(
 const status = (loop: LoopState, id: string) =>
   loop.items.find((i) => i.id === id)?.status;
 
+describe("the model an item's run went to", () => {
+  test("is recorded when the run starts and shown as the running item's note when it fell back", () => {
+    const p = plan({ text: "Hard", model: "Claude Opus" } as any, {
+      text: "Easy",
+    });
+    const own = startItemRun(loopOn(p), "1", 0, T0, {
+      model: { title: "Claude Opus" },
+    });
+    expect(own.items[0].model).toEqual({ title: "Claude Opus" });
+    expect(taskPlanWithLoop(p, own).items[0].note).toBeUndefined();
+
+    const fallen = startItemRun(loopOn(p), "1", 0, T0, {
+      model: {
+        title: "Nova Lite",
+        fallbackReason:
+          'model "Claude Opus" is not configured; using Nova Lite',
+      },
+    });
+    expect(taskPlanWithLoop(p, fallen).items[0].note).toBe(
+      'model "Claude Opus" is not configured; using Nova Lite',
+    );
+    // The next run replaces it; an item without a model records nothing
+    const again = startItemRun(
+      finishItemRun(fallen, { outcome: "stuck" }),
+      "1",
+      0,
+      T0,
+    );
+    expect(again.items[0].model).toBeUndefined();
+  });
+});
+
 describe("the plan file's after: and check: lines", () => {
   const file = `# Retry
 

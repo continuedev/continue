@@ -261,4 +261,29 @@ describe("parseMarkdownChecklist", () => {
       { text: "five", status: "cancelled" },
     ]);
   });
+
+  it("gives indented after:, check: and model: lines to the item above", () => {
+    expect(
+      parseMarkdownChecklist(
+        [
+          "- [ ] one",
+          "  after: 2",
+          "  check: npm test",
+          "  model: Claude Opus",
+          "- [ ] two",
+          "\tmodel: fast",
+          "model: not indented",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      {
+        text: "one",
+        status: "pending",
+        after: "2",
+        check: "npm test",
+        model: "Claude Opus",
+      },
+      { text: "two", status: "pending", model: "fast" },
+    ]);
+  });
 });

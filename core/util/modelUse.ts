@@ -1,4 +1,13 @@
-import type { ModeModelSetting, ModeModelsConfig, ModelUse } from "..";
+import type {
+  LoopItemModel,
+  ModeModelSetting,
+  ModeModelsConfig,
+  ModelUse,
+} from "..";
+import {
+  findConfiguredModel,
+  type ModelCandidate,
+} from "../subagents/model.js";
 
 /**
  * Which model does what. Pure helpers over the resolved `modeModels`, shared
@@ -47,6 +56,42 @@ export function modeModelFor(
 /** The use a Loop turn is: items act, everything else re-plans. */
 export function useForLoopTurn(kind: "item" | "replan" | "check"): ModelUse {
   return kind === "item" ? "loop" : "replan";
+}
+
+export interface LoopItemModelChoice<M extends ModelCandidate> {
+  /** The model the run goes to; undefined keeps whichever is selected */
+  model?: M;
+  /** What the item's run records when it names a model (LoopItemState.model) */
+  record?: LoopItemModel;
+}
+
+/**
+ * The chat model an item's run goes to. An item that names one
+ * (`TaskItem.model`, by the model's name) gets it, resolved against the
+ * configured chat models the way a subagent's model is (title, id, then a
+ * family alias); a name that is not configured falls back to `loopModel`,
+ * the model `modeModels.loop` gives the loop (or the selected one), with the
+ * reason in `record`. An item that names none gets `loopModel` and records
+ * nothing. Everything else about the turn (prompt, reasoning effort) stays
+ * the loop entry's.
+ */
+export function modelForLoopItem<M extends ModelCandidate>(
+  item: { model?: string } | undefined,
+  chatModels: M[],
+  loopModel: M | undefined,
+): LoopItemModelChoice<M> {
+  const requested = item?.model?.trim();
+  if (!requested) return { model: loopModel };
+  const found = findConfiguredModel(requested, chatModels, loopModel);
+  if (found) return { model: found, record: { title: found.title } };
+  const fallbackTitle = loopModel?.title ?? "the selected model";
+  return {
+    model: loopModel,
+    record: {
+      title: fallbackTitle,
+      fallbackReason: `model "${requested}" is not configured; using ${fallbackTitle}`,
+    },
+  };
 }
 
 /** Thinking budget (tokens) each reasoning effort maps to. */

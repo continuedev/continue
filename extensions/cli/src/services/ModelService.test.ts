@@ -415,4 +415,38 @@ describe("ModelService: the model for a use (modeModels)", () => {
     expect(await service.switchToModelForUse("subagent")).toBe(false);
     expect(service.modelIndexForUse("chat")).toBe(-1);
   });
+
+  test("a Loop item's own model wins over the loop entry, by name, id or alias", async () => {
+    const service = await start({ loop: { model: "GPT-4" } });
+    expect(service.resolveModelForUse("loop", "Claude 3")).toEqual({
+      index: 1,
+      record: { title: "Claude 3" },
+    });
+    expect(service.resolveModelForUse("loop", "claude-3").index).toBe(1);
+    // The reviewer-only model is not a chat model
+    expect(service.resolveModelForUse("loop", "Judge").index).toBe(0);
+    expect(await service.switchToModelForUse("loop", "Claude 3")).toBe(true);
+    expect(service.getState().model?.model).toBe("claude-3");
+    // The next item without its own model goes back to the loop model
+    expect(await service.switchToModelForUse("loop")).toBe(true);
+    expect(service.getState().model?.model).toBe("gpt-4");
+  });
+
+  test("an item's model that is not configured falls back to the loop model with the reason", async () => {
+    const service = await start({ loop: { model: "GPT-4" } });
+    expect(service.resolveModelForUse("loop", "gpt-9")).toEqual({
+      index: 0,
+      record: {
+        title: "GPT-4",
+        fallbackReason: 'model "gpt-9" is not configured; using GPT-4',
+      },
+    });
+    expect(await service.switchToModelForUse("loop", "gpt-9")).toBe(false);
+    // Without a loop entry, the current model is the fallback
+    const bare = await start({});
+    expect(bare.resolveModelForUse("loop", "gpt-9").record?.title).toBe(
+      "GPT-4",
+    );
+    expect(bare.resolveModelForUse("loop", "Claude 3").index).toBe(1);
+  });
 });

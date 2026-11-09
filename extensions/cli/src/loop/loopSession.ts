@@ -36,7 +36,8 @@ import { useForLoopTurn } from "core/util/modelUse.js";
 import { isAutoReviewEnabled } from "../permissions/coreRules.js";
 import type { PermissionMode } from "../permissions/types.js";
 import {
-  applyModelForUse,
+  applyModelForLoopTurn,
+  applyModelNamed,
   serviceContainer,
   services,
 } from "../services/index.js";
@@ -73,7 +74,11 @@ export function commitLoop(loop: LoopState | undefined): void {
     const synced = taskPlanWithLoop(plan, loop);
     if (synced !== plan) updateSessionTaskPlan(synced);
   }
-  if (wasActive && !isActiveLoop(loop)) afterLoopEnded();
+  if (wasActive && !isActiveLoop(loop)) {
+    afterLoopEnded();
+    // An item's own model was selected when the loop ended: come back
+    if (loop?.modelBefore) void applyModelNamed(loop.modelBefore);
+  }
 }
 
 function isActiveLoop(loop: LoopState | undefined): boolean {
@@ -254,10 +259,30 @@ export function enterReplanMode(): void {
 /**
  * Before a Loop turn is sent: switch to the model `modeModels` gives it
  * (`loop` for an item, `replan` otherwise, falling back to the agent and plan
- * entries). Awaited, so the turn goes to that model and not the one before.
+ * entries), or to the item's own model when its to-do names one
+ * (TaskItem.model; a name that is not configured falls back to the loop
+ * model). Without an entry for the use, the other turns come back to the
+ * model an own model switched away from (LoopState.modelBefore). Awaited, so
+ * the turn goes to that model and not the one before.
  */
-export async function prepareLoopTurn(kind: "item" | "replan"): Promise<void> {
-  await applyModelForUse(useForLoopTurn(kind));
+export async function prepareLoopTurn(turn: {
+  kind: "item" | "replan";
+  /** The item that runs, whose to-do may name its model */
+  itemId?: string;
+}): Promise<void> {
+  const itemModel =
+    turn.kind === "item" && turn.itemId
+      ? getSessionTaskPlan()?.items.find((i) => i.id === turn.itemId)?.model
+      : undefined;
+  const modelBefore = await applyModelForLoopTurn(
+    useForLoopTurn(turn.kind),
+    itemModel,
+    getSessionLoop()?.modelBefore,
+  );
+  const loop = getSessionLoop();
+  if (loop && loop.modelBefore !== modelBefore) {
+    updateSessionLoop({ ...loop, modelBefore });
+  }
 }
 
 // --- Starting, accepting a re-plan, stopping, resuming ---

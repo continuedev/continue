@@ -399,6 +399,14 @@ export interface Session {
 export type LoopItemStatus =
   "pending" | "running" | "checking" | "done" | "waiting" | "redo" | "failed";
 
+/** The model a run of an item that names one (TaskItem.model) went to. */
+export interface LoopItemModel {
+  /** The title of the chat model the run went to */
+  title: string;
+  /** Set when the item's model is not configured and the loop model ran instead */
+  fallbackReason?: string;
+}
+
 /** The last time an item's check (TaskItem.check) ran, or why it did not. */
 export interface LoopCheckResult {
   /**
@@ -446,6 +454,11 @@ export interface LoopItemState {
   again?: boolean;
   /** The last run of the item's check (TaskItem.check) */
   check?: LoopCheckResult;
+  /**
+   * The model the item's last run went to, when the item names one
+   * (TaskItem.model): its title, and why the item's own model was not used.
+   */
+  model?: LoopItemModel;
   /**
    * Fix forward: re-plans scoped to this item after it failed (at most
    * LOOP_MAX_REPAIRS_PER_ITEM). To-dos a repair splits it into inherit it.
@@ -673,6 +686,13 @@ export interface LoopState {
   checkInDue?: string;
   /** Fix forward: the failed item waiting for its scoped re-plan */
   repairItemId?: string;
+  /**
+   * The chat model an item's own model (TaskItem.model) switched away from
+   * when `modeModels` names none for the loop: the next turn without an own
+   * model, and the loop's end, come back to it, so the other items run on
+   * the model the person had selected.
+   */
+  modelBefore?: string;
   questions: LoopQuestion[];
   answers: LoopAnswer[];
   /** Items finished in this round, for the no-progress check */
@@ -738,6 +758,14 @@ export interface TaskItem {
    * command. The plan file writes it as `check: <command>` under the to-do.
    */
   check?: string;
+  /**
+   * The `name` of the chat model this item's Loop run goes to instead of
+   * `modeModels.loop`; the prompt and reasoning effort still come from the
+   * loop entry. The plan file writes it as `model: <name>` under the to-do.
+   * A name that is not configured falls back to the loop model, with the
+   * reason on the item's run (LoopItemState.model).
+   */
+  model?: string;
 }
 
 export interface TaskPlan {

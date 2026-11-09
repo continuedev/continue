@@ -99,6 +99,100 @@ describe("parseMarkdownChecklist id comments", () => {
   });
 });
 
+describe("a to-do's model: line", () => {
+  const file = [
+    "# Parser",
+    "",
+    "## To-dos",
+    "",
+    "- [ ] Design the grammar <!-- id: 1 -->",
+    "  model: Claude Opus",
+    "- [ ] Write the lexer <!-- id: 2 -->",
+    "  after: 1",
+    "  check: npm test -- lexer",
+    "  Model: fast",
+    "- [ ] Document it <!-- id: 3 -->",
+    "",
+  ].join("\n");
+
+  it("is read under its to-do, in any case, next to after: and check:", () => {
+    const read = taskPlanFromPlanFile(file, undefined, now);
+    if (!read.ok) throw new Error(read.error);
+    expect(read.plan.items).toEqual([
+      {
+        id: "1",
+        text: "Design the grammar",
+        status: "pending",
+        model: "Claude Opus",
+      },
+      {
+        id: "2",
+        text: "Write the lexer",
+        status: "pending",
+        after: ["1"],
+        check: "npm test -- lexer",
+        model: "fast",
+      },
+      { id: "3", text: "Document it", status: "pending" },
+    ]);
+  });
+
+  it("is written back under the to-do, after its after: and check: lines", () => {
+    const read = taskPlanFromPlanFile(file, undefined, now);
+    if (!read.ok) throw new Error(read.error);
+    const doc = parsePlanFile(file);
+    expect(
+      serializePlanFile({
+        title: doc.title,
+        body: doc.body,
+        items: read.plan.items,
+      }),
+    ).toBe(file.replace("  Model: fast", "  model: fast"));
+  });
+
+  it("comes from the plan tool as a to-do object or in todo_details", () => {
+    const args = validatePlanArgs({
+      title: "Parser",
+      todos: [
+        { text: "Design the grammar", model: "Claude Opus" },
+        "Write the lexer",
+      ],
+      todo_details: [{ todo: 2, model: "fast" }],
+    });
+    expect(args.ok && args.items).toEqual([
+      { text: "Design the grammar", status: "pending", model: "Claude Opus" },
+      { text: "Write the lexer", status: "pending", model: "fast" },
+    ]);
+    const built = args.ok && taskPlanForProposal(args.items, undefined, now);
+    expect(built && built.ok && built.plan.items.map((i) => i.model)).toEqual([
+      "Claude Opus",
+      "fast",
+    ]);
+  });
+
+  it("is refused when it is not a string or is too long", () => {
+    expect(
+      taskPlanForProposal([{ text: "A", model: 3 }], undefined, now),
+    ).toEqual({ ok: false, error: "Item 1: model must be a string" });
+    expect(
+      taskPlanForProposal(
+        [{ text: "A", model: "x".repeat(101) }],
+        undefined,
+        now,
+      ),
+    ).toEqual({
+      ok: false,
+      error: "Item 1: model is longer than 100 characters",
+    });
+    // A blank line is no model
+    const blank = taskPlanForProposal(
+      [{ text: "A", model: "  " }],
+      undefined,
+      now,
+    );
+    expect(blank.ok && blank.plan.items[0].model).toBeUndefined();
+  });
+});
 describe("file names", () => {
   it("slugifies titles", () => {
     expect(slugifyPlanTitle("Add retry to the Uploader!")).toBe(

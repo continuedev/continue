@@ -99,8 +99,9 @@ export const LOOP_CHECKLIST_LINES = 8;
  * shows above the prompt while a loop runs, and in full in the inbox.
  * Compact folds the finished items but the last into a count and shows the
  * next open items up to LOOP_CHECKLIST_LINES, with notes only for items
- * that wait on the person or failed. In full, every item has its note: what
- * its run reported, or the questions it waits on.
+ * that wait on the person or failed. In full, every item has its note (what
+ * its run reported, or the questions it waits on) and the model its to-do
+ * names (TaskItem.model).
  */
 export function loopChecklist(
   loop: LoopState,
@@ -110,7 +111,8 @@ export function loopChecklist(
   const items: TaskItem[] = taskPlanWithLoop(plan, loop).items;
   const line = (item: TaskItem) => {
     const showNote = !!item.note && (!compact || item.status === "blocked");
-    return `- ${TASK_STATUS_MARKERS[item.status]} ${item.text}${showNote ? ` (${item.note})` : ""}`;
+    const model = !compact && item.model ? ` [model: ${item.model}]` : "";
+    return `- ${TASK_STATUS_MARKERS[item.status]} ${item.text}${model}${showNote ? ` (${item.note})` : ""}`;
   };
   if (!compact) return items.map(line).join("\n");
 
