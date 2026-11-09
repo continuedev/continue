@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   actTurn,
@@ -9,6 +9,7 @@ import {
   planTurn,
   planTurnFor,
   planTurnShort,
+  PROMPT_PROFILE_ENV,
   promptProfile,
 } from "./turns";
 
@@ -21,6 +22,34 @@ describe("prompt profile", () => {
     );
     expect(promptProfile("us.amazon.nova-2-lite-v1:0")).toBe("full");
     expect(promptProfile(undefined)).toBe("full");
+  });
+
+  describe("environment override", () => {
+    const saved = process.env[PROMPT_PROFILE_ENV];
+    afterEach(() => {
+      if (saved === undefined) delete process.env[PROMPT_PROFILE_ENV];
+      else process.env[PROMPT_PROFILE_ENV] = saved;
+    });
+
+    it("picks the profile for every model when set to full or short", () => {
+      process.env[PROMPT_PROFILE_ENV] = "short";
+      expect(promptProfile("us.amazon.nova-2-lite-v1:0")).toBe("short");
+      expect(promptProfile(undefined)).toBe("short");
+      expect(
+        actTurnFor("us.amazon.nova-2-lite-v1:0", CLI_TURN_TOOL_NAMES),
+      ).toBe(actTurnShort(CLI_TURN_TOOL_NAMES));
+      process.env[PROMPT_PROFILE_ENV] = "full";
+      expect(promptProfile("qwen.qwen3-32b-v1:0")).toBe("full");
+      expect(planTurnFor("qwen.qwen3-32b-v1:0")).toBe(planTurn());
+    });
+
+    it("ignores any other value", () => {
+      process.env[PROMPT_PROFILE_ENV] = "terse";
+      expect(promptProfile("qwen.qwen3-32b-v1:0")).toBe("short");
+      expect(promptProfile("gpt-5")).toBe("full");
+      process.env[PROMPT_PROFILE_ENV] = "";
+      expect(promptProfile("qwen.qwen3-32b-v1:0")).toBe("short");
+    });
   });
 
   it("selects the matching turn text", () => {

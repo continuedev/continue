@@ -1,0 +1,51 @@
+{
+  "name": "long-read",
+  "group": "guidance",
+  "kind": "agent",
+  "surface": "serve",
+  "what": "Compaction: a 60k-token file read mid-task at a 32k context; compaction fires and the task still completes.",
+  "prompt": "Read docs/big.log in full (the whole file, however many reads it takes) and count how many lines have status=500. Then create src/c.js exporting const c = 3 and run `node --check src/c.js`. Report the count and what you ran.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test", "docs"],
+    "files": {
+      "docs/big.log": {
+        "generate": "log",
+        "tokens": 60000
+      }
+    }
+  },
+  "config": {
+    "contextLength": 32000,
+    "maxTokens": 2000
+  },
+  "policy": {
+    "serve": ["--auto"]
+  },
+  "expectations": [
+    {
+      "check": "file-exists",
+      "path": "src/c.js"
+    },
+    {
+      "check": "command-exits-0",
+      "command": "node --check src/c.js"
+    },
+    {
+      "check": "compaction-fired",
+      "min": 1
+    },
+    {
+      "check": "final-report"
+    },
+    {
+      "check": "outcome",
+      "expected": "done"
+    }
+  ],
+  "budget": {
+    "maxRequests": 40,
+    "maxTokens": 900000,
+    "deadlineSeconds": 900
+  }
+}

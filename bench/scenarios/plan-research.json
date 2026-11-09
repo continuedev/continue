@@ -1,0 +1,49 @@
+{
+  "name": "plan-research",
+  "group": "guidance",
+  "kind": "plan",
+  "surface": "serve",
+  "what": "Reads before claims: each file the request names is read; no claim about the test framework without reading package.json.",
+  "prompt": "Plan adding wordCount(text) to the helpers in src/strings.js of this package, returning the number of words. Follow the shape of the existing tests under test/ for its tests, and add it to the README's Usage section. Present the plan with PresentPlan when it is ready.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--readonly"]
+  },
+  "expectations": [
+    {
+      "check": "plan-presented"
+    },
+    {
+      "check": "tool-read-file",
+      "path": "src/strings.js"
+    },
+    {
+      "check": "tool-read-file",
+      "path": "README.md"
+    },
+    {
+      "check": "tool-read-file",
+      "path": "test/",
+      "anyUnder": true
+    },
+    {
+      "check": "claims-need-read",
+      "pattern": "node:test|node --test|npm test|jest|mocha|vitest",
+      "read": "package.json"
+    },
+    {
+      "check": "nudges-at-most",
+      "n": 1,
+      "kind": "all"
+    }
+  ],
+  "budget": {
+    "maxRequests": 15,
+    "maxTokens": 200000,
+    "deadlineSeconds": 420
+  }
+}

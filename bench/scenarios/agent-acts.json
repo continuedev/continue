@@ -1,0 +1,53 @@
+{
+  "name": "agent-acts",
+  "group": "guidance",
+  "kind": "agent",
+  "surface": "serve",
+  "what": "Act, do not narrate: files exist, tests pass, a final report; how many nudges it took.",
+  "prompt": "Create src/strings.js in this package exporting reverseWords(text), which returns the words of text in reverse order, single-spaced. Add a test for it with node:test in test/reverse.test.js and run the tests with `npm test`. Then tell me what you did and what the tests showed.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--auto"]
+  },
+  "expectations": [
+    {
+      "check": "file-exists",
+      "path": "src/strings.js"
+    },
+    {
+      "check": "file-exists",
+      "path": "test/reverse.test.js"
+    },
+    {
+      "check": "command-exits-0",
+      "command": "npm test"
+    },
+    {
+      "check": "final-report"
+    },
+    {
+      "check": "no-asks-to-proceed"
+    },
+    {
+      "check": "nudges-at-most",
+      "n": 4,
+      "kind": "cli"
+    },
+    {
+      "check": "turns-at-most",
+      "n": 20
+    },
+    {
+      "check": "no-text-leaks"
+    }
+  ],
+  "budget": {
+    "maxRequests": 30,
+    "maxTokens": 400000,
+    "deadlineSeconds": 600
+  }
+}

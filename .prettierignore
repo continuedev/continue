@@ -32,3 +32,5 @@ coverage
 # e2e
 packages/continue-sdk
 .conductor
+# the benchmark seed repository is copied as is into every run
+bench/seed

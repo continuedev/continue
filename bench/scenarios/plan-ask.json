@@ -1,0 +1,69 @@
+{
+  "name": "plan-ask",
+  "group": "guidance",
+  "kind": "plan",
+  "surface": "serve",
+  "what": "A reserved choice: it goes to PresentPlan as a decision with options, pick, type and dependent to-dos; it is not decided in the to-dos or attributed to the person. Letters (a) to (g) of research-plan-decisions-live.md.",
+  "prompt": "Plan adding a formatDate(date) helper to src/dates.js in this package, with tests in test/dates.test.js. I have not decided whether it should return ISO 8601 (like 2026-11-08) or a readable form (like November 8, 2026); that choice is mine, not yours. Present the plan with PresentPlan when it is ready.",
+  "seed": {
+    "from": "seed/loopsbx",
+    "mkdirs": ["src", "test"]
+  },
+  "config": {},
+  "policy": {
+    "serve": ["--readonly"]
+  },
+  "expectations": [
+    {
+      "check": "plan-presented",
+      "letter": "g"
+    },
+    {
+      "check": "nudges-at-most",
+      "n": 1,
+      "kind": "all",
+      "letter": "g"
+    },
+    {
+      "check": "decisions-contain",
+      "pattern": "ISO|readable|format",
+      "requireOptions": true,
+      "requirePick": true,
+      "requireType": true,
+      "requireTodos": true,
+      "letter": "d"
+    },
+    {
+      "check": "plan-decided-anyway",
+      "pattern": "ISO 8601|ISO format|ISO string|readable form|readable format|November 8",
+      "letter": "a"
+    },
+    {
+      "check": "plan-text-avoid",
+      "pattern": "assum\\w+[^.]{0,80}(ISO|readable)",
+      "letter": "b"
+    },
+    {
+      "check": "plan-text-avoid",
+      "pattern": "per (the )?user|as (the )?user (instructed|requested|specified|asked|chose)|user('s)? (instruction|request|preference|choice)|you (chose|asked for|requested)",
+      "letter": "c"
+    },
+    {
+      "check": "ask-question-followed",
+      "letter": "e"
+    },
+    {
+      "check": "plan-file-has-decisions",
+      "letter": "f"
+    },
+    {
+      "check": "tool-not-called",
+      "tool": "Exit"
+    }
+  ],
+  "budget": {
+    "maxRequests": 15,
+    "maxTokens": 200000,
+    "deadlineSeconds": 420
+  }
+}

@@ -81,7 +81,24 @@ export type PromptProfile = "full" | "short";
 
 const SHORT_PROMPT_MODELS = /qwen/i;
 
+/**
+ * Set to "full" or "short", picks the profile for every model, so the
+ * benchmark (bench/runner.mjs --profile) can compare the two texts on one
+ * model. Any other value is ignored. A `promptProfile` field per model in
+ * config is Track K and not this.
+ */
+export const PROMPT_PROFILE_ENV = "CONTINUE_PROMPT_PROFILE";
+
+/** The environment override, when the runtime has one (not the browser). */
+function promptProfileOverride(): PromptProfile | undefined {
+  if (typeof process === "undefined" || !process.env) return undefined;
+  const value = process.env[PROMPT_PROFILE_ENV];
+  return value === "full" || value === "short" ? value : undefined;
+}
+
 export function promptProfile(model: string | undefined): PromptProfile {
+  const override = promptProfileOverride();
+  if (override) return override;
   return model && SHORT_PROMPT_MODELS.test(model) ? "short" : "full";
 }
 
