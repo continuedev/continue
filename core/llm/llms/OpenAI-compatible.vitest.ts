@@ -32,6 +32,7 @@ import FunctionNetwork from "./FunctionNetwork.js";
 import NCompass from "./NCompass.js";
 import LlamaStack from "./LlamaStack.js";
 import Nebius from "./Nebius.js";
+import Kitani from "./Kitani.js";
 import OVHcloud from "./OVHcloud.js";
 
 // Base OpenAI tests
@@ -446,6 +447,11 @@ createOpenAISubclassTests(NCompass, {
 createOpenAISubclassTests(LlamaStack, {
   providerName: "llamastack",
   defaultApiBase: "http://localhost:8321/v1/openai/v1/",
+});
+
+createOpenAISubclassTests(Kitani, {
+  providerName: "kitani",
+  defaultApiBase: "https://api.kitani.ai/v1/",
 });
 
 createOpenAISubclassTests(Nebius, {

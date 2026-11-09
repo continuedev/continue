@@ -58,6 +58,7 @@ export const modelDescriptionSchema = z.object({
     "azure",
     "ovhcloud",
     "nebius",
+    "kitani",
     "scaleway",
     "watsonx",
     "minimax",

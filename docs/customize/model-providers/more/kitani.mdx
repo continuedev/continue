@@ -1,0 +1,42 @@
+---
+title: "Kitani"
+description: "Configure Kitani with Continue to use open-weight models and community fine-tunes through an OpenAI-compatible API"
+---
+
+You can get an API key from the [Kitani dashboard](https://kitani.ai/dashboard).
+
+## Available Models
+
+Available models can be found on the [Kitani models page](https://kitani.ai/models), or by calling `GET https://api.kitani.ai/v1/models`.
+
+## Chat Model
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: GLM 5.3
+      provider: kitani
+      model: z-ai/glm-5.3
+      apiKey: <YOUR_KITANI_API_KEY>
+  ```
+  </Tab>
+  <Tab title="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GLM 5.3",
+        "provider": "kitani",
+        "model": "z-ai/glm-5.3",
+        "apiKey": "<YOUR_KITANI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>

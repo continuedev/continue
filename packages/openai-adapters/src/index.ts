@@ -170,6 +170,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.ncompass.tech/v1", config);
     case "novita":
       return openAICompatible("https://api.novita.ai/v3/openai", config);
+    case "kitani":
+      return openAICompatible("https://api.kitani.ai/v1/", config);
     case "nebius":
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
