@@ -13,14 +13,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { services } from "../services/index.js";
 
 import {
-  fireNotification,
   firePostToolUse,
   firePostToolUseFailure,
-  firePreCompact,
   firePreToolUse,
   fireSessionEnd,
   fireSessionStart,
-  fireStop,
   fireUserPromptSubmit,
 } from "./fireHook.js";
 import { getMatchingHookGroups, loadHooksConfig } from "./hookConfig.js";
@@ -952,7 +949,9 @@ describeUnix("hookRunner", () => {
       const result = await runHooks(config, input);
       expect(result.blocked).toBe(true);
       expect(result.permissionDecision).toBe("deny");
-      expect(result.permissionDecisionReason).toBe("Blocked by security policy");
+      expect(result.permissionDecisionReason).toBe(
+        "Blocked by security policy",
+      );
     });
 
     it("clears timeout in finally block when HTTP hook fetch throws", async () => {
@@ -1015,15 +1014,29 @@ describeUnix("hookRunner", () => {
       expect(userPromptResult.blocked).toBe(false);
       expect(userPromptResult.results).toEqual([]);
 
-      const preToolResult = await firePreToolUse("Bash", { command: "ls" }, "call-1");
+      const preToolResult = await firePreToolUse(
+        "Bash",
+        { command: "ls" },
+        "call-1",
+      );
       expect(preToolResult.blocked).toBe(false);
       expect(preToolResult.results).toEqual([]);
 
-      const postToolResult = await firePostToolUse("Bash", { command: "ls" }, "output", "call-1");
+      const postToolResult = await firePostToolUse(
+        "Bash",
+        { command: "ls" },
+        "output",
+        "call-1",
+      );
       expect(postToolResult.blocked).toBe(false);
       expect(postToolResult.results).toEqual([]);
 
-      const failureResult = await firePostToolUseFailure("Bash", { command: "ls" }, "call-1", "err");
+      const failureResult = await firePostToolUseFailure(
+        "Bash",
+        { command: "ls" },
+        "call-1",
+        "err",
+      );
       expect(failureResult.blocked).toBe(false);
       expect(failureResult.results).toEqual([]);
 
@@ -1107,7 +1120,11 @@ describeUnix("hookRunner", () => {
         onceKeys: new Set(),
       };
 
-      const result = await firePreToolUse("Bash", { command: "raw command" }, "call-1");
+      const result = await firePreToolUse(
+        "Bash",
+        { command: "raw command" },
+        "call-1",
+      );
       expect(result.blocked).toBe(false);
       expect(result.updatedInput).toEqual({ command: "safe command" });
     });
@@ -1131,7 +1148,11 @@ describeUnix("hookRunner", () => {
         onceKeys: new Set(),
       };
 
-      const result = await firePreToolUse("Bash", { command: "dangerous" }, "call-1");
+      const result = await firePreToolUse(
+        "Bash",
+        { command: "dangerous" },
+        "call-1",
+      );
       expect(result.blocked).toBe(true);
       expect(result.blockReason).toContain("tool forbidden");
     });
@@ -1155,7 +1176,12 @@ describeUnix("hookRunner", () => {
         onceKeys: new Set(),
       };
 
-      const result = await firePostToolUse("Bash", { command: "ls" }, "file.txt", "call-1");
+      const result = await firePostToolUse(
+        "Bash",
+        { command: "ls" },
+        "file.txt",
+        "call-1",
+      );
       expect(result.blocked).toBe(false);
       expect(result.results).toHaveLength(1);
       expect(result.results[0].stdout).toBe("post-tool-success");
