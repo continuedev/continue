@@ -19,6 +19,12 @@ sidebarTitle: "Engy"
   schema: v1
 
   models:
+    - name: Kimi K3.1 Pro
+      provider: openai
+      model: kimi-k3.1-pro
+      apiBase: https://api.engy.ai/v1
+      apiKey: <YOUR_ENGY_API_KEY>
+      roles: [chat, edit, apply]
     - name: Kimi K3
       provider: openai
       model: kimi-k3
@@ -31,6 +37,14 @@ sidebarTitle: "Engy"
   ```json title="config.json"
   {
     "models": [
+      {
+        "title": "Kimi K3.1 Pro",
+        "provider": "openai",
+        "model": "kimi-k3.1-pro",
+        "apiBase": "https://api.engy.ai/v1",
+        "apiKey": "<YOUR_ENGY_API_KEY>",
+        "roles": ["chat", "edit", "apply"]
+      },
       {
         "title": "Kimi K3",
         "provider": "openai",
@@ -51,6 +65,7 @@ The live model catalog and pricing are at [`https://api.engy.ai/v1/models`](http
 
 | Model | Description |
 | :---- | :---------- |
+| `kimi-k3.1-pro` | Flagship Kimi K3.1 Pro. 1M context window. |
 | `kimi-k3` | Flagship Kimi K3. 1M context window. |
 | `glm-5.3` | Flagship GLM 5.3. 328K context window. |
 | `glm-5.3-flash` | Fast GLM 5.3. 328K context window. |
