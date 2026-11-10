@@ -540,7 +540,7 @@ export async function executeStreamedToolCalls(
             "canceled",
           );
         } catch {}
-        firePostToolUseFailure(
+        void firePostToolUseFailure(
           call.name,
           call.arguments,
           call.id,
@@ -590,7 +590,7 @@ export async function executeStreamedToolCalls(
             "canceled",
           );
         } catch {}
-        firePostToolUseFailure(
+        void firePostToolUseFailure(
           call.name,
           call.arguments,
           call.id,
@@ -626,7 +626,12 @@ export async function executeStreamedToolCalls(
             };
             entriesByIndex.set(index, entry);
             callbacks?.onToolResult?.(toolResult, call.name, "done");
-            firePostToolUse(call.name, call.arguments, toolResult, call.id);
+            void firePostToolUse(
+              call.name,
+              call.arguments,
+              toolResult,
+              call.id,
+            );
             // Immediate service update for UI feedback
             try {
               services.chatHistory.addToolResult(
@@ -650,7 +655,7 @@ export async function executeStreamedToolCalls(
               status: "errored",
             });
             callbacks?.onToolError?.(errorMessage, call.name);
-            firePostToolUseFailure(
+            void firePostToolUseFailure(
               call.name,
               call.arguments,
               call.id,
