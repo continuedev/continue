@@ -1,3 +1,6 @@
+// IMPORTANT: Import nativeFetch FIRST so fetch/Headers are snapshotted before
+// AI SDK packages loaded by ./apis/AiSdk.js can pollute them.
+import "./util/nativeFetch.js";
 import dotenv from "dotenv";
 import { z } from "zod";
 import { AiSdkApi } from "./apis/AiSdk.js";
