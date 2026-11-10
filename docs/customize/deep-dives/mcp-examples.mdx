@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, deja-vu]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -182,6 +182,20 @@ mcpServers:
 ```
 
 See also: [Chrome DevTools MCP guide](/guides/chrome-devtools-mcp-performance)
+
+## deja-vu (Session Memory)
+
+[deja-vu](https://github.com/vshulcz/deja-vu) indexes the session transcripts that Continue (`~/.continue/sessions/*.json`) and 42 other coding agents already write to disk, and serves local search and cross-session recall over stdio with no API key.
+
+```yaml
+mcpServers:
+  - name: deja-vu
+    command: npx
+    args:
+      - "-y"
+      - "@vshulcz/deja-vu"
+      - "mcp"
+```
 
 ## Other guides
 
