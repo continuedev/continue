@@ -1,0 +1,46 @@
+---
+title: "Local GGUF Coding Models with Swizzle Runtime"
+description: "Configure Continue with Swizzle Runtime (swizzle-rt), a pure-Rust GGUF inference engine with CUDA, Vulkan, and AVX2 kernels and OpenAI-compatible serving."
+sidebarTitle: "Swizzle Runtime Guide"
+---
+
+[Swizzle Runtime](https://github.com/Swizzle-AI/swizzle-runtime) (`swizzle-rt`) is an Apache-2.0, pure-Rust GGUF inference engine with custom AVX2, NVIDIA CUDA (`sm_75` to `sm_120`), and Vulkan compute kernels. It includes self-speculative decoding (`RAD-1`) and prefix caching (`Warm Start`), making it well-suited for local inline code edits and low-VRAM laptop GPUs.
+
+## 1. Install and Serve a GGUF Model
+
+Install `swizzle-rt` on Linux x86_64 (CUDA 12.8):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Swizzle-AI/swizzle-runtime/main/install.sh | sh
+```
+
+Pull a local model and start the OpenAI-compatible server:
+
+```sh
+swizzle-rt pull Qwen/Qwen3-0.6B-GGUF:Q8_0
+swizzle-rt serve Qwen3-0.6B-Q8_0.gguf --port 8080
+```
+
+## 2. Configure Continue (`config.yaml`)
+
+Point Continue's `openai` provider to your local `swizzle-rt` server:
+
+```yaml
+name: Local Swizzle Assistant
+version: 1.0.0
+schema: v1
+
+models:
+  - name: Qwen3 Local (Swizzle Runtime)
+    provider: openai
+    model: Qwen3-0.6B-Q8_0.gguf
+    apiBase: http://localhost:8080/v1
+    apiKey: swizzle-local
+    roles:
+      - chat
+      - edit
+    env:
+      useLegacyCompletionsEndpoint: false
+```
+
+`swizzle-rt serve` also exposes Ollama-compatible routes (`/api/chat`, `/api/generate`, `/api/tags`) and emits latency telemetry headers (`X-Swizzle-TTFT-Ms`, `X-Swizzle-Tokens-Per-Sec`).
