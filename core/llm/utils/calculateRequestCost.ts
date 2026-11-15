@@ -41,7 +41,44 @@ function calculateAnthropicCost(
       cacheRead: 0.5,
     },
 
-    // Claude Opus 4 (legacy)
+    // Claude Opus 4.1 and Opus 4 (dated ids and the -0 alias; a bare
+    // "claude-opus-4" prefix would also catch the cheaper Opus 4.5+ ids)
+    "claude-opus-4-1": {
+      input: 15,
+      output: 75,
+      cacheWrite: 18.75,
+      cacheRead: 1.5,
+    },
+    "claude-opus-4-0": {
+      input: 15,
+      output: 75,
+      cacheWrite: 18.75,
+      cacheRead: 1.5,
+    },
+    "claude-opus-4-2025": {
+      input: 15,
+      output: 75,
+      cacheWrite: 18.75,
+      cacheRead: 1.5,
+    },
+
+    // Claude Sonnet 4 and Sonnet 4.5 (same price as Sonnet 4.6)
+    "claude-sonnet-4": {
+      input: 3,
+      output: 15,
+      cacheWrite: 3.75,
+      cacheRead: 0.3,
+    },
+
+    // Claude Haiku 4.5
+    "claude-haiku-4-5": {
+      input: 1,
+      output: 5,
+      cacheWrite: 1.25,
+      cacheRead: 0.1,
+    },
+
+    // Claude 3 Opus (legacy)
     "claude-3-opus": {
       input: 15,
       output: 75,
@@ -49,7 +86,15 @@ function calculateAnthropicCost(
       cacheRead: 1.5,
     },
 
-    // Claude Sonnet 4 (optimal balance)
+    // Claude 3.7 Sonnet
+    "claude-3-7-sonnet": {
+      input: 3,
+      output: 15,
+      cacheWrite: 3.75,
+      cacheRead: 0.3,
+    },
+
+    // Claude 3.5 Sonnet
     "claude-3-5-sonnet": {
       input: 3,
       output: 15,
@@ -157,17 +202,31 @@ function calculateOpenAICost(
 
   // Define pricing per million tokens (MTok) by model family prefix
   const pricing: Record<string, { input: number; output: number }> = {
+    // GPT-4.1 models (must be listed so they don't fall back to base GPT-4)
+    "gpt-4.1-nano": { input: 0.1, output: 0.4 },
+    "gpt-4.1-mini": { input: 0.4, output: 1.6 },
+    "gpt-4.1": { input: 2, output: 8 },
+
     // GPT-4o models (most specific first)
     "gpt-4o-mini": { input: 0.15, output: 0.6 },
+    "gpt-4o-2024-05-13": { input: 5, output: 15 },
     "gpt-4o": { input: 2.5, output: 10 },
 
     // GPT-4 Turbo models
     "gpt-4-turbo": { input: 10, output: 30 },
 
     // GPT-3.5 Turbo models (most specific first)
+    "gpt-3.5-turbo-instruct": { input: 1.5, output: 2 },
+    "gpt-3.5-turbo-16k": { input: 3, output: 4 },
     "gpt-3.5-turbo-0125": { input: 0.5, output: 1.5 },
     "gpt-3.5-turbo-1106": { input: 1, output: 2 },
-    "gpt-3.5-turbo": { input: 1.5, output: 2 },
+    "gpt-3.5-turbo-0613": { input: 1.5, output: 2 },
+    "gpt-3.5-turbo-0301": { input: 1.5, output: 2 },
+    // The bare alias points to gpt-3.5-turbo-0125
+    "gpt-3.5-turbo": { input: 0.5, output: 1.5 },
+
+    // GPT-4 32k context
+    "gpt-4-32k": { input: 60, output: 120 },
 
     // Base GPT-4 (fallback for other gpt-4 variants)
     "gpt-4": { input: 30, output: 60 },
