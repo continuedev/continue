@@ -34,7 +34,9 @@ const GridDiv = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
   height: 100vh;
-  overflow-x: visible;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 `;
 
 const Layout = () => {
