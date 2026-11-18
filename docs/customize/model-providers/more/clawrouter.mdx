@@ -16,15 +16,15 @@ sidebarTitle: "ClawRouter"
 ClawRouter runs locally and provides an OpenAI-compatible API:
 
 ```bash
-npx clawrouter
+npx @blockrun/clawrouter
 ```
 
-This starts the router at `http://localhost:1337`.
+This starts the router at `http://localhost:8402`.
 
 You can also install it globally:
 
 ```bash
-npm install -g clawrouter
+npm install -g @blockrun/clawrouter
 clawrouter
 ```
 
@@ -41,7 +41,7 @@ clawrouter
     - name: ClawRouter Auto
       provider: clawrouter
       model: blockrun/auto
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
   ```
   </Tab>
   <Tab title="JSON (Deprecated)">
@@ -52,7 +52,7 @@ clawrouter
         "title": "ClawRouter Auto",
         "provider": "clawrouter",
         "model": "blockrun/auto",
-        "apiBase": "http://localhost:1337/v1/"
+        "apiBase": "http://localhost:8402/v1/"
       }
     ]
   }
@@ -103,7 +103,7 @@ ClawRouter supports function calling and tool use through its underlying model p
     - name: ClawRouter Auto
       provider: clawrouter
       model: blockrun/auto
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
       capabilities:
         - tool_use
   ```
@@ -116,7 +116,7 @@ ClawRouter supports function calling and tool use through its underlying model p
         "title": "ClawRouter Auto",
         "provider": "clawrouter",
         "model": "blockrun/auto",
-        "apiBase": "http://localhost:1337/v1/",
+        "apiBase": "http://localhost:8402/v1/",
         "capabilities": {
           "tools": true
         }
@@ -139,25 +139,25 @@ Add multiple ClawRouter profiles to your config and switch via Continue's model 
     - name: ClawRouter Auto
       provider: clawrouter
       model: blockrun/auto
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
 
     # Maximum savings
     - name: ClawRouter Eco  
       provider: clawrouter
       model: blockrun/eco
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
 
     # Best quality
     - name: ClawRouter Premium
       provider: clawrouter
       model: blockrun/premium
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
 
     # Zero cost
     - name: ClawRouter Free
       provider: clawrouter
       model: blockrun/free
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
   ```
   </Tab>
   <Tab title="JSON (Deprecated)">
@@ -168,25 +168,25 @@ Add multiple ClawRouter profiles to your config and switch via Continue's model 
         "title": "ClawRouter Auto",
         "provider": "clawrouter",
         "model": "blockrun/auto",
-        "apiBase": "http://localhost:1337/v1/"
+        "apiBase": "http://localhost:8402/v1/"
       },
       {
         "title": "ClawRouter Eco",
         "provider": "clawrouter",
         "model": "blockrun/eco",
-        "apiBase": "http://localhost:1337/v1/"
+        "apiBase": "http://localhost:8402/v1/"
       },
       {
         "title": "ClawRouter Premium",
         "provider": "clawrouter",
         "model": "blockrun/premium",
-        "apiBase": "http://localhost:1337/v1/"
+        "apiBase": "http://localhost:8402/v1/"
       },
       {
         "title": "ClawRouter Free",
         "provider": "clawrouter",
         "model": "blockrun/free",
-        "apiBase": "http://localhost:1337/v1/"
+        "apiBase": "http://localhost:8402/v1/"
       }
     ]
   }
@@ -241,7 +241,7 @@ You can configure ClawRouter for different Continue roles:
     - name: ClawRouter Auto
       provider: clawrouter
       model: blockrun/auto
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
       roles:
         - chat
         - edit
@@ -250,7 +250,7 @@ You can configure ClawRouter for different Continue roles:
     - name: ClawRouter Eco
       provider: clawrouter
       model: blockrun/eco
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
       roles:
         - autocomplete
   ```
@@ -263,7 +263,7 @@ You can configure ClawRouter for different Continue roles:
         "title": "ClawRouter Auto",
         "provider": "clawrouter",
         "model": "blockrun/auto",
-        "apiBase": "http://localhost:1337/v1/",
+        "apiBase": "http://localhost:8402/v1/",
         "roles": ["chat", "edit", "apply"]
       }
     ],
@@ -271,7 +271,7 @@ You can configure ClawRouter for different Continue roles:
       "title": "ClawRouter Eco",
       "provider": "clawrouter",
       "model": "blockrun/eco",
-      "apiBase": "http://localhost:1337/v1/"
+      "apiBase": "http://localhost:8402/v1/"
     }
   }
   ```
@@ -291,7 +291,7 @@ For self-hosted setups with custom authentication:
     - name: ClawRouter
       provider: clawrouter
       model: blockrun/auto
-      apiBase: http://localhost:1337/v1/
+      apiBase: http://localhost:8402/v1/
       apiKey: ${{ secrets.CLAWROUTER_API_KEY }}
   ```
   </Tab>
@@ -303,7 +303,7 @@ For self-hosted setups with custom authentication:
         "title": "ClawRouter",
         "provider": "clawrouter",
         "model": "blockrun/auto",
-        "apiBase": "http://localhost:1337/v1/",
+        "apiBase": "http://localhost:8402/v1/",
         "apiKey": "<YOUR_CLAWROUTER_API_KEY>"
       }
     ]
@@ -317,7 +317,7 @@ For self-hosted setups with custom authentication:
 ClawRouter supports crypto-native payments via the x402 protocol. On first run, ClawRouter automatically generates a wallet:
 
 ```bash
-npx clawrouter
+npx @blockrun/clawrouter
 # Wallet created: 5g3cB6...
 # Fund your wallet to access premium models
 ```
@@ -401,10 +401,10 @@ If you see connection errors, make sure ClawRouter is running:
 
 ```bash
 # Check if ClawRouter is running
-curl http://localhost:1337/v1/models
+curl http://localhost:8402/v1/models
 
 # Start ClawRouter if needed
-npx clawrouter
+npx @blockrun/clawrouter
 ```
 
 ### Model Not Found
@@ -421,13 +421,13 @@ Run the doctor command for AI-analyzed troubleshooting:
 
 ```bash
 # Basic diagnostics with Claude Sonnet (~$0.003)
-npx clawrouter doctor
+npx @blockrun/clawrouter doctor
 
 # Complex issues with Claude Opus (~$0.01)  
-npx clawrouter doctor opus
+npx @blockrun/clawrouter doctor opus
 
 # Ask a specific question
-npx clawrouter doctor "why are my requests failing?"
+npx @blockrun/clawrouter doctor "why are my requests failing?"
 ```
 
 The doctor collects system info, wallet status, network connectivity, and sends to Claude for analysis.
@@ -443,7 +443,7 @@ ClawRouter provides cost tracking via response headers:
 You can view aggregated costs with:
 
 ```bash
-curl http://localhost:1337/stats
+curl http://localhost:8402/stats
 ```
 
 ## Dual-Chain Wallet Support
@@ -500,7 +500,7 @@ Useful when a model doesn't follow instructions well or you want to control cost
 | Privacy | ✅ Data stays local | ⚠️ Data sent to cloud |
 | Authentication | Wallet signature | API key |
 | Payment | USDC (Solana/Base) | Credit card |
-| Setup | `npx clawrouter` | Account signup |
+| Setup | `npx @blockrun/clawrouter` | Account signup |
 
 <Note>
   ClawRouter can be used alongside OpenRouter — route complex tasks through ClawRouter while using OpenRouter for specific model access.
