@@ -30,6 +30,7 @@ import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Inception from "./Inception";
+import Infer from "./Infer";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -128,6 +129,7 @@ export const LLMClasses = [
   Scaleway,
   Relace,
   Inception,
+  Infer,
   Voyage,
   LlamaStack,
   TARS,

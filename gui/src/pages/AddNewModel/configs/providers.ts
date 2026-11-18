@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  infer: {
+    title: "Infer by Flow7",
+    provider: "infer",
+    description:
+      "Infer is an OpenAI-compatible API for models from Anthropic, OpenAI, Google, xAI and others, with up to four routes per model.",
+    longDescription:
+      "To get started with Infer, create an API key at [infer.flow7.org](https://infer.flow7.org/app#/keys) and add wallet credit. Each model ID ends with its route, for example `infer/claude-opus-5-5:low-cost`.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Infer API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://infer.flow7.org/app#/keys",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
