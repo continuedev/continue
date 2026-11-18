@@ -1323,8 +1323,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     longDescription: `[ClawRouter](https://github.com/BlockRunAI/ClawRouter) is an open-source LLM router that automatically selects the cheapest capable model for each request based on prompt complexity. It provides 78-96% cost savings on blended inference costs.
 
 To get started:
-1. Install ClawRouter: \`npx clawrouter\`
-2. The router runs locally at \`http://localhost:1337\`
+1. Install ClawRouter: \`npx @blockrun/clawrouter\`
+2. The router runs locally at \`http://localhost:8402\`
 3. A wallet is auto-generated on first run
 4. Select a model preset below
 
@@ -1352,7 +1352,7 @@ Fund your wallet with USDC on Solana or Base. ClawRouter uses x402 micropayments
     collectInputFor: [
       {
         ...apiBaseInput,
-        defaultValue: "http://localhost:1337/v1/",
+        defaultValue: "http://localhost:8402/v1/",
       },
       ...completionParamsInputsConfigs,
     ],

@@ -9,7 +9,7 @@ describe("ClawRouterApi", () => {
 
   it("should use default apiBase when not provided", () => {
     const api = new ClawRouterApi(baseConfig);
-    expect(api["config"].apiBase).toBe("http://localhost:1337/v1/");
+    expect(api["config"].apiBase).toBe("http://localhost:8402/v1/");
   });
 
   it("should allow custom apiBase", () => {

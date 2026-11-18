@@ -8,7 +8,7 @@ describe("ClawRouter", () => {
   });
 
   it("should have correct default options", () => {
-    expect(ClawRouter.defaultOptions.apiBase).toBe("http://localhost:1337/v1/");
+    expect(ClawRouter.defaultOptions.apiBase).toBe("http://localhost:8402/v1/");
     expect(ClawRouter.defaultOptions.model).toBe("blockrun/auto");
     expect(ClawRouter.defaultOptions.useLegacyCompletionsEndpoint).toBe(false);
   });
@@ -21,6 +21,14 @@ describe("ClawRouter", () => {
     // ClawRouter routes to models that may support reasoning
     expect(clawRouter["supportsReasoningField"]).toBe(true);
     expect(clawRouter["supportsReasoningDetailsField"]).toBe(true);
+  });
+
+  it("should cap stop sequences at 4, as the OpenAI models it routes to require", () => {
+    const clawRouter = new ClawRouter({
+      model: "blockrun/auto",
+    });
+
+    expect(clawRouter["getMaxStopWords"]()).toBe(4);
   });
 
   it("should include Continue User-Agent header", () => {

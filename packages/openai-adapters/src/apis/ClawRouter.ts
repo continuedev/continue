@@ -13,7 +13,7 @@ export interface ClawRouterConfig extends OpenAIConfig {}
  * Features:
  * - 15-dimension prompt complexity scoring
  * - Automatic model selection (cheap → capable based on task)
- * - OpenAI-compatible API at localhost:1337
+ * - OpenAI-compatible API at localhost:8402
  * - Support for multiple routing tiers (auto, free, eco)
  *
  * @see https://github.com/BlockRunAI/ClawRouter
@@ -22,7 +22,7 @@ export class ClawRouterApi extends OpenAIApi {
   constructor(config: ClawRouterConfig) {
     super({
       ...config,
-      apiBase: config.apiBase ?? "http://localhost:1337/v1/",
+      apiBase: config.apiBase ?? "http://localhost:8402/v1/",
     });
   }
 
