@@ -1,0 +1,55 @@
+---
+title: "Infer by Flow7"
+description: "Configure Infer by Flow7 with Continue to reach models from Anthropic, OpenAI, Google, xAI and others through one OpenAI-compatible API"
+---
+
+[Infer by Flow7](https://infer.flow7.org) is an OpenAI-compatible API for models from Anthropic, OpenAI, Google, xAI and others. Each model has up to four routes, and the suffix of the model ID picks one: `:low-cost`, `:balanced`, `:stable` or `:official`. It's prepaid, with no subscription.
+
+<Info>
+  You can get an API key from the
+  [Infer dashboard](https://infer.flow7.org/app#/keys). Add wallet credit before the first request.
+</Info>
+
+## Chat Model
+
+We recommend configuring **infer/claude-opus-5-5:low-cost** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Opus 5.5 (Low cost)
+        provider: infer
+        model: infer/claude-opus-5-5:low-cost
+        apiKey: <YOUR_INFER_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Opus 5.5 (Low cost)",
+          "provider": "infer",
+          "model": "infer/claude-opus-5-5:low-cost",
+          "apiKey": "<YOUR_INFER_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Choosing a model
+
+The [Infer models page](https://infer.flow7.org/models) lists every model ID with its routes, prices, context window and current availability. Use the ID exactly as listed, with the `infer/` prefix and the route suffix.
+
+Low cost routes take text and tool calls. For image input, use a model's `:official` route.
