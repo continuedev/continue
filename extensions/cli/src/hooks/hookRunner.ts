@@ -154,14 +154,17 @@ async function executeHttpHook(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-    const response = await fetch(handler.url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(input),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
+    let response: Response;
+    try {
+      response = await fetch(handler.url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(input),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       // Non-2xx = non-blocking error (matches Claude Code behavior)
@@ -375,9 +378,12 @@ function aggregateResults(
     switch (specific.hookEventName) {
       case "PreToolUse":
         if (specific.permissionDecision) {
-          eventResult.permissionDecision = specific.permissionDecision;
-          eventResult.permissionDecisionReason =
-            specific.permissionDecisionReason;
+          // Preserve most restrictive decision: once "deny", do not allow later "allow" to overwrite
+          if (eventResult.permissionDecision !== "deny") {
+            eventResult.permissionDecision = specific.permissionDecision;
+            eventResult.permissionDecisionReason =
+              specific.permissionDecisionReason;
+          }
           if (specific.permissionDecision === "deny") {
             eventResult.blocked = true;
             eventResult.blockReason =
