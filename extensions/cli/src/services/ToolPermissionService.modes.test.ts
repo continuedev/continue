@@ -32,7 +32,7 @@ describe("ToolPermissionService - Mode Functionality", () => {
         policies.some((p) => p.tool === "Edit" && p.permission === "exclude"),
       ).toBe(true);
       expect(
-        policies.some((p) => p.tool === "Bash" && p.permission === "allow"),
+        policies.some((p) => p.tool === "Bash" && p.permission === "ask"),
       ).toBe(true);
 
       // Should have specific policies for read tools (allowed)
@@ -232,7 +232,7 @@ describe("ToolPermissionService - Mode Functionality", () => {
         policies.some((p) => p.tool === "Edit" && p.permission === "exclude"),
       ).toBe(true);
       expect(
-        policies.some((p) => p.tool === "Bash" && p.permission === "allow"),
+        policies.some((p) => p.tool === "Bash" && p.permission === "ask"),
       ).toBe(true);
 
       // Read tools should be allowed

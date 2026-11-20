@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getDefaultToolPolicies } from "./defaultPolicies.js";
+import {
+  getDefaultToolPolicies,
+  PLAN_MODE_POLICIES,
+} from "./defaultPolicies.js";
 const DEFAULT_TOOL_POLICIES = getDefaultToolPolicies();
 
 describe("defaultPolicies", () => {
@@ -61,5 +64,48 @@ describe("defaultPolicies", () => {
       (p) => p.tool === "*",
     );
     expect(catchAllIndex).toBe(DEFAULT_TOOL_POLICIES.length - 1);
+  });
+});
+
+describe("PLAN_MODE_POLICIES", () => {
+  it("should require confirmation for Bash in plan mode", () => {
+    const bashPolicy = PLAN_MODE_POLICIES.find((p) => p.tool === "Bash");
+    expect(bashPolicy).toEqual({ tool: "Bash", permission: "ask" });
+  });
+
+  it("should exclude write tools in plan mode", () => {
+    const writeTools = ["Write", "Edit", "MultiEdit"];
+    for (const tool of writeTools) {
+      const policy = PLAN_MODE_POLICIES.find((p) => p.tool === tool);
+      expect(policy).toEqual({ tool, permission: "exclude" });
+    }
+  });
+
+  it("should allow read-only tools in plan mode", () => {
+    const readOnlyTools = [
+      "Read",
+      "List",
+      "Search",
+      "Fetch",
+      "Exit",
+      "Diff",
+      "Checklist",
+      "CheckBackgroundJob",
+      "AskQuestion",
+      "ReportFailure",
+      "Skills",
+      "Status",
+      "UploadArtifact",
+    ];
+
+    for (const tool of readOnlyTools) {
+      const policy = PLAN_MODE_POLICIES.find((p) => p.tool === tool);
+      expect(policy).toEqual({ tool, permission: "allow" });
+    }
+  });
+
+  it("should allow MCP tools with wildcard in plan mode", () => {
+    const catchAllPolicy = PLAN_MODE_POLICIES.find((p) => p.tool === "*");
+    expect(catchAllPolicy).toEqual({ tool: "*", permission: "allow" });
   });
 });
