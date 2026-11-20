@@ -420,6 +420,10 @@ class DiffStreamHandler(
                 val numChanges = diffBlocks.sumOf { it.deletedLines.size + it.addedLines.size }
 
                 repeat(numChanges) {
+                    // IntelliJ can coalesce adjacent line edits into fewer undoable commands.
+                    if (!undoManager.isUndoAvailable(fileEditor)) {
+                        return@runWriteCommandAction
+                    }
                     undoManager.undo(fileEditor)
                 }
             }
