@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from "child_process";
+import { ChildProcess, execFileSync, spawn } from "child_process";
 import fs from "fs";
 
 import {
@@ -84,6 +84,55 @@ function getShellCommand(command: string): { shell: string; args: string[] } {
   // Unix/macOS: Use login shell to source .bashrc/.zshrc etc.
   const userShell = process.env.SHELL || "/bin/bash";
   return { shell: userShell, args: ["-l", "-c", command] };
+}
+
+function listDescendantPids(pid: number): number[] {
+  let output = "";
+  try {
+    output = execFileSync("pgrep", ["-P", String(pid)], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    return [];
+  }
+
+  const children = output
+    .split("\n")
+    .map((line) => Number.parseInt(line, 10))
+    .filter((value) => Number.isInteger(value));
+  return children.flatMap((childPid) => [
+    childPid,
+    ...listDescendantPids(childPid),
+  ]);
+}
+
+function stopChildProcess(child: ChildProcess): void {
+  const pid = child.pid;
+  if (pid === undefined || child.exitCode !== null) {
+    return;
+  }
+
+  if (process.platform === "win32") {
+    spawn("taskkill", ["/PID", String(pid), "/T", "/F"], {
+      stdio: "ignore",
+      windowsHide: true,
+    });
+    return;
+  }
+
+  for (const descendant of listDescendantPids(pid).reverse()) {
+    try {
+      process.kill(descendant, "SIGTERM");
+    } catch {
+      // The process already exited.
+    }
+  }
+  try {
+    child.kill("SIGTERM");
+  } catch {
+    // The process already exited.
+  }
 }
 
 export function runCommandInBackground(command: string): {
@@ -231,17 +280,17 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         }
         backgroundSignalManager.off("backgroundRequested", moveToBackground);
 
-        // Detach stdout/stderr listeners so they don't accumulate in local
-        // buffers or trigger chat history updates after the tool call resolves.
-        // BackgroundJobService.createJobWithProcess attaches its own listeners.
-        child.stdout.removeListener("data", onStdout);
-        child.stderr.removeListener("data", onStderr);
-
         const job = backgroundJobService.createJobWithProcess(
           command,
           child as ChildProcess,
           stdout,
         );
+
+        // Drop the tool's own readers after the handoff. The job service
+        // attaches its own. If the handoff fails, stop the process instead
+        // of leaving it with nobody reading its pipes.
+        child.stdout?.removeListener("data", onStdout);
+        child.stderr?.removeListener("data", onStderr);
 
         if (job) {
           const truncationResult = truncateOutputFromStart(stdout, {
@@ -255,8 +304,9 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
             `Command moved to background. Job ID: ${job.id}\nOutput so far:\n${outputSoFar}\nUse CheckBackgroundJob("${job.id}") to check status.`,
           );
         } else {
+          stopChildProcess(child);
           resolve(
-            `Failed to move to background (job limit reached). Command continues in foreground.\nOutput so far: ${stdout}`,
+            `Failed to move to background (job limit reached). The command was stopped.\nOutput so far: ${stdout}`,
           );
         }
       };
@@ -270,7 +320,10 @@ IMPORTANT: To edit files, use Edit/MultiEdit tools instead of bash commands (sed
         timeoutId = setTimeout(() => {
           if (isResolved) return;
           isResolved = true;
-          child.kill();
+          backgroundSignalManager.off("backgroundRequested", moveToBackground);
+          child.stdout?.removeListener("data", onStdout);
+          child.stderr?.removeListener("data", onStderr);
+          stopChildProcess(child);
           let output = stdout + (stderr ? `\nStderr: ${stderr}` : "");
           output += `\n\n[Command timed out after ${TIMEOUT_MS / 1000} seconds of no output]`;
 
