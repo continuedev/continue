@@ -1,4 +1,3 @@
-import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 
 import { isSupportedLanceDbCpuTargetForLinux } from "../config/util";
@@ -14,7 +13,11 @@ import { getUriPathBasename } from "../util/uri";
 
 import { basicChunker } from "./chunk/basic.js";
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
-import { DatabaseConnection, SqliteDb } from "./refreshIndex.js";
+import {
+  DatabaseConnection,
+  SqliteDb,
+  withSqliteTransaction,
+} from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -497,54 +500,33 @@ export class LanceDbIndex implements CodebaseIndex {
     db: DatabaseConnection,
     rows: LanceDbRow[],
   ): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      db.db.serialize(() => {
-        db.db.exec("BEGIN", (err: Error | null) => {
-          if (err) {
-            reject(new Error("error creating transaction", { cause: err }));
-          }
-        });
+    if (rows.length === 0) {
+      return;
+    }
 
-        const sql =
-          "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        rows.map((r) => {
-          db.db.run(
-            sql,
-            [
-              r.uuid,
-              r.cachekey,
-              r.path,
-              this.artifactId,
-              JSON.stringify(r.vector),
-              r.startLine,
-              r.endLine,
-              r.contents,
-            ],
-            (result: RunResult, err: Error) => {
-              if (err) {
-                reject(
-                  new Error("error inserting into lance_db_cache table", {
-                    cause: err,
-                  }),
-                );
-              }
-            },
+    try {
+      await withSqliteTransaction(db, async () => {
+        for (const r of rows) {
+          await db.run(
+            "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            r.uuid,
+            r.cachekey,
+            r.path,
+            this.artifactId,
+            JSON.stringify(r.vector),
+            r.startLine,
+            r.endLine,
+            r.contents,
           );
-        });
-        db.db.exec("COMMIT", (err: Error | null) => {
-          if (err) {
-            reject(
-              new Error(
-                "error while committing insert into lance_db_rows transaction",
-                { cause: err },
-              ),
-            );
-          } else {
-            resolve();
-          }
-        });
+        }
       });
-    });
+    } catch (err) {
+      const cause = err instanceof Error ? err : new Error(String(err));
+      throw new Error(
+        `error inserting into lance_db_cache table: ${cause.message}`,
+        { cause },
+      );
+    }
   }
 
   private formatListPlurality(word: string, length: number): string {

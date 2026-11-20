@@ -18,6 +18,24 @@ import {
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
+export async function withSqliteTransaction(
+  db: DatabaseConnection,
+  work: () => Promise<void>,
+): Promise<void> {
+  await db.exec("BEGIN");
+  try {
+    await work();
+    await db.exec("COMMIT");
+  } catch (err) {
+    try {
+      await db.exec("ROLLBACK");
+    } catch {
+      // Surface the statement error. Rollback can also fail if BEGIN did.
+    }
+    throw err;
+  }
+}
+
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
