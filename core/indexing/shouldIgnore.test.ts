@@ -60,6 +60,19 @@ describe("shouldIgnore", () => {
     expect(result).toBe(true);
   });
 
+  test("should ignore a percent-encoded URI whose gitignore name contains a space", async () => {
+    addToTestDir([
+      ["ignored file.txt", "content"],
+      ["My Dir/kept.txt", "content"],
+      [".gitignore", "ignored file.txt\nMy Dir/"],
+    ]);
+    const encodedFile = `${TEST_DIR}/${encodeURIComponent("ignored file.txt")}`;
+    const encodedNested = `${TEST_DIR}/${encodeURIComponent("My Dir")}/kept.txt`;
+
+    expect(await shouldIgnore(encodedFile, testIde, [TEST_DIR])).toBe(true);
+    expect(await shouldIgnore(encodedNested, testIde, [TEST_DIR])).toBe(true);
+  });
+
   test("should return true if a .continueignore override ignores file", async () => {
     addToTestDir([
       ["override-file.txt", "content"],

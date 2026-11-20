@@ -12,6 +12,21 @@ import { getIgnoreContext } from "./walkDir";
 
     TODO there might be issues with symlinks here
 */
+
+function decodeUriRelativePath(relativePath: string): string {
+  return relativePath
+    .split("/")
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch {
+        // A stray "%" is not a valid escape. Keep the segment as written.
+        return segment;
+      }
+    })
+    .join("/");
+}
+
 export async function shouldIgnore(
   fileUri: string,
   ide: IDE,
@@ -60,7 +75,9 @@ export async function shouldIgnore(
       defaultAndGlobalIgnores,
     );
 
-    let relativePath = uri.substring(currentDir.length + 1);
+    let relativePath = decodeUriRelativePath(
+      uri.substring(currentDir.length + 1),
+    );
     if (fileType === (2 as FileType.Directory)) {
       relativePath += "/";
     }
