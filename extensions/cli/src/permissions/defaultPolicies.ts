@@ -39,14 +39,14 @@ export function getDefaultToolPolicies(
   return policies;
 }
 
-// Plan mode: Complete override - exclude all write operations, allow only reads and bash
+// Plan mode: Complete override - exclude all write operations, require confirmation for bash, allow reads
 export const PLAN_MODE_POLICIES: ToolPermissionPolicy[] = [
   { tool: "Edit", permission: "exclude" },
   { tool: "MultiEdit", permission: "exclude" },
   { tool: "Write", permission: "exclude" },
 
-  // TODO address bash read only concerns, maybe make permissions more granular
-  { tool: "Bash", permission: "allow" },
+  // Require user confirmation for bash in plan mode (principle of least privilege)
+  { tool: "Bash", permission: "ask" },
   { tool: "CheckBackgroundJob", permission: "allow" },
   { tool: "AskQuestion", permission: "allow" },
   { tool: "Checklist", permission: "allow" },
