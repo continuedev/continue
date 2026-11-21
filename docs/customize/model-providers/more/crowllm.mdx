@@ -1,0 +1,69 @@
+---
+title: "How to Configure CrowLLM with Continue"
+sidebarTitle: "CrowLLM"
+---
+
+<Info>
+  CrowLLM is an OpenAI-compatible gateway: one endpoint and one key for every model, with a zero-rated `:free` shelf next to the paid ids.
+</Info>
+
+<Tip>
+  Create an API key at [crowllm.com](https://crowllm.com) and browse the served catalog at [crowllm.com/docs](https://crowllm.com/docs).
+</Tip>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: CrowLLM DeepSeek V4 Flash
+      provider: crowllm
+      model: deepseek-v4-flash
+      apiKey: ${{ secrets.CROWLLM_API_KEY }}
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "CrowLLM DeepSeek V4 Flash",
+        "provider": "crowllm",
+        "model": "deepseek-v4-flash",
+        "apiKey": "<YOUR_CROWLLM_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+The `provider: crowllm` defaults to `https://crowllm.com/v1/`; set `apiBase` only when you route through a different host.
+
+## Available Models
+
+Any id served by the gateway works; pass it as `model`. A few commonly used ids:
+
+| Model | Id | Notes |
+|-------|-----|-------|
+| DeepSeek V4 Flash | `deepseek-v4-flash` | Default, fast and cheap |
+| GLM 5.3 | `glm-5.3` | Reasoning effort via `reasoning_effort` |
+| Kimi K3 | `kimi-k3` | Long-context coding |
+| GPT 5.6 Sol | `gpt-5.6-sol` | Frontier general model |
+| Claude Opus 4.7 | `claude-opus-4-7` | Frontier reasoning |
+| Qwen 3.8 27B (free) | `qwen-3.8-27b:free` | Zero-rated shelf |
+
+Query the full list with:
+
+```bash
+curl https://crowllm.com/v1/models
+```
+
+## Free Models
+
+Ids ending in `:free` bill at zero and need no credit. They are rate-limited, so use them for exploration rather than long agent loops.
