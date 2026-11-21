@@ -1314,6 +1314,47 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://api.router.tetrate.ai/",
   },
+  crowllm: {
+    title: "CrowLLM",
+    provider: "crowllm",
+    refPage: "crowllm",
+    description:
+      "OpenAI-compatible gateway with one key for every model and a zero-rated free shelf",
+    longDescription: `[CrowLLM](https://crowllm.com) is an OpenAI-compatible gateway: one endpoint (\`https://crowllm.com/v1\`) and one key for every model, with a \`:free\` shelf next to the paid ids.
+
+To get started:
+1. Create an API key at [crowllm.com](https://crowllm.com)
+2. Paste it below
+3. Pick a model id, or use autodetect to list what the gateway serves
+
+Ids ending in \`:free\` bill at zero and need no credit.`,
+    icon: "crowllm.svg",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "CrowLLM",
+        },
+      },
+    ],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your CrowLLM API key",
+        required: true,
+      },
+      {
+        ...apiBaseInput,
+        defaultValue: "https://crowllm.com/v1/",
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://crowllm.com",
+  },
   clawrouter: {
     title: "ClawRouter",
     provider: "clawrouter",
