@@ -165,3 +165,30 @@ By default, Continue uses OpenAI's `/responses` endpoint for o-series and gpt-5 
   ```
   </Tab>
 </Tabs>
+
+### Example: Kimi K3.1 Pro via Wallaby
+
+A tested configuration for running Kimi K3.1 Pro (Moonshot AI) through Wallaby, an OpenAI-compatible inference platform. Get an API key at [wallabytoken.com](https://wallabytoken.com) ($0.50 trial credit, no card required):
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Kimi K3.1 Pro (Wallaby)
+      provider: openai
+      model: kimi-k3.1-pro
+      apiBase: https://api.wallabytoken.com/v1
+      apiKey: <YOUR_WALLABY_API_KEY>
+  ```
+  </Tab>
+</Tabs>
+
+Notes:
+
+- Use `apiBase` with the full `/v1` suffix; no Responses API flags are needed for this model.
+- Kimi K3.1 Pro supports tool use for Agent mode; reasoning tokens are billed as output, matching the official Kimi API.
+- Pricing: $1.80 / 1M input ($0.18 cached), $9.00 / 1M output. Machine-readable rate card: [pricing.json](https://wallabytoken.com/pricing.json). Public status page: [status.wallabytoken.com](https://status.wallabytoken.com).
