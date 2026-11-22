@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createAceDataCloudApi } from "./AceDataCloud.js";
+import {
+  createAceDataCloudApi,
+  fetchAceDataCloudCatalog,
+} from "./AceDataCloud.js";
 
 vi.mock("../util.js", () => ({ customFetch: () => globalThis.fetch }));
 
@@ -151,51 +154,98 @@ describe("Ace Data Cloud adapter", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("lists the configured catalog without inventing recommended models", async () => {
-    const fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          object: "list",
-          data: [
+  it("uses typed protocols rather than names for account model discovery", async () => {
+    const fetch = vi.fn().mockImplementation(async (url) => {
+      const data = String(url).startsWith("https://platform.acedata.cloud")
+        ? [
+            { id: "gpt-4o-image", type: "chat" },
             {
-              id: "exact-model",
-              object: "model",
-              created: 1,
-              owned_by: "test",
+              id: "future-chat-id",
+              type: "chat",
+              recommended: false,
+              visible: false,
             },
-            {
-              id: "gpt-image-2",
-              object: "model",
-              created: 1,
-              owned_by: "test",
-            },
-            {
-              id: "gpt-4o-image",
-              object: "model",
-              created: 1,
-              owned_by: "test",
-            },
-            {
-              id: "text-embedding-3-small",
-              object: "model",
-              created: 1,
-              owned_by: "test",
-            },
-          ],
-        }),
-        { headers: { "Content-Type": "application/json" } },
-      ),
-    );
+            { id: "not-authorized", type: "chat" },
+            { id: "nano-banana", type: "image" },
+            { id: "future-vector", type: "embedding" },
+          ]
+        : [
+            "gpt-4o-image",
+            "future-chat-id",
+            "nano-banana",
+            "future-vector",
+          ].map((id) => ({
+            id,
+            object: "model",
+            created: 1,
+            owned_by: "acedatacloud",
+          }));
+      return new Response(JSON.stringify({ object: "list", data }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    });
     vi.stubGlobal("fetch", fetch);
     const api = createAceDataCloudApi({
       provider: "acedatacloud",
       apiKey: "test-key",
     });
     expect((await api.list()).map((model) => model.id)).toEqual([
-      "exact-model",
+      "gpt-4o-image",
+      "future-chat-id",
     ]);
     expect(String(fetch.mock.calls[0][0])).toBe(
       "https://api.acedata.cloud/v1/models",
     );
+    const publicRequest = fetch.mock.calls.find(([url]) =>
+      String(url).startsWith("https://platform.acedata.cloud"),
+    );
+    expect(new Headers(publicRequest?.[1]?.headers).has("authorization")).toBe(
+      false,
+    );
+  });
+
+  it("fetches all public chat models without a key or inferred limits", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: "new-chat",
+                label: "New Chat",
+                type: "chat",
+                capabilities: ["vision"],
+                recommended: false,
+                visible: false,
+              },
+              { id: "new-video", type: "video" },
+              { id: "new-audio", type: "audio" },
+              { id: "new-embedding", type: "embedding" },
+            ],
+          }),
+        ),
+      ),
+    );
+    expect(await fetchAceDataCloudCatalog()).toEqual([
+      {
+        id: "new-chat",
+        label: "New Chat",
+        type: "chat",
+        capabilities: ["vision"],
+      },
+    ]);
+  });
+
+  it("reports a failed or malformed public catalog instead of falling back to a preset", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("unavailable", { status: 503 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: [{ id: "untyped-model" }] })),
+      );
+    vi.stubGlobal("fetch", fetch);
+    await expect(fetchAceDataCloudCatalog()).rejects.toThrow("503");
+    await expect(fetchAceDataCloudCatalog()).rejects.toThrow();
   });
 });

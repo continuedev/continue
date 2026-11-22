@@ -9,7 +9,9 @@ Ace Data Cloud connects Continue to the chat model you select using the Chat Com
 
 ## Select the provider
 
-Open **Add Chat model**, search for **Ace Data Cloud** in **Provider**, and paste your API token in **API key**. The API base is already configured. Select a model, or use the refresh control beside **Model** to retrieve the current catalog. Check that the exact model supports your intended use before clicking **Connect**.
+Open **Add Chat model** and choose **Ace Data Cloud** in **Provider**. Continue automatically loads every chat model from Ace Data Cloud's current public catalog before you enter a key. Open **Model** to search by name or exact ID, choose a model, and paste your API token in **API key**. The API base is already configured. Click **Connect** to save that exact model.
+
+The refresh control reloads the online catalog without upgrading Continue. There is no bundled model shortlist: newly added chat models appear when the catalog updates. Loading or failure is shown in the form, and **Connect** stays disabled until you select a model. The public catalog describes supported models; your token's API permissions, model access and balance still apply when you use one.
 
 <Note>
 This named provider requires a Continue build containing the integration. It is not an extension Marketplace listing or a Continue Hub package. A source contribution is not proof that an installed release includes it.
@@ -45,7 +47,7 @@ models:
       - chat
 ```
 
-Replace `MODEL_ID` with the exact ID selected from the current catalog. Existing official releases that do not contain this contribution need their generic OpenAI-compatible configuration; that is a separate manual route.
+Replace `MODEL_ID` with the exact ID selected from the current catalog. To populate all account-discoverable chat models when Continue loads the configuration, set `model: AUTODETECT` instead. Autodetection intersects the authenticated Models response with the public typed chat catalog; it does not guess a model's protocol from its name. Existing official releases that do not contain this contribution need their generic OpenAI-compatible configuration; that is a separate manual route.
 
 ## Verify your model
 
@@ -53,11 +55,12 @@ Send `Reply only OK` in Chat mode. Then use Plan mode with a model that supports
 
 ## Keep media tools separate
 
-Suno, Seedance, HappyHorse, GPT Image and Nano Banana are separate MCP tools, not chat models to add to this provider's selector. Current Continue source has removed Hub package loading. A locally loaded MCP block does not mean the service is searchable in an official directory. For asynchronous tools, retrieve the same task ID until it reaches a terminal result; resubmitting generation creates another request and can cost more.
+Image-generation, video, audio and music APIs (including GPT Image, Nano Banana, Suno, Seedance and HappyHorse) use separate MCP tools rather than this Chat selector. A chat-compatible multimodal model remains in the Chat catalog even when its ID contains “image”. Embedding models use a separate model configuration with `roles: [embed]` and their exact embedding model ID; the Add Chat model form does not configure that role. Current Continue source has removed Hub package loading. A locally loaded MCP block does not mean the service is searchable in an official directory. For asynchronous tools, retrieve the same task ID until it reaches a terminal result; resubmitting generation creates another request and can cost more.
 
 ## Troubleshoot
 
 - **401:** check the raw token, expiry, allowed APIs and model access.
 - **Unknown model:** use the complete catalog ID, including its suffix; do not rename a model to bypass a protocol restriction.
-- **Empty catalog or insufficient balance:** inspect the account and [current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_troubleshooting). A catalog response alone does not guarantee permission to generate.
+- **Empty catalog:** refresh the public catalog and retry. A catalog failure is not an empty account balance.
+- **Insufficient balance:** inspect the account and [current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_troubleshooting). A catalog response alone does not guarantee permission to generate.
 - **Provider missing:** the installed Continue release does not include the contribution. Do not infer release inclusion from a passing test or an open PR.

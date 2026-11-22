@@ -33,6 +33,7 @@ export interface ProviderInfo {
   refPage?: string;
   apiKeyUrl?: string;
   downloadUrl?: string;
+  fetchModelsOnSelect?: boolean;
 }
 
 const completionParamsInputsConfigs = Object.values(completionParamsInputs);
@@ -60,7 +61,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     description:
       "Use your Ace Data Cloud account with an explicitly selected chat model.",
     longDescription:
-      "Paste your Ace Data Cloud API token, select an exact model, or refresh the model catalog. Check model access, current pricing and balance before sending a request.",
+      "Select any chat model from the current Ace Data Cloud catalog and paste your API token. The catalog refreshes automatically; model access and usage depend on your account.",
     icon: "acedatacloud.png",
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "acedatacloud",
@@ -70,7 +71,8 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       apiBase: "https://api.acedata.cloud/v1/",
       useResponsesApi: false,
     },
-    packages: [{ ...models.gpt41, providerOptions: ["acedatacloud"] }],
+    packages: [],
+    fetchModelsOnSelect: true,
     collectInputFor: [
       {
         inputType: "text",

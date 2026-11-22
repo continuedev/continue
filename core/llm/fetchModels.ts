@@ -1,3 +1,4 @@
+import { fetchAceDataCloudCatalog } from "@continuedev/openai-adapters";
 import { LLMClasses, llmFromProviderAndOptions } from "./llms/index.js";
 
 export interface FetchedModel {
@@ -8,6 +9,7 @@ export interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
+  supportsImages?: boolean;
 }
 
 const OLLAMA_EXCLUDED_CAPABILITIES = ["vision", "audio", "embedding"];
@@ -244,6 +246,13 @@ export async function fetchModels(
   apiBase?: string,
 ): Promise<FetchedModel[]> {
   switch (provider) {
+    case "acedatacloud":
+      return (await fetchAceDataCloudCatalog()).map((model) => ({
+        name: model.label ? `${model.label} (${model.id})` : model.id,
+        modelId: model.id,
+        icon: "acedatacloud.png",
+        supportsImages: model.capabilities?.includes("vision"),
+      }));
     case "ollama":
       return fetchOllamaModels();
     case "openrouter":
