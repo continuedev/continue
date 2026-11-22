@@ -5,7 +5,7 @@ description: "Choose Ace Data Cloud, add your API token, and select an exact cha
 keywords: [Ace Data Cloud, acedatacloud, models, API token]
 ---
 
-Ace Data Cloud connects Continue to the chat model you select using the Chat Completions API. Each request uses your own account's access and balance. Model IDs are sent unchanged; the provider does not select a substitute model.
+Ace Data Cloud connects Continue to the chat model you select using its published Chat Completions, Messages, or Responses interface. Each request uses your own account's access and balance. Model IDs are sent unchanged; the provider does not select a substitute model or infer the wire protocol from its name.
 
 ## Select the provider
 
@@ -21,7 +21,7 @@ This named provider requires a Continue build containing the integration. It is 
 
 1. [Register or sign in to Ace Data Cloud](https://platform.acedata.cloud/console/applications?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_register).
 2. Open **Applications → General application**. If it is absent, choose **Initialize General Application**.
-3. Copy the API key, or open **Manage Keys → Create** for a separate key named `Continue`. Check the selected model's access, expiration, allowed APIs, usage limit and balance. For model discovery and chat, allow `/openai/models` and `/openai/chat/completions` when using API restrictions.
+3. Copy the API key, or open **Manage Keys → Create** for a separate key named `Continue`. Check the selected model's access, expiration, allowed APIs, usage limit and balance. When using API restrictions, allow the Models API and the selected model's published API from `endpoints[].api_id`; a Messages-only model needs the Messages API, not the OpenAI Chat Completions API.
 4. Paste the raw token in Continue's password field; do not add `Bearer ` or use an account-management `platform-...` token.
 
 ![Copy an API key or open Manage Keys](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/get-api-key-en.png)
@@ -48,6 +48,10 @@ models:
 ```
 
 Replace `MODEL_ID` with the exact ID selected from the current catalog. To populate all account-discoverable chat models when Continue loads the configuration, set `model: AUTODETECT` instead. Autodetection intersects the authenticated Models response with the public typed chat catalog; it does not guess a model's protocol from its name. Existing official releases that do not contain this contribution need their generic OpenAI-compatible configuration; that is a separate manual route.
+
+The default Ace endpoint reads the public catalog's per-model `endpoints` without sending your API key or custom request headers to the metadata service. Messages requests use Bearer authentication and preserve text, images, tool calls, and streaming. Custom API bases keep their own Chat Completions behavior and do not inherit Ace's public metadata. A missing protocol declaration is an explicit catalog error, not a reason to silently retry another protocol or model.
+
+Context/output limits and image support are not copied from same-named vendor models. The picker retains Ace's explicit image capability; manually configured models can specify `capabilities.uploadImage` when supported. Continue's local request budgets remain configurable and are not claims about an unpublished model maximum.
 
 ## Verify your model
 

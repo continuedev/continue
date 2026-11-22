@@ -220,6 +220,11 @@ export class AnthropicApi implements BaseLlmApi {
                 dataUrl,
               );
             }
+          } else if (/^https?:\/\//.test(dataUrl ?? "")) {
+            blocks.push({
+              type: "image",
+              source: { type: "url", url: dataUrl },
+            });
           }
         } else {
           const text = part.type === "text" ? part.text : part.refusal;

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
 import {
   createAceDataCloudApi,
   fetchAceDataCloudCatalog,
@@ -28,6 +29,26 @@ describe("Ace Data Cloud adapter", () => {
         { headers: { "Content-Type": "application/json" } },
       ),
     );
+    fetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "gpt-5.5",
+              type: "chat",
+              endpoints: [
+                {
+                  protocol: "chat_completions",
+                  path: "/v1/chat/completions",
+                  base_url: "https://api.acedata.cloud/v1",
+                  auth: "bearer",
+                },
+              ],
+            },
+          ],
+        }),
+      ),
+    );
     vi.stubGlobal("fetch", fetch);
     const api = createAceDataCloudApi({
       provider: "acedatacloud",
@@ -44,13 +65,13 @@ describe("Ace Data Cloud adapter", () => {
       new AbortController().signal,
     );
     expect(result.choices[0].message.content).toBe("OK");
-    const [url, init] = fetch.mock.calls[0];
+    const [url, init] = fetch.mock.calls[1];
     expect(String(url)).toBe("https://api.acedata.cloud/v1/chat/completions");
     expect(new Headers(init.headers).get("authorization")).toBe(
       "Bearer test-key",
     );
     expect(JSON.parse(init.body).model).toBe("gpt-5.5");
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("streams exact-model tool calls on Chat Completions", async () => {
@@ -98,6 +119,26 @@ describe("Ace Data Cloud adapter", () => {
           { headers: { "Content-Type": "text/event-stream" } },
         ),
       );
+    fetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "gpt-5.5",
+              type: "chat",
+              endpoints: [
+                {
+                  protocol: "chat_completions",
+                  path: "/v1/chat/completions",
+                  base_url: "https://api.acedata.cloud/v1",
+                  auth: "bearer",
+                },
+              ],
+            },
+          ],
+        }),
+      ),
+    );
     vi.stubGlobal("fetch", fetch);
     const api = createAceDataCloudApi({
       provider: "acedatacloud",
@@ -112,13 +153,14 @@ describe("Ace Data Cloud adapter", () => {
         messages: [{ role: "user", content: "Read fixture.txt" }],
       },
       new AbortController().signal,
-    ))
+    )) {
       chunks.push(chunk);
+    }
     expect(chunks[0].choices[0].delta.tool_calls?.[0].function?.name).toBe(
       "Read",
     );
     expect(chunks[1].choices[0].finish_reason).toBe("tool_calls");
-    expect(String(fetch.mock.calls[0][0])).toBe(
+    expect(String(fetch.mock.calls[1][0])).toBe(
       "https://api.acedata.cloud/v1/chat/completions",
     );
     expect(api.responsesStream).toBeUndefined();

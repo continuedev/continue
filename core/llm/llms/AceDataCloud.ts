@@ -1,7 +1,8 @@
 import { LLMOptions } from "../../index.js";
+import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import OpenAI from "./OpenAI.js";
 
-/** Named Chat Completions provider; model IDs are sent without translation. */
+/** Named provider; its adapter selects each exact model's published protocol. */
 class AceDataCloud extends OpenAI {
   static providerName = "acedatacloud";
   static defaultOptions: Partial<LLMOptions> = {
@@ -16,6 +17,14 @@ class AceDataCloud extends OpenAI {
       useLegacyCompletionsEndpoint: false,
       useResponsesApi: false,
     });
+    // A same-named vendor entry is not a published Ace capacity guarantee.
+    this._contextLength = options.contextLength;
+    this.completionOptions.maxTokens =
+      options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS;
+  }
+
+  supportsImages(): boolean {
+    return this.capabilities?.uploadImage === true;
   }
 
   async listModels(): Promise<string[]> {
