@@ -306,6 +306,75 @@ describe("OpenAI", () => {
     });
   });
 
+  test("should omit stop for gpt-5 models", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-5-nano",
+      apiBase: "https://api.openai.com/v1/",
+    });
+
+    await runLlmTest({
+      llm: openai,
+      methodToTest: "chat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { maxTokens: 100, stop: ["\n"] },
+      ],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer <redacted>",
+          "api-key": "test-api-key",
+        },
+        body: {
+          model: "gpt-5-nano",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          max_completion_tokens: 100,
+        },
+      },
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
+    });
+  });
+
+  test("should keep stop for other models", async () => {
+    const openai = new OpenAI({
+      apiKey: "test-api-key",
+      model: "gpt-4o",
+      apiBase: "https://api.openai.com/v1/",
+    });
+
+    await runLlmTest({
+      llm: openai,
+      methodToTest: "chat",
+      params: [
+        [{ role: "user", content: "hello" }],
+        new AbortController().signal,
+        { maxTokens: 100, stop: ["\n"] },
+      ],
+      expectedRequest: {
+        url: "https://api.openai.com/v1/chat/completions",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer <redacted>",
+          "api-key": "test-api-key",
+        },
+        body: {
+          model: "gpt-4o",
+          messages: [{ role: "user", content: "hello" }],
+          stream: true,
+          max_tokens: 100,
+          stop: ["\n"],
+        },
+      },
+      mockStream: [{ choices: [{ delta: { content: "Hello world" } }] }],
+    });
+  });
+
   test("should handle tools", async () => {
     const openai = new OpenAI({
       apiKey: "test-api-key",
