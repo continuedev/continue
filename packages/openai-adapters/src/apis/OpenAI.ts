@@ -79,6 +79,9 @@ export class OpenAIApi implements BaseLlmApi {
           }
           return message;
         });
+
+        // c) don't support stop (these models return 400 for the parameter)
+        body.stop = undefined;
       }
       if (body.tools?.length && !body.model.startsWith("o3")) {
         body.parallel_tool_calls = false;

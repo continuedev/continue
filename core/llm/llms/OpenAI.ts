@@ -291,6 +291,9 @@ class OpenAI extends BaseLLM {
 
       // b) don't support system message
       finalOptions.messages = formatMessageForO1OrGpt5(finalOptions.messages);
+
+      // c) don't support stop (these models return 400 for the parameter)
+      finalOptions.stop = undefined;
     }
 
     if (options.model === "o1") {
@@ -447,6 +450,9 @@ class OpenAI extends BaseLLM {
 
       // b) don't support system message
       body.messages = formatMessageForO1OrGpt5(body.messages);
+
+      // c) don't support stop (these models return 400 for the parameter)
+      body.stop = undefined;
     }
 
     if (body.model === "o1") {
