@@ -85,7 +85,11 @@ export async function fetchwithRequestOptions(
   requestOptions?: RequestOptions,
 ): Promise<Response> {
   const url = typeof url_ === "string" ? new URL(url_) : url_;
-  if (url.host === "localhost") {
+  // The packaged binary cannot resolve `localhost`, so it rewrites the host to
+  // 127.0.0.1. Outside the binary, preserve the user-configured hostname:
+  // `localhost` is not always interchangeable with `127.0.0.1` (e.g. IPv6-only
+  // loopback, WSL2, containers).
+  if (process.env.IS_BINARY && url.host === "localhost") {
     url.host = "127.0.0.1";
   }
 
@@ -136,8 +140,9 @@ export async function fetchwithRequestOptions(
     ...requestOptions?.headers,
   };
 
-  // Replace localhost with 127.0.0.1
-  if (url.hostname === "localhost") {
+  // Replace localhost with 127.0.0.1 only in the packaged binary, where
+  // `localhost` cannot be resolved. See note above.
+  if (process.env.IS_BINARY && url.hostname === "localhost") {
     url.hostname = "127.0.0.1";
   }
 
