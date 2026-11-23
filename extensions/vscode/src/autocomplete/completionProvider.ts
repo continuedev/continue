@@ -31,6 +31,32 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
+// URI schemes belonging to non-code input surfaces (other extensions'
+// chat / comment / output boxes) where inline completions must never fire.
+// The provider is registered with a catch-all document selector
+// ([{ pattern: "**" }] in VsCodeExtension.ts), so without this guard VS Code
+// invokes it for every document, including foreign input boxes — e.g. the
+// Copilot Chat input (scheme `chatSessionInput`, issue #12933). A denylist
+// (rather than narrowing the registration selector) avoids silently
+// regressing document types that work today: `vscode-remote` (SSH/WSL),
+// `vscode-vfs` (github.dev), `untitled` buffers, and notebook cells.
+// Scheme names follow VS Code's scheme registry (Schemas in
+// src/vs/base/common/network.ts).
+const NON_CODE_INPUT_SCHEMES: Set<string> = new Set([
+  "vscode-scm", // SCM commit-message input (the only guard before this fix)
+  "comment", // SCM / review comment input
+  "chatSessionInput", // Copilot Chat input — the #12933 repro
+  "vscode-interactive-input", // chat / interactive input (older builds)
+  "vscode-chat-editor", // chat editor surface (older builds)
+  "chat-editing-text-model", // chat editing working-copy model
+  "output", // Output panel (never a code input)
+  "vscode-settings", // Settings editor input fields
+]);
+
+export function isNonCodeInputScheme(scheme: string): boolean {
+  return NON_CODE_INPUT_SCHEMES.has(scheme);
+}
+
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
   position: vscode.Position;
@@ -171,7 +197,7 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    if (document.uri.scheme === "vscode-scm") {
+    if (isNonCodeInputScheme(document.uri.scheme)) {
       return null;
     }
 
