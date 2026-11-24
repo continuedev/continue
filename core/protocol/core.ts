@@ -343,7 +343,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       contextLength?: number;
       maxTokens?: number;
       supportsTools?: boolean;
-      supportsImages?: boolean;
     }[],
   ];
 };

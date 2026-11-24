@@ -2,7 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Button, Input, StyledActionButton } from "../components";
 import Alert from "../components/gui/Alert";
@@ -35,7 +35,7 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     providers["openai"]!,
   );
   const { selectedProfile } = useAuth();
-  const [selectedModel, setSelectedModel] = useState<ModelPackage | undefined>(
+  const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
   );
   const formMethods = useForm();
@@ -45,22 +45,22 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     [],
   );
   const [isFetchingModels, setIsFetchingModels] = useState(false);
-  const [modelFetchError, setModelFetchError] = useState<string>();
-  const modelFetchId = useRef(0);
 
   useEffect(() => {
     void initializeDynamicModels(ideMessenger);
   }, []);
 
+  useEffect(() => {
+    setFetchedModelsList([]);
+  }, [selectedProvider]);
+
   const handleFetchModels = useCallback(async () => {
     const apiKey = formMethods.watch("apiKey");
     const apiBase = formMethods.watch("apiBase");
-    if (!apiKey && !selectedProvider.fetchModelsOnSelect) return;
+    if (!apiKey) return;
 
     const providerAtFetchTime = selectedProvider.provider;
-    const fetchId = ++modelFetchId.current;
     setIsFetchingModels(true);
-    setModelFetchError(undefined);
     try {
       const models = await fetchProviderModels(
         ideMessenger,
@@ -68,42 +68,15 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
         apiKey,
         apiBase,
       );
-      if (fetchId !== modelFetchId.current) return;
-      setFetchedModelsList(models);
-      if (selectedProvider.fetchModelsOnSelect) {
-        setSelectedModel((current) =>
-          models.find((model) => model.params.model === current?.params.model),
-        );
-        if (models.length === 0) {
-          setModelFetchError(
-            "No chat models were returned. Refresh the catalog to try again.",
-          );
-        }
-      }
+      setFetchedModelsList((prev) =>
+        selectedProvider.provider === providerAtFetchTime ? models : prev,
+      );
     } catch (error) {
-      if (fetchId === modelFetchId.current) {
-        setModelFetchError(
-          "Unable to load the model catalog. Refresh to try again.",
-        );
-      }
       console.error("Failed to fetch models:", error);
     } finally {
-      if (fetchId === modelFetchId.current) setIsFetchingModels(false);
-    }
-  }, [ideMessenger, selectedProvider, formMethods]);
-
-  useEffect(() => {
-    setFetchedModelsList([]);
-    setModelFetchError(undefined);
-    if (selectedProvider.fetchModelsOnSelect) {
-      void handleFetchModels();
-    } else {
       setIsFetchingModels(false);
     }
-    return () => {
-      modelFetchId.current += 1;
-    };
-  }, [selectedProvider, handleFetchModels]);
+  }, [ideMessenger, selectedProvider, formMethods]);
 
   const popularProviderTitles = [
     providers["openai"]?.title || "",
@@ -138,12 +111,6 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
     if (selectedProvider.downloadUrl) {
       return false;
     }
-    if (
-      !selectedModel ||
-      (selectedProvider.fetchModelsOnSelect && isFetchingModels)
-    ) {
-      return true;
-    }
 
     const required = selectedProvider.collectInputFor
       ?.filter((input) => input.required)
@@ -176,7 +143,6 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
       : undefined;
 
   function onSubmit() {
-    if (!selectedModel) return;
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
 
@@ -273,14 +239,10 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                 <label className="block text-sm font-medium">Model</label>
                 <button
                   type="button"
-                  title={
-                    selectedProvider.fetchModelsOnSelect
-                      ? "Refresh available chat models"
-                      : "Use entered API key to fetch available models"
-                  }
+                  title="Use entered API key to fetch available models"
                   className={`cursor-pointer border-none bg-transparent p-0 ${
-                    (selectedProvider.fetchModelsOnSelect ||
-                      (apiKeyValue && apiKeyValue.length > 0)) &&
+                    apiKeyValue &&
+                    apiKeyValue.length > 0 &&
                     selectedProvider.provider !== "ollama" &&
                     selectedProvider.provider !== "openrouter"
                       ? `text-description-muted hover:text-foreground`
@@ -311,7 +273,6 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   }
                 }}
                 topOptions={(() => {
-                  if (selectedProvider.fetchModelsOnSelect) return [];
                   const providerInfo = Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,
@@ -321,8 +282,6 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   );
                 })()}
                 otherOptions={(() => {
-                  if (selectedProvider.fetchModelsOnSelect)
-                    return fetchedModelsList;
                   const providerInfo = Object.entries(providers).find(
                     ([, provider]) =>
                       provider?.title === selectedProvider.title,
@@ -347,30 +306,11 @@ export function AddModelForm({ onDone }: AddModelFormProps) {
                   }
                   return staticOther;
                 })()}
-                otherOptionsLabel={
-                  selectedProvider.fetchModelsOnSelect
-                    ? "Available chat models"
-                    : "Additional models"
-                }
+                otherOptionsLabel="Additional models"
               />
-              {selectedProvider.fetchModelsOnSelect && (
-                <p
-                  className="text-description-muted mt-1 text-xs"
-                  role="status"
-                >
-                  {isFetchingModels
-                    ? "Loading the current model catalog…"
-                    : `${fetchedModelsList.length} chat models from the current catalog. Choose a model to connect.`}
-                </p>
-              )}
-              {modelFetchError && (
-                <p className="text-error mt-1 text-xs" role="alert">
-                  {modelFetchError}
-                </p>
-              )}
             </div>
 
-            {selectedModel?.params.model.startsWith("codestral") && (
+            {selectedModel.params.model.startsWith("codestral") && (
               <div className="my-2">
                 <Alert>
                   <p className="m-0 text-sm font-bold">Codestral API key</p>

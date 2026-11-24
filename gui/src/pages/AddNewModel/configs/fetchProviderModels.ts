@@ -12,7 +12,6 @@ interface FetchedModel {
   contextLength?: number;
   maxTokens?: number;
   supportsTools?: boolean;
-  supportsImages?: boolean;
 }
 
 function modelParams(model: FetchedModel): Record<string, any> {
@@ -23,12 +22,6 @@ function modelParams(model: FetchedModel): Record<string, any> {
   }
   if (model.supportsTools) {
     params.capabilities = { tools: true };
-  }
-  if (model.supportsImages !== undefined) {
-    params.capabilities = {
-      ...params.capabilities,
-      uploadImage: model.supportsImages,
-    };
   }
   return params;
 }
@@ -80,7 +73,6 @@ function toGenericPackage(model: FetchedModel, provider: string): ModelPackage {
     },
     isOpenSource: false,
     providerOptions: [provider],
-    icon: model.icon,
   };
 }
 
@@ -104,7 +96,7 @@ async function fetchModels(
 export async function fetchProviderModels(
   ideMessenger: IIdeMessenger,
   provider: string,
-  apiKey?: string,
+  apiKey: string,
   apiBase?: string,
 ): Promise<ModelPackage[]> {
   const models = await fetchModels(ideMessenger, provider, apiKey, apiBase);

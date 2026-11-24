@@ -33,7 +33,6 @@ export interface ProviderInfo {
   refPage?: string;
   apiKeyUrl?: string;
   downloadUrl?: string;
-  fetchModelsOnSelect?: boolean;
 }
 
 const completionParamsInputsConfigs = Object.values(completionParamsInputs);
@@ -61,18 +60,17 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     description:
       "Use your Ace Data Cloud account with an explicitly selected chat model.",
     longDescription:
-      "Select any chat model from the current Ace Data Cloud catalog and paste your API token. The catalog refreshes automatically; model access and usage depend on your account.",
+      "Enter your API token and use Fetch models to find chat models available to your account.",
     icon: "acedatacloud.png",
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "acedatacloud",
     apiKeyUrl:
-      "https://platform.acedata.cloud/console/applications?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_api_key",
+      "https://platform.acedata.cloud/console/applications",
     params: {
       apiBase: "https://api.acedata.cloud/v1/",
       useResponsesApi: false,
     },
-    packages: [],
-    fetchModelsOnSelect: true,
+    packages: [models.aceDataCloudSol],
     collectInputFor: [
       {
         inputType: "text",

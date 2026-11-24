@@ -16,7 +16,7 @@ import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 
 interface ModelSelectionListboxProps {
   /** Model selection listbox for choosing AI providers */
-  selectedProvider?: DisplayInfo;
+  selectedProvider: DisplayInfo;
   setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
   otherOptions?: DisplayInfo[];
@@ -96,24 +96,22 @@ function ModelSelectionListbox({
 
   return (
     <Listbox
-      value={selectedProvider ?? null}
+      value={selectedProvider}
       onChange={(value) => {
-        if (value) setSelectedProvider(value);
+        setSelectedProvider(value);
         setSearchQuery("");
       }}
     >
       <div className="relative mb-2 mt-1">
         <ListboxButton className="bg-background border-border text-foreground hover:bg-input relative m-0 grid h-full w-full cursor-pointer grid-cols-[1fr_auto] items-center rounded-lg border border-solid py-2 pl-3 pr-10 text-left focus:outline-none">
           <span className="flex items-center">
-            {window.vscMediaUrl && selectedProvider?.icon && (
+            {window.vscMediaUrl && selectedProvider.icon && (
               <img
-                src={`${window.vscMediaUrl}/logos/${selectedProvider?.icon}`}
+                src={`${window.vscMediaUrl}/logos/${selectedProvider.icon}`}
                 className="mr-3 h-4 w-4 object-contain object-center"
               />
             )}
-            <span className="text-xs">
-              {selectedProvider?.title ?? "Select a model"}
-            </span>
+            <span className="text-xs">{selectedProvider.title}</span>
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon

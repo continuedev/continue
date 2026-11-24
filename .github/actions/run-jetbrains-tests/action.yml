@@ -42,13 +42,10 @@ runs:
         java-version: 17
 
     - name: Setup FFmpeg
-      shell: bash
-      run: |
-        # BtbN's rolling release removes older versioned FFmpeg assets.
-        # Use the Ubuntu package for the integration test video recorder.
-        sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends ffmpeg
-        ffmpeg -version
+      uses: AnimMouse/setup-ffmpeg@v1
+      with:
+        version: 7.1
+        token: ${{ inputs.github-token }}
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
@@ -109,13 +106,6 @@ runs:
       run: |
         cd binary
         npm run build
-
-    - name: Verify packaged core startup
-      shell: bash
-      working-directory: binary/bin/linux-x64
-      env:
-        CONTINUE_GLOBAL_DIR: ${{ runner.temp }}/continue-core-startup
-      run: ./continue-binary --help
 
     - name: Run tests
       shell: bash
