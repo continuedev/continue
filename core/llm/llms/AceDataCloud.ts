@@ -2,7 +2,6 @@ import { LLMOptions } from "../../index.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import OpenAI from "./OpenAI.js";
 
-/** Named provider; its adapter selects each exact model's published protocol. */
 class AceDataCloud extends OpenAI {
   static providerName = "acedatacloud";
   static defaultOptions: Partial<LLMOptions> = {

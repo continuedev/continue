@@ -5,34 +5,9 @@ description: "Choose Ace Data Cloud, add your API token, and select an exact cha
 keywords: [Ace Data Cloud, acedatacloud, models, API token]
 ---
 
-Ace Data Cloud connects Continue to the chat model you select using its published Chat Completions, Messages, or Responses interface. Each request uses your own account's access and balance. Model IDs are sent unchanged; the provider does not select a substitute model or infer the wire protocol from its name.
+Use an Ace Data Cloud model that supports Chat Completions. In **Add Chat model**, choose **Ace Data Cloud**, enter your application API key, then use **Fetch models** to list compatible models available to that key. Select a model and click **Connect**.
 
-## Select the provider
-
-Open **Add Chat model** and choose **Ace Data Cloud** in **Provider**. Paste your token in **API Key**, then click the fetch button next to **Model** to load the chat models available to your account. Choose the exact model you want and click **Connect**. GPT-5.6 Sol is available as a starter selection while you set up the provider.
-
-The refresh control reloads the online catalog without upgrading Continue. There is no bundled model shortlist: newly added chat models appear when the catalog updates. Loading or failure is shown in the form, and **Connect** stays disabled until you select a model. The public catalog describes supported models; your token's API permissions, model access and balance still apply when you use one.
-
-<Note>
-This named provider requires a Continue build containing the integration. It is not an extension Marketplace listing or a Continue Hub package. A source contribution is not proof that an installed release includes it.
-</Note>
-
-## Get your API token
-
-1. [Register or sign in to Ace Data Cloud](https://platform.acedata.cloud/console/applications?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_register).
-2. Open **Applications → General application**. If it is absent, choose **Initialize General Application**.
-3. Copy the API key, or open **Manage Keys → Create** for a separate key named `Continue`. Check the selected model's access, expiration, allowed APIs, usage limit and balance. When using API restrictions, allow the Models API and the selected model's published API from `endpoints[].api_id`; a Messages-only model needs the Messages API, not the OpenAI Chat Completions API.
-4. Paste the raw token in Continue's password field; do not add `Bearer ` or use an account-management `platform-...` token.
-
-![Copy an API key or open Manage Keys](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/get-api-key-en.png)
-
-![Create a separately named API token](https://raw.githubusercontent.com/AceDataCloud/SunoDify/8d3d03570e73324220f111f7fe343da0792a8071/_assets/tutorial/create-api-key-en.png)
-
-These Ace account screenshots are reference images from the published Suno for Dify guide; the account Key controls are shared. Keep actual tokens out of screenshots, prompts and shared configuration. [Review current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_pricing); an example does not grant free usage.
-
-## Configure a local secret
-
-For a local YAML configuration, store `ACEDATACLOUD_API_KEY` in your own `~/.continue/.env` and use:
+Get an API key from [Applications](https://platform.acedata.cloud/console/applications). Model access and pricing depend on your account. You can also save the key as `ACEDATACLOUD_API_KEY` in your local `~/.continue/.env` and configure a model in YAML.
 
 ```yaml
 name: Ace Data Cloud
@@ -47,24 +22,6 @@ models:
       - chat
 ```
 
-Replace `MODEL_ID` with the exact ID selected from the current catalog. To populate all account-discoverable chat models when Continue loads the configuration, set `model: AUTODETECT` instead. Autodetection intersects the authenticated Models response with the public typed chat catalog; it does not guess a model's protocol from its name. Existing official releases that do not contain this contribution need their generic OpenAI-compatible configuration; that is a separate manual route.
+Use the exact ID from the [model catalog](https://platform.acedata.cloud/models). Set `model: AUTODETECT` to discover compatible models at startup. The default configuration intersects your account's Models response with the public catalog during discovery. Chat requests go directly to the configured endpoint. A custom `apiBase` uses that host's own model list.
 
-The default Ace endpoint reads the public catalog's per-model `endpoints` without sending your API key or custom request headers to the metadata service. Messages requests use Bearer authentication and preserve text, images, tool calls, and streaming. Custom API bases keep their own Chat Completions behavior and do not inherit Ace's public metadata. A missing protocol declaration is an explicit catalog error, not a reason to silently retry another protocol or model.
-
-Context/output limits and image support are not copied from same-named vendor models. The picker retains Ace's explicit image capability; manually configured models can specify `capabilities.uploadImage` when supported. Continue's local request budgets remain configurable and are not claims about an unpublished model maximum.
-
-## Verify your model
-
-Send `Reply only OK` in Chat mode. Then use Plan mode with a model that supports tools to read a non-sensitive test file. Verify the exact model and usage in your account. Chat success does not prove tool support or every model is compatible.
-
-## Keep media tools separate
-
-Image-generation, video, audio and music APIs (including GPT Image, Nano Banana, Suno, Seedance and HappyHorse) use separate MCP tools rather than this Chat selector. A chat-compatible multimodal model remains in the Chat catalog even when its ID contains “image”. Embedding models use a separate model configuration with `roles: [embed]` and their exact embedding model ID; the Add Chat model form does not configure that role. Current Continue source has removed Hub package loading. A locally loaded MCP block does not mean the service is searchable in an official directory. For asynchronous tools, retrieve the same task ID until it reaches a terminal result; resubmitting generation creates another request and can cost more.
-
-## Troubleshoot
-
-- **401:** check the raw token, expiry, allowed APIs and model access.
-- **Unknown model:** use the complete catalog ID, including its suffix; do not rename a model to bypass a protocol restriction.
-- **Empty catalog:** refresh the public catalog and retry. A catalog failure is not an empty account balance.
-- **Insufficient balance:** inspect the account and [current pricing](https://platform.acedata.cloud/models?utm_source=continue&utm_medium=integration&utm_campaign=ecosystem-growth&utm_content=provider_troubleshooting). A catalog response alone does not guarantee permission to generate.
-- **Provider missing:** the installed Continue release does not include the contribution. Do not infer release inclusion from a passing test or an open PR.
+Models offered exclusively through Anthropic Messages require a client that supports that protocol.
