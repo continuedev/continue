@@ -11,6 +11,7 @@ import { CometAPIApi } from "./apis/CometAPI.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { InceptionApi } from "./apis/Inception.js";
+import { InferockApi } from "./apis/Inferock.js";
 import { JinaApi } from "./apis/Jina.js";
 import { LlamastackApi } from "./apis/LlamaStack.js";
 import { MiniMaxApi } from "./apis/MiniMax.js";
@@ -121,6 +122,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new RelaceApi(config);
     case "inception":
       return new InceptionApi(config);
+    case "inferock":
+      return new InferockApi(config);
     case "watsonx":
       return new WatsonXApi(config);
     case "vertexai":
@@ -241,5 +244,9 @@ export {
 } from "./apis/AnthropicUtils.js";
 
 export { isResponsesModel } from "./apis/openaiResponses.js";
+export {
+  normalizeInferockApiBase,
+  sanitizeDaneRequestBody,
+} from "./apis/Inferock.js";
 export { OPENROUTER_HEADERS } from "./apis/OpenRouter.js";
 export { extractBase64FromDataUrl, parseDataUrl } from "./util/url.js";

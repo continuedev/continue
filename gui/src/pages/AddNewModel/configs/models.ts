@@ -2685,6 +2685,18 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["sambanova"],
     isOpenSource: true,
   },
+  inferockDane: {
+    title: "Dane",
+    description:
+      "Hybrid frontier-class reasoning model by Inferock. 1M token context window, 128K max output, tool calling.",
+    params: {
+      title: "Dane",
+      model: "dane",
+      contextLength: 1_000_000,
+    },
+    providerOptions: ["inferock"],
+    isOpenSource: false,
+  },
   minimaxM27: {
     title: "MiniMax M2.7",
     description:

@@ -1,0 +1,59 @@
+---
+title: "How to Configure Inferock with Continue"
+sidebarTitle: "Inferock"
+---
+
+<Info>
+  Sign in at [Inferock](https://inferock.ai), activate Inferock Serve, and copy your API key and Gateway base URL from **Settings → Inferock keys**.
+</Info>
+
+## Configuration
+
+<Tabs>
+  <Tab title="YAML">
+  ```yaml title="config.yaml"
+  name: My Config
+  version: 0.0.1
+  schema: v1
+
+  models:
+    - name: Dane
+      provider: inferock
+      model: dane
+      apiBase: <YOUR_GATEWAY_BASE_URL>
+      apiKey: <YOUR_INFEROCK_API_KEY>
+      capabilities:
+        - tool_use
+      requestOptions:
+        extraBodyProperties:
+          reasoning_effort: high # low | medium | high | xhigh | max
+  ```
+  </Tab>
+  <Tab title="JSON (Deprecated)">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Dane",
+        "provider": "inferock",
+        "model": "dane",
+        "apiBase": "<YOUR_GATEWAY_BASE_URL>",
+        "apiKey": "<YOUR_INFEROCK_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </Tab>
+</Tabs>
+
+## Available Models
+
+| Model | Description |
+| :---- | :---------- |
+| `dane` | Hybrid frontier-class reasoning model by Inferock. 1M token context window, 128K max output tokens, text input/output, tool calling. |
+
+## Notes
+
+- Each Inferock account has its own **Gateway base URL** shown under **Settings → Inferock keys**. Pass it directly as `apiBase` (with or without `/v1`; Continue normalizes it automatically).
+- Continue automatically sends `x-governance-provider: inferock-serve` and strips parameters Dane rejects (`temperature`, `top_p`, `parallel_tool_calls`, `tools[].function.strict`).
+- To change reasoning effort from Dane's default (`high`), set `requestOptions.extraBodyProperties.reasoning_effort` to `low`, `medium`, `high`, `xhigh`, or `max`.
