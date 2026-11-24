@@ -1,0 +1,73 @@
+---
+title: "TeamoRouter"
+description: "Configure TeamoRouter with Continue to use Claude, GPT, Gemini, DeepSeek, GLM, Kimi and other models through one API key"
+---
+
+[TeamoRouter](https://teamorouter.com) is an API gateway: one API key calls Claude, GPT, Gemini, DeepSeek, GLM, Kimi, Qwen and other models. It serves an OpenAI-compatible API, and Claude models are also available over the native Anthropic Messages API. Billing is pay-as-you-go from a prepaid balance, with no subscription.
+
+<Info>
+  Create an API key in the [TeamoRouter dashboard](https://teamorouter.com/dashboard). Model IDs are listed on the [models page](https://teamorouter.com/models).
+</Info>
+
+## Chat Model
+
+Claude models can use the `anthropic` provider with TeamoRouter's base URL. This keeps prompt caching, tool use, and extended thinking in their native form. All other models use the `openai` provider with the `/v1` base URL.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Sonnet 5.5 (TeamoRouter)
+        provider: anthropic
+        model: claude-sonnet-5-5
+        apiBase: https://api.teamorouter.com/v1/
+        apiKey: <YOUR_TEAMOROUTER_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+      - name: DeepSeek V4 Flash (TeamoRouter)
+        provider: openai
+        model: deepseek-v4-flash
+        apiBase: https://api.teamorouter.com/v1/
+        apiKey: <YOUR_TEAMOROUTER_API_KEY>
+        roles:
+          - chat
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Sonnet 5.5 (TeamoRouter)",
+          "provider": "anthropic",
+          "model": "claude-sonnet-5-5",
+          "apiBase": "https://api.teamorouter.com/v1/",
+          "apiKey": "<YOUR_TEAMOROUTER_API_KEY>"
+        },
+        {
+          "title": "DeepSeek V4 Flash (TeamoRouter)",
+          "provider": "openai",
+          "model": "deepseek-v4-flash",
+          "apiBase": "https://api.teamorouter.com/v1/",
+          "apiKey": "<YOUR_TEAMOROUTER_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Notes
+
+- Use model IDs exactly as they appear on the [models page](https://teamorouter.com/models), for example `gpt-6-astra`, `glm-5.3`, or `kimi-k3`.
+- A `402 Payment Required` response means the account balance is used up. Top up in the dashboard, then retry.
+
+<Note>
+  This page was contributed by TeamoRouter, the provider it describes.
+</Note>
