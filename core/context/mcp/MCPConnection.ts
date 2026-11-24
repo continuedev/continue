@@ -44,6 +44,8 @@ const WINDOWS_BATCH_COMMANDS = [
   "dlx",
   "nx",
   "bunx",
+  "yarn",
+  "pnpm",
 ];
 
 const COMMONS_ENV_VARS = ["HOME", "USER", "USERPROFILE", "LOGNAME", "USERNAME"];
