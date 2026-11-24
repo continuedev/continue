@@ -413,6 +413,18 @@ describe("MCPConnection", () => {
         expect(result.command).toBe("cmd.exe");
         expect(result.args).toEqual(["/c", "npx", "-y", "test"]);
       } finally {
+        Object.defineProperty(process, "platform", { value: "win32" });
+      }
+
+      try {
+        // Package-manager shims (yarn/pnpm via npm -g) are .cmd batch files too
+        const result = await (conn as any).resolveCommandForPlatform("yarn", [
+          "run",
+          "server",
+        ]);
+        expect(result.command).toBe("cmd.exe");
+        expect(result.args).toEqual(["/c", "yarn", "run", "server"]);
+      } finally {
         Object.defineProperty(process, "platform", { value: originalPlatform });
       }
     });
