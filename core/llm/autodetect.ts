@@ -47,6 +47,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "lemonade",
   "openai",
+  "nanogpt",
   "nvidia",
   "ollama",
   "together",
@@ -113,6 +114,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
+  "nanogpt",
   "ollama",
   "lemonade",
   "cohere",
