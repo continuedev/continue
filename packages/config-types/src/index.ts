@@ -44,6 +44,7 @@ export const modelDescriptionSchema = z.object({
   title: z.string(),
   provider: z.enum([
     "openai",
+    "nanogpt",
     "anthropic",
     "cohere",
     "ollama",
@@ -108,6 +109,7 @@ export const embeddingsProviderSchema = z.object({
     "transformers.js",
     "ollama",
     "openai",
+    "nanogpt",
     "cohere",
     "gemini",
     "ovhcloud",

@@ -1,0 +1,61 @@
+---
+title: "NanoGPT"
+description: "Configure NanoGPT models in Continue with an API key."
+---
+
+Get an API key from the [NanoGPT API page](https://nano-gpt.com/api).
+
+## Configuration
+
+```yaml title="config.yaml"
+name: My Config
+version: 1.0.0
+schema: v1
+
+models:
+  - name: DeepSeek V4.1 Flash
+    provider: nanogpt
+    model: deepseek/deepseek-v4.1-flash
+    apiKey: ${{ secrets.NANOGPT_API_KEY }}
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+      - image_input
+    defaultCompletionOptions:
+      contextLength: 1048576
+```
+
+Set `NANOGPT_API_KEY` in your [local secrets file](/faqs#how-to-reference-secrets-in-configyaml).
+Keep API keys out of version control.
+
+The provider defaults to `https://nano-gpt.com/api/v1/`. You can override it with
+`apiBase` and choose another exact model ID from the
+[NanoGPT model catalog](https://nano-gpt.com/api/v1/models).
+
+## Suggested coding models
+
+DeepSeek V4.1 Flash is the default, following the starting recommendation on the
+[NanoGPT coding guide](https://nano-gpt.com/use-cases/coding). The guide's small
+API tool-call test does not rank coding quality. The model catalog currently
+labels DeepSeek V4.1 Flash as a limited-capacity beta.
+
+The Add Model screen also offers these alternatives from the same guide:
+
+- GLM 5.3 Flash: `z-ai/glm-5.3-flash`
+- Kimi K2.6: `moonshotai/kimi-k2.6`
+- Claude Sonnet 5.5: `anthropic/claude-sonnet-5.5`
+- Claude Opus 5.5: `anthropic/claude-opus-5.5`
+
+Use automatic tool choice for the Claude models. Check model prices before long
+runs, especially with Opus.
+
+## Model discovery
+
+Select **NanoGPT** in Continue's Add Model screen to use the DeepSeek V4.1 Flash preset or
+autodetect the available models. In YAML, set `model: AUTODETECT` to list models
+through the API. Discovery lists model IDs; it does not detect their capabilities.
+Only set `tool_use` for models that support tool calling, and `image_input` for
+models that accept images. Context and output limits also vary by model.

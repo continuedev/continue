@@ -1182,6 +1182,34 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
   },
+  nanogpt: {
+    title: "NanoGPT",
+    provider: "nanogpt",
+    refPage: "nanogpt",
+    description: "Use models through NanoGPT's OpenAI-compatible API.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    apiKeyUrl: "https://nano-gpt.com/api",
+    collectInputFor: [
+      {
+        inputType: "password",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your NanoGPT API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.nanogptDeepSeekV41Flash,
+      models.nanogptGlm53Flash,
+      models.nanogptKimi26,
+      models.nanogptClaudeSonnet55,
+      models.nanogptClaudeOpus55,
+      {
+        ...models.AUTODETECT,
+        params: { ...models.AUTODETECT.params, title: "NanoGPT" },
+      },
+    ],
+  },
   nebius: {
     title: "Nebius AI Studio",
     provider: "nebius",

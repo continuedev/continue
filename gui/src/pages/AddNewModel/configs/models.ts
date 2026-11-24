@@ -37,6 +37,66 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  nanogptDeepSeekV41Flash: {
+    title: "DeepSeek V4.1 Flash",
+    description: "DeepSeek V4.1 Flash through NanoGPT.",
+    params: {
+      title: "DeepSeek V4.1 Flash",
+      model: "deepseek/deepseek-v4.1-flash",
+      contextLength: 1048576,
+      capabilities: { tools: true, uploadImage: true },
+    },
+    providerOptions: ["nanogpt"],
+    isOpenSource: true,
+  },
+  nanogptGlm53Flash: {
+    title: "GLM 5.3 Flash",
+    description: "GLM 5.3 Flash through NanoGPT.",
+    params: {
+      title: "GLM 5.3 Flash",
+      model: "z-ai/glm-5.3-flash",
+      contextLength: 1048576,
+      capabilities: { tools: true, uploadImage: true },
+    },
+    providerOptions: ["nanogpt"],
+    isOpenSource: true,
+  },
+  nanogptKimi26: {
+    title: "Kimi K2.6",
+    description: "Kimi K2.6 through NanoGPT.",
+    params: {
+      title: "Kimi K2.6",
+      model: "moonshotai/kimi-k2.6",
+      contextLength: 262144,
+      capabilities: { tools: true, uploadImage: true },
+    },
+    providerOptions: ["nanogpt"],
+    isOpenSource: true,
+  },
+  nanogptClaudeSonnet55: {
+    title: "Claude Sonnet 5.5",
+    description: "Claude Sonnet 5.5 through NanoGPT.",
+    params: {
+      title: "Claude Sonnet 5.5",
+      model: "anthropic/claude-sonnet-5.5",
+      contextLength: 1000000,
+      capabilities: { tools: true, uploadImage: true },
+    },
+    providerOptions: ["nanogpt"],
+    isOpenSource: false,
+  },
+  nanogptClaudeOpus55: {
+    title: "Claude Opus 5.5",
+    description: "Claude Opus 5.5 through NanoGPT.",
+    params: {
+      title: "Claude Opus 5.5",
+      model: "anthropic/claude-opus-5.5",
+      contextLength: 1000000,
+      capabilities: { tools: true, uploadImage: true },
+    },
+    providerOptions: ["nanogpt"],
+    isOpenSource: false,
+  },
   hermes3Llama31_405b: {
     title: "Hermes 3 Llama 3.1 405B",
     description:
