@@ -16,6 +16,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       if (lower.match(/^gpt-[4-9]/) || lower.match(/^o[1-9]/)) return true;
       return false;
     },
+    inferock: (model) => model.toLowerCase() === "dane",
     openai: (model) => {
       const lower = model.toLowerCase();
       // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling

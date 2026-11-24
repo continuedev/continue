@@ -5,6 +5,7 @@ import { Cohere } from "./providers/cohere.js";
 import { CometAPI } from "./providers/cometapi.js";
 import { Gemini } from "./providers/gemini.js";
 import { Inception } from "./providers/inception.js";
+import { Inferock } from "./providers/inferock.js";
 import { MiniMax } from "./providers/minimax.js";
 import { Mistral } from "./providers/mistral.js";
 import { Ollama } from "./providers/ollama.js";
@@ -28,6 +29,7 @@ export const allModelProviders: ModelProvider[] = [
   Cohere,
   CometAPI,
   Inception,
+  Inferock,
   MiniMax,
   xAI,
   zAI,

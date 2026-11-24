@@ -557,6 +557,42 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  inferock: {
+    title: "Inferock",
+    provider: "inferock",
+    description:
+      "Inferock Serve featuring Dane, a hybrid frontier-class reasoning model with a 1M context window.",
+    longDescription:
+      "Sign in at [Inferock](https://inferock.ai), activate Inferock Serve, and copy your API key and Gateway base URL from Settings → Inferock keys.",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Inferock API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "apiBase",
+        label: "Gateway Base URL",
+        placeholder: "https://<your-gateway-host>",
+        required: true,
+      },
+    ],
+    packages: [
+      models.inferockDane,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Inferock",
+        },
+      },
+    ],
+    apiKeyUrl: "https://inferock.ai/docs/dane/",
+  },
   minimax: {
     title: "MiniMax",
     provider: "minimax",

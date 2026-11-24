@@ -234,6 +234,11 @@ export const InceptionConfigSchema = OpenAIConfigSchema.extend({
 });
 export type InceptionConfig = z.infer<typeof InceptionConfigSchema>;
 
+export const InferockConfigSchema = OpenAIConfigSchema.extend({
+  provider: z.literal("inferock"),
+});
+export type InferockConfig = z.infer<typeof InferockConfigSchema>;
+
 export const VertexAIConfigSchema = BasePlusConfig.extend({
   provider: z.literal("vertexai"),
   env: z
@@ -269,6 +274,7 @@ export const LLMConfigSchema = z.discriminatedUnion("provider", [
   JinaConfigSchema,
   MockConfigSchema,
   InceptionConfigSchema,
+  InferockConfigSchema,
   VertexAIConfigSchema,
   LlamastackConfigSchema,
   CometAPIConfigSchema,
