@@ -31,6 +31,17 @@ import { MCPConnectionInfo } from "./types.js";
  */
 const COMMONS_ENV_VARS = ["HOME", "USER", "USERPROFILE", "LOGNAME", "USERNAME"];
 
+// Proxy-relevant environment variables passed through the whitelist so the
+// mcp-remote fallback and proxied servers keep working under a minimal env.
+const PROXY_ENV_VARS = [
+  "HTTP_PROXY",
+  "HTTPS_PROXY",
+  "NO_PROXY",
+  "http_proxy",
+  "https_proxy",
+  "no_proxy",
+];
+
 const INHERIT_ALL_ENV_VAR = "CONTINUE_CLI_MCP_INHERIT_ALL_ENV";
 
 /**
@@ -58,6 +69,16 @@ export function constructMcpChildEnv(
   const env: Record<string, string> = {};
   if (process.env) {
     for (const key of COMMONS_ENV_VARS) {
+      const value = process.env[key];
+      if (value !== undefined) {
+        env[key] = value;
+      }
+    }
+    // Proxy vars: the mcp-remote fallback (and any server that respects
+    // proxy conventions) needs these to reach proxied remote servers.
+    // Without them, a whitelisted child silently loses proxy routing
+    // that the full-inheritance behavior used to provide (#8602).
+    for (const key of PROXY_ENV_VARS) {
       const value = process.env[key];
       if (value !== undefined) {
         env[key] = value;
