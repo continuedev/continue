@@ -64,8 +64,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     icon: "acedatacloud.png",
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "acedatacloud",
-    apiKeyUrl:
-      "https://platform.acedata.cloud/console/applications",
+    apiKeyUrl: "https://platform.acedata.cloud/console/applications",
     params: {
       apiBase: "https://api.acedata.cloud/v1/",
       useResponsesApi: false,
