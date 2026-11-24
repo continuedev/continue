@@ -37,6 +37,14 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  aceDataCloudSol: {
+    title: "GPT-5.6 Sol",
+    description: "A chat model available from Ace Data Cloud.",
+    params: { model: "gpt-5.6-sol" },
+    icon: "acedatacloud.png",
+    providerOptions: ["acedatacloud"],
+    isOpenSource: false,
+  },
   hermes3Llama31_405b: {
     title: "Hermes 3 Llama 3.1 405B",
     description:

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { z } from "zod";
+import { createAceDataCloudApi } from "./apis/AceDataCloud.js";
 import { AiSdkApi } from "./apis/AiSdk.js";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AskSageApi } from "./apis/AskSage.js";
@@ -95,6 +96,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   }
 
   switch (config.provider) {
+    case "acedatacloud":
+      return createAceDataCloudApi(config);
     case "openai":
       return new OpenAIApi(config);
     case "azure":

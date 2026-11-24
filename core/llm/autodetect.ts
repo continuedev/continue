@@ -44,6 +44,7 @@ import {
 } from "./templates/edit.js";
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
+  "acedatacloud",
   "lmstudio",
   "lemonade",
   "openai",
@@ -112,6 +113,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
+  "acedatacloud",
   "openai",
   "ollama",
   "lemonade",

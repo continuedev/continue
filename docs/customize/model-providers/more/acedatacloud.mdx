@@ -1,0 +1,27 @@
+---
+title: "Use Ace Data Cloud in Continue"
+sidebarTitle: "Ace Data Cloud"
+description: "Choose Ace Data Cloud, add your API token, and select an exact chat model."
+keywords: [Ace Data Cloud, acedatacloud, models, API token]
+---
+
+Use an Ace Data Cloud model that supports Chat Completions. In **Add Chat model**, choose **Ace Data Cloud**, enter your application API key, then use **Fetch models** to list compatible models available to that key. Select a model and click **Connect**.
+
+Get an API key from [Applications](https://platform.acedata.cloud/console/applications). Model access and pricing depend on your account. You can also save the key as `ACEDATACLOUD_API_KEY` in your local `~/.continue/.env` and configure a model in YAML.
+
+```yaml
+name: Ace Data Cloud
+version: 1.0.0
+schema: v1
+models:
+  - name: My selected Ace chat model
+    provider: acedatacloud
+    model: MODEL_ID
+    apiKey: ${{ secrets.ACEDATACLOUD_API_KEY }}
+    roles:
+      - chat
+```
+
+Use the exact ID from the [model catalog](https://platform.acedata.cloud/models). Set `model: AUTODETECT` to discover compatible models at startup. The default configuration intersects your account's Models response with the public catalog during discovery. Chat requests go directly to the configured endpoint. A custom `apiBase` uses that host's own model list.
+
+Models offered exclusively through Anthropic Messages require a client that supports that protocol.

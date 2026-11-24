@@ -54,6 +54,33 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<string, ProviderInfo>> = {
+  acedatacloud: {
+    title: "Ace Data Cloud",
+    provider: "acedatacloud",
+    description:
+      "Use your Ace Data Cloud account with an explicitly selected chat model.",
+    longDescription:
+      "Enter your API token and use Fetch models to find chat models available to your account.",
+    icon: "acedatacloud.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "acedatacloud",
+    apiKeyUrl: "https://platform.acedata.cloud/console/applications",
+    params: {
+      apiBase: "https://api.acedata.cloud/v1/",
+      useResponsesApi: false,
+    },
+    packages: [models.aceDataCloudSol],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Ace Data Cloud API token",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+  },
   cometapi: {
     title: "CometAPI",
     provider: "cometapi",
