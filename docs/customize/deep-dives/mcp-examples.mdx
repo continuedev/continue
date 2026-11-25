@@ -1,6 +1,6 @@
 ---
 title: "Example MCP Servers"
-keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, suno, seedance, happyhorse, gpt-image, nano-banana]
+keywords: [mcp, integrations, sentry, slack, linear, posthog, supabase, netlify, atlassian, github, sanity, snyk, dlt, chrome-devtools, ace-music, suno, seedance, happyhorse, gpt-image, nano-banana]
 ---
 
 Ready-to-use MCP server configurations for popular tools and services. Copy these into your `config.yaml` to get started.
@@ -189,6 +189,12 @@ Ace Data Cloud maintains these servers. Create a service API key in [Ace Data Cl
 
 ```yaml
 mcpServers:
+  - name: ACE Music by Ace Data Cloud
+    type: streamable-http
+    url: https://acemusic.mcp.acedata.cloud/mcp
+    requestOptions:
+      headers:
+        Authorization: Bearer ${{ secrets.ACEDATACLOUD_API_TOKEN }}
   - name: Suno by Ace Data Cloud
     type: streamable-http
     url: https://suno.mcp.acedata.cloud/mcp
@@ -223,7 +229,7 @@ mcpServers:
 
 Reload Continue and inspect the available tools in Agent mode. The GPT Image entry connects to the OpenAI MCP server, which also exposes chat, audio, and embedding tools subject to your token's permissions. Generation may incur charges. If a tool returns a pending task ID, use its task lookup tool with that ID to check progress.
 
-Server details are available in [SunoMCP](https://github.com/AceDataCloud/SunoMCP), [SeedanceMCP](https://github.com/AceDataCloud/SeedanceMCP), [HappyHorseMCP](https://github.com/AceDataCloud/HappyHorseMCP), [OpenAIMCP](https://github.com/AceDataCloud/OpenAIMCP), and [NanoBananaMCP](https://github.com/AceDataCloud/NanoBananaMCP).
+Server details are available in [AceMusicMCP](https://github.com/AceDataCloud/AceMusicMCP), [SunoMCP](https://github.com/AceDataCloud/SunoMCP), [SeedanceMCP](https://github.com/AceDataCloud/SeedanceMCP), [HappyHorseMCP](https://github.com/AceDataCloud/HappyHorseMCP), [OpenAIMCP](https://github.com/AceDataCloud/OpenAIMCP), and [NanoBananaMCP](https://github.com/AceDataCloud/NanoBananaMCP).
 
 ## Other guides
 
