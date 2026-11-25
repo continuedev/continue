@@ -19,6 +19,34 @@ import type { HooksConfig } from "./types.js";
 const DEFAULT_COMMAND_TIMEOUT_SECONDS = 600;
 const DEFAULT_HTTP_TIMEOUT_SECONDS = 30;
 
+/**
+ * Environment variables passed to hook command subprocesses.
+ *
+ * Hooks run user-configured shell commands; passing the full parent
+ * environment would leak secrets (API keys, tokens) into them. Instead,
+ * mirror the whitelist pattern used for MCP stdio server subprocesses in
+ * core (COMMONS_ENV_VARS in core/context/mcp/MCPConnection.ts) — it is not
+ * exported, so we keep a local copy of the same list here.
+ */
+const COMMONS_ENV_VARS = ["HOME", "USER", "USERPROFILE", "LOGNAME", "USERNAME"];
+
+function buildHookEnv(cwd: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  for (const key of COMMONS_ENV_VARS) {
+    const value = process.env[key];
+    if (value !== undefined) {
+      env[key] = value;
+    }
+  }
+  // PATH is required for the hook command itself to resolve executables
+  if (process.env.PATH !== undefined) {
+    env.PATH = process.env.PATH;
+  }
+  env.CLAUDE_PROJECT_DIR = cwd;
+  env.CONTINUE_PROJECT_DIR = cwd;
+  return env;
+}
+
 function tryParseJson(str: string): HookOutput | null {
   const trimmed = str.trim();
   if (!trimmed || !trimmed.startsWith("{")) return null;
@@ -37,11 +65,7 @@ function executeCommandHook(
   const timeoutMs = (handler.timeout ?? DEFAULT_COMMAND_TIMEOUT_SECONDS) * 1000;
 
   return new Promise((resolve) => {
-    const env = {
-      ...process.env,
-      CLAUDE_PROJECT_DIR: cwd,
-      CONTINUE_PROJECT_DIR: cwd,
-    };
+    const env = buildHookEnv(cwd);
 
     // Use shell to execute the command (matches Claude Code behavior)
     const shell = process.platform === "win32" ? "cmd.exe" : "/bin/sh";

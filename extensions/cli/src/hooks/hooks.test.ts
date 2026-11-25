@@ -858,6 +858,109 @@ describeUnix("hookRunner", () => {
       // Both vars should be set to the same cwd
       expect(result.results[0].stdout).toBe(`${testCwd}|${testCwd}`);
     });
+
+    it("passes PATH to the hook subprocess so commands can resolve executables", async () => {
+      const config: HooksConfig = {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                type: "command",
+                // `env` only exists when PATH is set
+                command: "env | grep -c '^PATH='",
+              },
+            ],
+          },
+        ],
+      };
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "",
+        cwd: process.cwd(),
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+        tool_use_id: "test-id",
+      };
+
+      const result = await runHooks(config, input);
+      expect(result.results[0].exitCode).toBe(0);
+      expect(result.results[0].stdout).toBe("1");
+    });
+
+    it("passes whitelist identity vars (HOME/USER) to the hook subprocess", async () => {
+      const config: HooksConfig = {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                type: "command",
+                command: 'echo "$HOME|$USER"',
+              },
+            ],
+          },
+        ],
+      };
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "",
+        cwd: process.cwd(),
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+        tool_use_id: "test-id",
+      };
+
+      const result = await runHooks(config, input);
+      // On Unix both HOME and USER are normally defined; on systems where
+      // either is unset, the child also sees it unset (empty string)
+      expect(result.results[0].stdout).toBe(
+        `${process.env.HOME ?? ""}|${process.env.USER ?? ""}`,
+      );
+    });
+
+    it("does not pass non-whitelisted env vars (e.g. secrets) to the hook subprocess", async () => {
+      const secretValue = "super-secret-key-value-123";
+      process.env.AWS_SECRET_ACCESS_KEY = secretValue;
+      process.env.OPENAI_API_KEY = "sk-test-fake";
+
+      const config: HooksConfig = {
+        PreToolUse: [
+          {
+            hooks: [
+              {
+                type: "command",
+                // env only sees vars actually set in the child environment;
+                // count total vars to prove secrets are absent
+                command:
+                  'if env | grep "^AWS_SECRET_ACCESS_KEY="; then exit 3; fi; if env | grep "^OPENAI_API_KEY="; then exit 4; fi; echo clean',
+              },
+            ],
+          },
+        ],
+      };
+
+      const input: PreToolUseInput = {
+        session_id: "test-session",
+        transcript_path: "",
+        cwd: process.cwd(),
+        hook_event_name: "PreToolUse",
+        tool_name: "Bash",
+        tool_input: {},
+        tool_use_id: "test-id",
+      };
+
+      try {
+        const result = await runHooks(config, input);
+        expect(result.results[0].exitCode).toBe(0);
+        expect(result.results[0].stdout).toContain("clean");
+      } finally {
+        delete process.env.AWS_SECRET_ACCESS_KEY;
+        delete process.env.OPENAI_API_KEY;
+      }
+    });
   });
 
   describe("runHooks - error handling", () => {
