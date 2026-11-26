@@ -1,0 +1,55 @@
+---
+title: "OpenLux"
+description: "Configure OpenLux with Continue to use GPT, Claude, Gemini, DeepSeek, Qwen and other models through one OpenAI-compatible API"
+---
+
+[OpenLux](https://www.openlux.ai) is an OpenAI-compatible API gateway. One API key gives access to models from OpenAI, Anthropic, Google, DeepSeek, Alibaba (Qwen), xAI, Moonshot (Kimi), Zhipu (GLM), MiniMax and others, billed pay-as-you-go in USD.
+
+<Info>
+  You can get an API key from
+  [openlux.ai](https://www.openlux.ai/register?channel=c_l4hqyhu2).
+</Info>
+
+## Chat Model
+
+We recommend configuring **claude-sonnet-5-5** as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Sonnet 5.5
+        provider: openlux
+        model: claude-sonnet-5-5
+        apiKey: <YOUR_OPENLUX_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Sonnet 5.5",
+          "provider": "openlux",
+          "model": "claude-sonnet-5-5",
+          "apiKey": "<YOUR_OPENLUX_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Models
+
+Any OpenLux chat model ID works in the `model` field, for example `gpt-5.4`, `gemini-3.1-flash-lite`, `deepseek-v4-pro` or `qwen3.5-plus`. The model list with prices is at [openlux.ai](https://www.openlux.ai/console/models?view=table) (sign-in required). The OpenLux [documentation](https://doc.openlux.ai/en/tutorials/00-intro) covers API keys and the base URL, `https://api.openlux.ai/v1`.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/OpenLux.ts)

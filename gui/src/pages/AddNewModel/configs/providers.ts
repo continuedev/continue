@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  openlux: {
+    title: "OpenLux",
+    provider: "openlux",
+    description:
+      "OpenLux is an OpenAI-compatible API gateway with access to GPT, Claude, Gemini, DeepSeek, Qwen and more.",
+    longDescription:
+      "To get started with OpenLux, create an account and get an API key at [openlux.ai](https://www.openlux.ai/register?channel=c_l4hqyhu2).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your OpenLux API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://www.openlux.ai/register?channel=c_l4hqyhu2",
+  },
   venice: {
     title: "Venice",
     provider: "venice",
