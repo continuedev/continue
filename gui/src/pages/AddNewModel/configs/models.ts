@@ -1356,13 +1356,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   claude45Sonnet: {
-    title: "Claude Sonnet 4.5",
+    title: "Claude Sonnet 5.5",
     description:
-      "Previous generation Sonnet model with strong performance in reasoning and multilingual tasks.",
+      "Anthropic's latest Sonnet model with exceptional coding, reasoning, and multilingual performance.",
     params: {
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
       contextLength: 200_000,
-      title: "Claude Sonnet 4.5",
+      title: "Claude Sonnet 5.5",
       apiKey: "",
     },
     providerOptions: ["anthropic", "replicate"],
@@ -1411,12 +1411,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   claude41Opus: {
-    title: "Claude Opus 4.1",
-    description: "The most capable model in the Claude 4 series",
+    title: "Claude Opus 4.8",
+    description:
+      "Anthropic's highly capable Opus model for complex reasoning and agentic tasks.",
     params: {
-      model: "claude-opus-4-1-20250805",
+      model: "claude-opus-4-8",
       contextLength: 200_000,
-      title: "Claude Opus 4.1",
+      title: "Claude Opus 4.8",
       apiKey: "",
     },
     providerOptions: ["anthropic"],
@@ -2973,13 +2974,13 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   cometapiClaude45Sonnet: {
-    title: "Claude Sonnet 4.5 Latest",
+    title: "Claude Sonnet 5.5 Latest",
     description:
-      "Claude Sonnet 4.5 Latest via CometAPI - Anthropic's smartest model for complex agents and coding.",
+      "Claude Sonnet 5.5 Latest via CometAPI - Anthropic's smartest model for complex agents and coding.",
     params: {
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
       contextLength: 200_000,
-      title: "Claude Sonnet 4.5 Latest",
+      title: "Claude Sonnet 5.5 Latest",
       apiKey: "",
     },
     providerOptions: ["cometapi"],
