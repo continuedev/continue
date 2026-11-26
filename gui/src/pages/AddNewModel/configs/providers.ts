@@ -1270,6 +1270,26 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [{ ...models.AUTODETECT }],
     apiKeyUrl: "https://app.tensorix.ai",
   },
+  tokenless: {
+    title: "Tokenless",
+    provider: "tokenless",
+    description:
+      "Tokenless is an OpenAI-compatible API for Claude, GPT, and Gemini models at 50% of each provider's list price.",
+    longDescription:
+      "To get started with Tokenless, create an account and get an API key in the [Tokenless dashboard](https://www.tokenless.store/dashboard/keys).",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Tokenless API key",
+        required: true,
+      },
+    ],
+    packages: [{ ...models.AUTODETECT }],
+    apiKeyUrl: "https://www.tokenless.store/dashboard/keys",
+  },
   venice: {
     title: "Venice",
     provider: "venice",

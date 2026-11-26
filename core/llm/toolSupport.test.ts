@@ -380,6 +380,44 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
   });
 
+  describe("tokenless", () => {
+    const supportsFn = PROVIDER_TOOL_SUPPORT["tokenless"];
+
+    it("should return true for Claude, GPT, and Gemini model ids", () => {
+      expect(supportsFn("fable-5.2")).toBe(true);
+      expect(supportsFn("opus-5.5")).toBe(true);
+      expect(supportsFn("sonnet-5.5")).toBe(true);
+      expect(supportsFn("haiku-5.5")).toBe(true);
+      expect(supportsFn("gpt-6.2-astra")).toBe(true);
+      expect(supportsFn("chat-latest")).toBe(true);
+      expect(supportsFn("gemini-4-carbon")).toBe(true);
+    });
+
+    it("should return true for the other model lines", () => {
+      expect(supportsFn("kimi-k3.1-pro")).toBe(true);
+      expect(supportsFn("deepseek-v4.1-flash")).toBe(true);
+      expect(supportsFn("qwen4-max")).toBe(true);
+      expect(supportsFn("glm-5.3-flash")).toBe(true);
+      expect(supportsFn("minimax-m3")).toBe(true);
+      expect(supportsFn("mimo-v2.6-pro")).toBe(true);
+      expect(supportsFn("hy4")).toBe(true);
+      expect(supportsFn("doubao-seed-2.0-lite")).toBe(true);
+    });
+
+    it("should accept vendor-prefixed and provider-native ids", () => {
+      expect(supportsFn("anthropic/claude-opus-4.8")).toBe(true);
+      expect(supportsFn("openai/gpt-5.5")).toBe(true);
+      expect(supportsFn("claude-opus-5-5")).toBe(true);
+      expect(supportsFn("GPT-6.2-Sol")).toBe(true);
+    });
+
+    it("should return false for the role-play model and unknown ids", () => {
+      expect(supportsFn("qwen-plus-character")).toBe(false);
+      expect(supportsFn("random-model")).toBe(false);
+      expect(supportsFn("")).toBe(false);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle empty model names", () => {
       expect(PROVIDER_TOOL_SUPPORT["anthropic"]("")).toBe(false);
