@@ -1,0 +1,98 @@
+---
+title: "Tokenless"
+description: "Configure Tokenless with Continue to use Claude, GPT, Gemini, and other models through a single OpenAI-compatible API"
+---
+
+[Tokenless](https://www.tokenless.store) is an OpenAI-compatible API for Claude, GPT, and Gemini models, billed per token at 50% of each provider's list price. Kimi, DeepSeek, Qwen, and other models run on the same key at or below list price. Billing is prepaid with no subscription, and the first $1 of usage is free.
+
+<Info>
+  You can create an API key in the
+  [Tokenless dashboard](https://www.tokenless.store/dashboard/keys).
+</Info>
+
+## Chat Model
+
+We recommend configuring **fable-5.2** (Claude Fable 5.2) as your chat model.
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    name: My Config
+    version: 0.0.1
+    schema: v1
+
+    models:
+      - name: Claude Fable 5.2
+        provider: tokenless
+        model: fable-5.2
+        apiKey: <YOUR_TOKENLESS_API_KEY>
+        roles:
+          - chat
+          - edit
+          - apply
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Fable 5.2",
+          "provider": "tokenless",
+          "model": "fable-5.2",
+          "apiKey": "<YOUR_TOKENLESS_API_KEY>"
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Available Models
+
+Set `model` to any id from the [Tokenless model list](https://www.tokenless.store/models), for example `gpt-6.2-astra`, `gemini-4-carbon`, or `kimi-k3.1-pro`. One key reaches every model, so you can add several entries and switch between them in Continue.
+
+## Model Capabilities
+
+Continue turns on tool use (Agent mode) for Tokenless models automatically.
+
+Image input is detected automatically for model ids that contain `sonnet`, `opus`, or `haiku`. For other models that accept images, such as `fable-5.2`, add `image_input` to the model's capabilities:
+
+<Tabs>
+    <Tab title="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Claude Fable 5.2
+        provider: tokenless
+        model: fable-5.2
+        apiKey: <YOUR_TOKENLESS_API_KEY>
+        capabilities:
+          - tool_use
+          - image_input
+    ```
+    </Tab>
+    <Tab title="JSON (Deprecated)">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude Fable 5.2",
+          "provider": "tokenless",
+          "model": "fable-5.2",
+          "apiKey": "<YOUR_TOKENLESS_API_KEY>",
+          "capabilities": {
+            "tools": true,
+            "uploadImage": true
+          }
+        }
+      ]
+    }
+    ```
+    </Tab>
+</Tabs>
+
+## Embeddings Model
+
+Tokenless serves chat models through the Chat Completions API and does not have an embeddings endpoint. Use another provider for the `embed` role.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Tokenless.ts)

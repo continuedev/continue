@@ -416,6 +416,37 @@ export const PROVIDER_TOOL_SUPPORT: Record<string, (model: string) => boolean> =
       const lower = model.toLowerCase();
       return !!lower.match(/^glm-[4-9]/);
     },
+    tokenless: (model) => {
+      // https://www.tokenless.store/models
+      // Ids may carry a vendor prefix, e.g. "anthropic/claude-opus-5-5"
+      const lower = model.toLowerCase().replace(/^[a-z0-9-]+\//, "");
+
+      // The role-play model is the one model in the catalog without tool calls
+      if (lower.endsWith("-character")) {
+        return false;
+      }
+
+      const toolSupportingPrefixes = [
+        "claude",
+        "fable",
+        "opus",
+        "sonnet",
+        "haiku",
+        "gpt-",
+        "chat-latest",
+        "gemini",
+        "kimi",
+        "deepseek",
+        "qwen",
+        "glm",
+        "minimax",
+        "mimo",
+        "hy4",
+        "doubao",
+      ];
+
+      return toolSupportingPrefixes.some((prefix) => lower.startsWith(prefix));
+    },
     moonshot: (model) => {
       // support moonshot models
       // https://platform.moonshot.ai/docs/pricing/chat#concepts
